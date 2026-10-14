@@ -23,6 +23,16 @@
       }
     }
   </script>
+  <style>
+    /* Privacy / Stealth Mode: Blurs sensitive financial amounts and position sizes for safe screenshots */
+    body.privacy-mode .privacy-mask {
+      filter: blur(8px) grayscale(50%) !important;
+      user-select: none !important;
+      -webkit-user-select: none !important;
+      pointer-events: none;
+      transition: filter 0.15s ease-in-out;
+    }
+  </style>
 </head>
 <body class="bg-slate-950 text-slate-100 min-h-screen">
   <!-- Top Navigation -->
@@ -44,7 +54,12 @@
           <p class="text-xs text-slate-400">Live NSE Quotes &bull; Buy Price vs CMP &bull; Constraint Diagnostics &bull; Quant Alpha Models</p>
         </div>
       </div>
-      <div class="flex items-center space-x-3">
+      <div class="flex items-center space-x-2.5">
+        <!-- Privacy Eye Toggle Button -->
+        <button id="btnTogglePrivacy" class="text-xs bg-slate-900 hover:bg-slate-800 text-slate-300 hover:text-white border border-slate-700 px-3 py-1.5 rounded-lg flex items-center space-x-1.5 transition font-medium shadow-sm" title="Toggle Privacy Mode (Hide financial values for safe screenshots)">
+          <i id="privacyEyeIcon" class="fa-solid fa-eye text-amber-400"></i>
+          <span id="privacyBtnText" class="hidden sm:inline">Privacy Mode</span>
+        </button>
         <button id="btnOpenResearch" class="text-xs bg-gradient-to-r from-amber-500/20 to-orange-500/20 hover:from-amber-500/30 hover:to-orange-500/30 text-amber-400 border border-amber-500/40 px-3.5 py-1.5 rounded-lg flex items-center space-x-1.5 transition font-semibold shadow-sm">
           <i class="fa-solid fa-flask"></i>
           <span>Quant Research & Scenarios</span>
@@ -98,7 +113,7 @@
             <span>Current Value</span>
             <span class="text-[10px] text-emerald-400 font-mono">CMP</span>
           </div>
-          <div id="statTotalValue" class="text-2xl font-bold text-white mt-1">&#8377;0</div>
+          <div id="statTotalValue" class="text-2xl font-bold text-white mt-1 privacy-mask">&#8377;0</div>
           <div class="text-[11px] text-slate-500 mt-0.5">Live market valuation</div>
         </div>
 
@@ -108,7 +123,7 @@
             <span>Total Invested</span>
             <span class="text-[10px] text-slate-400 font-mono">Cost</span>
           </div>
-          <div id="statTotalInvested" class="text-2xl font-bold text-slate-200 mt-1">&#8377;0</div>
+          <div id="statTotalInvested" class="text-2xl font-bold text-slate-200 mt-1 privacy-mask">&#8377;0</div>
           <div class="text-[11px] text-slate-500 mt-0.5">Purchase cost basis</div>
         </div>
 
@@ -118,7 +133,7 @@
             <span>Unrealized P&L</span>
             <span id="statPnLBadge" class="text-[10px] font-bold px-1.5 py-0.2 rounded bg-emerald-500/20 text-emerald-400">NET GAIN</span>
           </div>
-          <div id="statTotalPnL" class="text-2xl font-bold text-emerald-400 mt-1">&#8377;0 (0.00%)</div>
+          <div id="statTotalPnL" class="text-2xl font-bold text-emerald-400 mt-1 privacy-mask">&#8377;0 (0.00%)</div>
           <div class="text-[11px] text-slate-500 mt-0.5">Overall profit / loss</div>
         </div>
 
@@ -561,7 +576,7 @@
               <span class="text-xs text-slate-400">micro-holdings (&lt;0.5%)</span>
             </div>
             <div class="text-xs text-slate-300 mt-1">
-              Diluted Capital: <span id="diagTailValue" class="font-bold font-mono text-white">&#8377;0</span>
+              Diluted Capital: <span id="diagTailValue" class="font-bold font-mono text-white privacy-mask">&#8377;0</span>
               <span id="diagTailPct" class="text-[10px] text-slate-400 font-mono">(0%)</span>
             </div>
             <p class="text-[11px] text-slate-400 mt-1.5">Negligible alpha contribution; causes operational oversight clutter.</p>

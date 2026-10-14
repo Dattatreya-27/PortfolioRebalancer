@@ -47,6 +47,54 @@ const SECTORS = [
 
 let currentPortfolioId = null;
 let currentPortfolioData = null;
+let isPrivacyMode = localStorage.getItem("portfolio_privacy_mode") === "true";
+let loadedPortfoliosList = [];
+
+function applyPrivacyModeUI() {
+  document.body.classList.toggle("privacy-mode", isPrivacyMode);
+
+  const icon = document.getElementById("privacyEyeIcon");
+  const btn = document.getElementById("btnTogglePrivacy");
+  const text = document.getElementById("privacyBtnText");
+
+  if (icon && btn && text) {
+    if (isPrivacyMode) {
+      icon.className = "fa-solid fa-eye-slash text-rose-400";
+      btn.className = "text-xs bg-rose-500/10 hover:bg-rose-500/20 text-rose-300 border border-rose-500/40 px-3 py-1.5 rounded-lg flex items-center space-x-1.5 transition font-semibold shadow-sm";
+      text.textContent = "Privacy: ON";
+      btn.title = "Privacy Mode is ON (Financial numbers blurred for safe screenshots). Click to reveal.";
+    } else {
+      icon.className = "fa-solid fa-eye text-amber-400";
+      btn.className = "text-xs bg-slate-900 hover:bg-slate-800 text-slate-300 hover:text-white border border-slate-700 px-3 py-1.5 rounded-lg flex items-center space-x-1.5 transition font-medium shadow-sm";
+      text.textContent = "Privacy Mode";
+      btn.title = "Click to blur financial values and position sizes for safe screenshots.";
+    }
+  }
+
+  renderPortfolioSelectOptions();
+}
+
+function handleTogglePrivacy() {
+  isPrivacyMode = !isPrivacyMode;
+  localStorage.setItem("portfolio_privacy_mode", isPrivacyMode ? "true" : "false");
+  applyPrivacyModeUI();
+}
+
+function renderPortfolioSelectOptions() {
+  const select = document.getElementById("portfolioSelect");
+  if (!select) return;
+  select.innerHTML = "";
+  loadedPortfoliosList.forEach(p => {
+    const opt = document.createElement("option");
+    opt.value = p.id;
+    const valText = isPrivacyMode ? "\u20B9••••••" : formatINR(p.totalValue);
+    opt.textContent = `${p.name} (${valText})`;
+    select.appendChild(opt);
+  });
+  if (currentPortfolioId) {
+    select.value = currentPortfolioId;
+  }
+}
 
 // Advisory Target Overrides for leading convictions
 const ADVISORY_TARGETS = {
@@ -111,12 +159,14 @@ function formatMarketCapCrores(marketCap) {
 
 // Initialize on DOM ready
 document.addEventListener("DOMContentLoaded", async () => {
+  applyPrivacyModeUI();
   renderSectorTargetInputs();
   setupEventListeners();
   await loadPortfolios();
 });
 
 function setupEventListeners() {
+  document.getElementById("btnTogglePrivacy")?.addEventListener("click", handleTogglePrivacy);
   document.getElementById("btnCreatePortfolio").addEventListener("click", handleCreatePortfolio);
   document.getElementById("portfolioSelect").addEventListener("change", (e) => {
     if (e.target.value) selectPortfolio(e.target.value);
@@ -274,8 +324,8 @@ async function loadPortfolios() {
   try {
     const res = await fetch("/api/portfolios");
     const portfolios = await res.json();
-    const select = document.getElementById("portfolioSelect");
-    select.innerHTML = "";
+    loadedPortfoliosList = portfolios || [];
+    renderPortfolioSelectOptions();
 
     if (!portfolios || portfolios.length === 0) {
       const pid = await seedSamplePortfolio();
@@ -284,13 +334,6 @@ async function loadPortfolios() {
       }
       return loadPortfolios();
     }
-
-    portfolios.forEach(p => {
-      const opt = document.createElement("option");
-      opt.value = p.id;
-      opt.textContent = `${p.name} (${formatINR(p.totalValue)})`;
-      select.appendChild(opt);
-    });
 
     const targetId = currentPortfolioId && portfolios.some(p => p.id === currentPortfolioId)
       ? currentPortfolioId
@@ -548,10 +591,10 @@ function renderHoldingsTable() {
       <td class="py-3 px-3 text-slate-400">
         <span class="px-2 py-0.5 rounded bg-slate-900 border border-slate-800 text-[11px] whitespace-nowrap">${h.sector}</span>
       </td>
-      <td class="py-3 px-3 text-right font-mono text-slate-200 font-medium">${h.quantity}</td>
+      <td class="py-3 px-3 text-right font-mono text-slate-200 font-medium privacy-mask">${h.quantity}</td>
       
       <!-- Avg Buy Price (From Excel) -->
-      <td class="py-3 px-4 text-right font-mono text-slate-300">
+      <td class="py-3 px-4 text-right font-mono text-slate-300 privacy-mask">
         ${formatINR(h.buyPrice)}
       </td>
 
@@ -562,16 +605,16 @@ function renderHoldingsTable() {
 
       <!-- Side-by-side Unrealized P&L -->
       <td class="py-3 px-4 text-right font-mono bg-slate-900/40 whitespace-nowrap">
-        <span class="inline-block px-2.5 py-1 rounded ${pnlBg} font-semibold">
+        <span class="inline-block px-2.5 py-1 rounded ${pnlBg} font-semibold privacy-mask">
           ${isPos ? '+' : ''}${formatINR(h.unrealizedPnL)} (${isPos ? '+' : ''}${h.unrealizedPnLPercent.toFixed(1)}%)
         </span>
       </td>
 
       <!-- Total Invested Cost -->
-      <td class="py-3 px-4 text-right font-mono text-slate-400">${formatINR(h.investedValue)}</td>
+      <td class="py-3 px-4 text-right font-mono text-slate-400 privacy-mask">${formatINR(h.investedValue)}</td>
 
       <!-- Current Market Value -->
-      <td class="py-3 px-4 text-right font-mono font-semibold text-white">${formatINR(h.marketValue)}</td>
+      <td class="py-3 px-4 text-right font-mono font-semibold text-white privacy-mask">${formatINR(h.marketValue)}</td>
 
       <!-- Portfolio Weight -->
       <td class="py-3 px-3 text-right font-mono text-slate-300">${h.weightPercent.toFixed(1)}%</td>
@@ -1059,14 +1102,14 @@ function renderRebalanceResults(data) {
           </div>
           <div>
             <div class="text-sm font-bold text-white font-mono">${t.ticker} <span class="text-xs font-normal text-slate-400 font-sans">(${t.stockName})</span></div>
-            <div class="text-[11px] text-slate-400">${t.sector} &bull; Current: ${t.currentQuantity} shares</div>
+            <div class="text-[11px] text-slate-400">${t.sector} &bull; Current: <span class="privacy-mask">${t.currentQuantity} shares</span></div>
           </div>
         </div>
         <div class="text-right">
-          <span class="inline-block px-2 py-0.5 rounded text-[11px] font-bold ${isBuy ? 'bg-emerald-500/20 text-emerald-400' : isHold ? 'bg-slate-700 text-slate-300' : 'bg-rose-500/20 text-rose-400'}">
+          <span class="inline-block px-2 py-0.5 rounded text-[11px] font-bold ${isBuy ? 'bg-emerald-500/20 text-emerald-400' : isHold ? 'bg-slate-700 text-slate-300' : 'bg-rose-500/20 text-rose-400'} privacy-mask">
             ${t.action} ${Math.abs(t.deltaQuantity)} shs
           </span>
-          <div class="text-xs font-mono text-slate-300 mt-0.5">${formatINR(t.currentValue)} &rarr; ${formatINR(t.targetValue)}</div>
+          <div class="text-xs font-mono text-slate-300 mt-0.5 privacy-mask">${formatINR(t.currentValue)} &rarr; ${formatINR(t.targetValue)}</div>
         </div>
       `;
       tradesContainer.appendChild(card);
