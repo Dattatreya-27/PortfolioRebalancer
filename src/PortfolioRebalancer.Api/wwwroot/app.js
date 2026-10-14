@@ -1,4 +1,4 @@
-﻿// Generic Sample Holdings used ONLY if the database is 100% empty on initial run
+// Generic Sample Holdings used ONLY if the database is 100% empty on initial run
 const SAMPLE_HOLDINGS = [
   { Ticker: "RELIANCE", Name: "Reliance Industries", Sector: "Energy", Quantity: 50, AvgPrice: 1250.00 },
   { Ticker: "TCS", Name: "Tata Consultancy Services", Sector: "Technology", Quantity: 30, AvgPrice: 3800.00 },
@@ -1026,74 +1026,287 @@ async function handleInspectStock() {
 
   const resultContainer = document.getElementById("stockInspectorResult");
   resultContainer.classList.remove("hidden");
-  resultContainer.innerHTML = `<div class="text-slate-400">Evaluating multi-factor score for ${ticker}...</div>`;
+  resultContainer.innerHTML = `<div class="text-slate-400 py-3 text-center"><i class="fa-solid fa-circle-notch fa-spin text-amber-400 mr-2"></i>Running 5-Pillar Institutional Equity Research Engine for ${ticker}...</div>`;
 
   try {
     const res = await fetch(`/api/stocks/${ticker}`);
     if (!res.ok) {
-      resultContainer.innerHTML = `<div class="text-rose-400">Stock '${ticker}' not found in registry.</div>`;
+      resultContainer.innerHTML = `<div class="text-rose-400 p-3 bg-rose-950/20 border border-rose-500/30 rounded-lg">Stock '${ticker}' not found in registry.</div>`;
       return;
     }
     const data = await res.json();
     
     const scoreColor = data.overallScore >= 75 ? 'emerald' : data.overallScore >= 50 ? 'amber' : 'rose';
+    const peg = data.peerBenchmark?.pegRatio;
+    const pegColor = peg && peg <= 1.5 ? 'text-emerald-400' : (peg && peg <= 2.2 ? 'text-amber-400' : 'text-slate-300');
+    const pledge = data.governanceAudit?.promoterPledgePercent ?? (data.governanceAudit?.pledgePercent ?? 0);
+    const isPristinePledge = pledge === 0;
 
     resultContainer.innerHTML = `
-      <div class="flex justify-between items-center border-b border-slate-800 pb-2">
+      <!-- Header: Ticker, Archetype, Conviction & Overall Score -->
+      <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-800 pb-3">
         <div>
-          <span class="font-bold text-sm text-white font-mono">${data.ticker}</span>
-          <span class="text-slate-400 text-xs ml-1">(${data.name})</span>
+          <div class="flex items-center space-x-2">
+            <span class="font-extrabold text-base text-white font-mono tracking-tight">${data.ticker}</span>
+            <span class="text-slate-400 text-xs">${data.name}</span>
+            <span class="text-[10px] uppercase px-2 py-0.5 rounded bg-slate-800 text-slate-300 border border-slate-700">${data.sector}</span>
+          </div>
+          <div class="mt-1 flex flex-wrap items-center gap-1.5">
+            <span class="px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-amber-500/10 text-amber-300 border border-amber-500/30">
+              ${data.investmentArchetype || 'Equities'}
+            </span>
+            <span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider bg-slate-800 text-slate-300 border border-slate-700">
+              ${data.ratingCategory || 'Conviction Evaluated'}
+            </span>
+          </div>
         </div>
-        <div class="flex items-center space-x-2">
-          <span class="text-[10px] uppercase px-2 py-0.5 rounded bg-slate-800 text-slate-300">${data.sector}</span>
-          <span class="text-xs font-bold px-2.5 py-0.5 rounded bg-${scoreColor}-500/20 text-${scoreColor}-400 border border-${scoreColor}-500/30">
-            Score: ${data.overallScore} / 100
+        <div class="flex items-center space-x-3 self-end sm:self-center">
+          <div class="text-right">
+            <div class="text-[10px] uppercase tracking-wider text-slate-400 font-medium">Composite Score</div>
+            <div class="text-xl font-black font-mono text-${scoreColor}-400">
+              ${data.overallScore}<span class="text-xs text-slate-500 font-normal"> / 100</span>
+            </div>
+          </div>
+          <div class="w-10 h-10 rounded-xl bg-${scoreColor}-500/10 border border-${scoreColor}-500/30 flex items-center justify-center text-${scoreColor}-400 text-lg shadow-inner">
+            <i class="fa-solid fa-award"></i>
+          </div>
+        </div>
+      </div>
+
+      <!-- 5 Institutional Pillars Bar Matrix -->
+      <div class="bg-slate-900/60 p-3 rounded-xl border border-slate-800/80 space-y-2">
+        <div class="text-[10px] uppercase font-bold tracking-wider text-slate-400 flex items-center justify-between">
+          <span><i class="fa-solid fa-layer-group text-amber-400 mr-1.5"></i>5-Pillar Score Breakdown</span>
+          <span class="text-slate-500 font-mono text-[9px]">Weighted Alpha Model</span>
+        </div>
+        <div class="grid grid-cols-1 sm:grid-cols-5 gap-2.5 pt-1">
+          <!-- Quality -->
+          <div class="bg-slate-950/70 p-2 rounded-lg border border-slate-800">
+            <div class="flex justify-between items-center text-[10px]">
+              <span class="text-slate-400 font-medium">1. Quality & ROCE</span>
+              <span class="font-bold text-white font-mono">${data.qualityScore || data.fundamentalScore}</span>
+            </div>
+            <div class="w-full bg-slate-800 h-1.5 rounded-full mt-1.5 overflow-hidden">
+              <div class="bg-emerald-500 h-1.5 rounded-full" style="width: ${data.qualityScore || data.fundamentalScore}%"></div>
+            </div>
+          </div>
+          <!-- Relative Valuation & PEG -->
+          <div class="bg-slate-950/70 p-2 rounded-lg border border-slate-800">
+            <div class="flex justify-between items-center text-[10px]">
+              <span class="text-slate-400 font-medium">2. Valuation & PEG</span>
+              <span class="font-bold text-white font-mono">${data.relativeValuationScore || 70}</span>
+            </div>
+            <div class="w-full bg-slate-800 h-1.5 rounded-full mt-1.5 overflow-hidden">
+              <div class="bg-amber-500 h-1.5 rounded-full" style="width: ${data.relativeValuationScore || 70}%"></div>
+            </div>
+          </div>
+          <!-- Sector Cycle -->
+          <div class="bg-slate-950/70 p-2 rounded-lg border border-slate-800">
+            <div class="flex justify-between items-center text-[10px]">
+              <span class="text-slate-400 font-medium">3. Sector Cycle</span>
+              <span class="font-bold text-white font-mono">${data.sectorCycleScore || data.technicalScore}</span>
+            </div>
+            <div class="w-full bg-slate-800 h-1.5 rounded-full mt-1.5 overflow-hidden">
+              <div class="bg-cyan-500 h-1.5 rounded-full" style="width: ${data.sectorCycleScore || data.technicalScore}%"></div>
+            </div>
+          </div>
+          <!-- Governance & FII/DII -->
+          <div class="bg-slate-950/70 p-2 rounded-lg border border-slate-800">
+            <div class="flex justify-between items-center text-[10px]">
+              <span class="text-slate-400 font-medium">4. Governance & Inst</span>
+              <span class="font-bold text-white font-mono">${data.institutionalGovernanceScore || 75}</span>
+            </div>
+            <div class="w-full bg-slate-800 h-1.5 rounded-full mt-1.5 overflow-hidden">
+              <div class="bg-purple-500 h-1.5 rounded-full" style="width: ${data.institutionalGovernanceScore || 75}%"></div>
+            </div>
+          </div>
+          <!-- Macro Policy -->
+          <div class="bg-slate-950/70 p-2 rounded-lg border border-slate-800">
+            <div class="flex justify-between items-center text-[10px]">
+              <span class="text-slate-400 font-medium">5. Policy Tailwinds</span>
+              <span class="font-bold text-white font-mono">${data.macroPolicyScore || data.policyAlignmentScore}</span>
+            </div>
+            <div class="w-full bg-slate-800 h-1.5 rounded-full mt-1.5 overflow-hidden">
+              <div class="bg-orange-500 h-1.5 rounded-full" style="width: ${data.macroPolicyScore || data.policyAlignmentScore}%"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Institutional Research Briefing & Sector Cycle -->
+      <div class="p-3 bg-slate-900/80 rounded-xl border border-slate-800 space-y-2">
+        <div class="flex flex-wrap items-center justify-between gap-1.5">
+          <div class="text-[10px] font-bold text-amber-400 uppercase tracking-wider flex items-center">
+            <i class="fa-solid fa-building-columns mr-1.5"></i> Institutional Consensus & Thesis
+          </div>
+          <span class="text-[10px] px-2 py-0.5 rounded bg-cyan-950/40 text-cyan-300 border border-cyan-800/40 font-mono">
+            Cycle: ${data.sectorCycleStatus || 'In Secular Phase'}
           </span>
         </div>
+        <p class="text-slate-200 text-xs leading-relaxed italic border-l-2 border-amber-500/60 pl-3 py-0.5">
+          "${data.institutionalCommentary || 'Multi-factor institutional evaluation reflects balanced earnings visibility, secular drivers, and regulatory stability.'}"
+        </p>
       </div>
 
-      <div class="grid grid-cols-3 gap-2 text-center pt-1 font-mono">
-        <div class="p-2 bg-slate-900 rounded border border-slate-800">
-          <div class="text-[10px] text-slate-400">Fundamentals</div>
-          <div class="font-bold text-white text-xs mt-0.5">${data.fundamentalScore} / 100</div>
-          <div class="text-[9px] text-slate-500">P/E: ${data.peRatio ? data.peRatio.toFixed(1) : 'N/A'}</div>
-        </div>
-        <div class="p-2 bg-slate-900 rounded border border-slate-800">
-          <div class="text-[10px] text-slate-400">Technicals</div>
-          <div class="font-bold text-white text-xs mt-0.5">${data.technicalScore} / 100</div>
-          <div class="text-[9px] text-slate-500">Momentum</div>
-        </div>
-        <div class="p-2 bg-slate-900 rounded border border-slate-800">
-          <div class="text-[10px] text-slate-400">National Policy</div>
-          <div class="font-bold text-amber-400 text-xs mt-0.5">${data.policyAlignmentScore} / 100</div>
-          <div class="text-[9px] text-slate-500">PLI / MakeInIndia</div>
-        </div>
-      </div>
-
-      <div class="p-2.5 bg-slate-900 rounded border border-slate-800">
-        <div class="text-[10px] font-semibold text-amber-400 uppercase tracking-wider mb-1 flex items-center">
-          <i class="fa-solid fa-landmark mr-1"></i> National Policy Tailwind
-        </div>
-        <p class="text-slate-300 text-[11px] leading-relaxed">${data.policyTailwindSummary}</p>
-      </div>
-
-      ${data.riskFlags.length > 0 ? `
-        <div class="p-2 bg-rose-950/20 border border-rose-500/30 rounded text-rose-300 text-[11px] space-y-1">
-          <div class="font-bold text-rose-400 text-[10px] uppercase flex items-center">
-            <i class="fa-solid fa-triangle-exclamation mr-1"></i> Breakdown Risk Warnings:
+      <!-- Deep Pillar Breakdown: 4 Diagnostic Quads -->
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+        <!-- Quad 1: Valuation & Peer Benchmark -->
+        <div class="p-3 bg-slate-900/60 rounded-xl border border-slate-800 space-y-2">
+          <div class="flex items-center justify-between pb-1 border-b border-slate-800/60">
+            <span class="text-[10px] font-bold uppercase tracking-wider text-slate-300 flex items-center">
+              <i class="fa-solid fa-scale-balanced text-amber-400 mr-1.5"></i> Relative Valuation & Peers
+            </span>
+            <span class="text-[9px] font-mono px-1.5 py-0.5 rounded bg-slate-800 text-slate-400">Growth-Adjusted</span>
           </div>
-          ${data.riskFlags.map(f => `<div>Ã¢â‚¬Â¢ ${f}</div>`).join('')}
+          <div class="grid grid-cols-3 gap-2 text-center font-mono">
+            <div class="bg-slate-950 p-1.5 rounded border border-slate-800/70">
+              <div class="text-[9px] text-slate-500">Stock P/E</div>
+              <div class="font-bold text-white text-xs mt-0.5">${data.peerBenchmark?.stockPe ? data.peerBenchmark.stockPe.toFixed(1) + 'x' : (data.peRatio ? data.peRatio.toFixed(1) + 'x' : 'N/A')}</div>
+            </div>
+            <div class="bg-slate-950 p-1.5 rounded border border-slate-800/70">
+              <div class="text-[9px] text-slate-500">Sector Median P/E</div>
+              <div class="font-bold text-slate-300 text-xs mt-0.5">${data.peerBenchmark?.sectorMedianPe ? data.peerBenchmark.sectorMedianPe.toFixed(1) + 'x' : 'N/A'}</div>
+            </div>
+            <div class="bg-slate-950 p-1.5 rounded border border-slate-800/70">
+              <div class="text-[9px] text-slate-500">PEG Ratio</div>
+              <div class="font-bold text-xs mt-0.5 ${pegColor}">${peg ? peg.toFixed(2) + 'x' : 'N/A'}</div>
+            </div>
+          </div>
+          <div class="text-[10px] text-slate-300 bg-slate-950/70 p-2 rounded border border-slate-800/60 flex items-center justify-between">
+            <span class="text-slate-400 font-medium">Verdict:</span>
+            <span class="font-semibold text-amber-300 truncate ml-2 text-right">${data.peerBenchmark?.valuationVerdict || 'Evaluated against peer median'}</span>
+          </div>
+          ${data.peerBenchmark?.topPeers && data.peerBenchmark.topPeers.length > 0 ? `
+            <div class="text-[10px] text-slate-400 flex flex-wrap items-center gap-1 pt-1">
+              <span class="text-[9px] text-slate-500 mr-1">Sector Peers:</span>
+              ${data.peerBenchmark.topPeers.map(p => `<span class="px-1.5 py-0.2 rounded bg-slate-800 text-slate-300 font-mono text-[9px] border border-slate-700/60">${p}</span>`).join('')}
+            </div>
+          ` : ''}
         </div>
-      ` : ''}
 
-      <div class="flex justify-between text-[11px] text-slate-400 pt-1 border-t border-slate-800">
-        <span>CMP: <strong class="text-white">${formatINR(data.price)}</strong></span>
-        <span>Market Cap: <strong class="text-white">${formatMarketCapCrores(data.marketCap)}</strong></span>
-        <span>Div Yield: <strong class="text-white">${data.dividendYield ? data.dividendYield.toFixed(2) + '%' : 'N/A'}</strong></span>
+        <!-- Quad 2: Management & Governance Audit -->
+        <div class="p-3 bg-slate-900/60 rounded-xl border border-slate-800 space-y-2">
+          <div class="flex items-center justify-between pb-1 border-b border-slate-800/60">
+            <span class="text-[10px] font-bold uppercase tracking-wider text-slate-300 flex items-center">
+              <i class="fa-solid fa-user-shield text-emerald-400 mr-1.5"></i> Governance & Capital Return
+            </span>
+            ${isPristinePledge ? `
+              <span class="text-[9px] font-bold px-1.5 py-0.5 rounded bg-emerald-500/15 text-emerald-300 border border-emerald-500/30">
+                <i class="fa-solid fa-check mr-1"></i>0% PLEDGE
+              </span>
+            ` : `
+              <span class="text-[9px] font-bold px-1.5 py-0.5 rounded bg-amber-500/15 text-amber-300 border border-amber-500/30">
+                ${pledge}% Pledged
+              </span>
+            `}
+          </div>
+          <div class="grid grid-cols-4 gap-1.5 text-center font-mono">
+            <div class="bg-slate-950 p-1.5 rounded border border-slate-800/70">
+              <div class="text-[9px] text-slate-500">Promoter</div>
+              <div class="font-bold text-white text-xs mt-0.5">${data.governanceAudit?.promoterHoldingPercent ? data.governanceAudit.promoterHoldingPercent.toFixed(1) + '%' : 'N/A'}</div>
+            </div>
+            <div class="bg-slate-950 p-1.5 rounded border border-slate-800/70">
+              <div class="text-[9px] text-slate-500">Pledge</div>
+              <div class="font-bold text-xs mt-0.5 ${isPristinePledge ? 'text-emerald-400' : 'text-amber-400'}">${pledge.toFixed(1)}%</div>
+            </div>
+            <div class="bg-slate-950 p-1.5 rounded border border-slate-800/70">
+              <div class="text-[9px] text-slate-500">ROCE</div>
+              <div class="font-bold text-xs mt-0.5 ${data.governanceAudit?.rocePercent >= 15 ? 'text-emerald-400' : 'text-slate-300'}">${data.governanceAudit?.rocePercent ? data.governanceAudit.rocePercent.toFixed(1) + '%' : 'N/A'}</div>
+            </div>
+            <div class="bg-slate-950 p-1.5 rounded border border-slate-800/70">
+              <div class="text-[9px] text-slate-500">Debt/Eq</div>
+              <div class="font-bold text-white text-xs mt-0.5">${data.governanceAudit?.debtToEquity !== null && data.governanceAudit?.debtToEquity !== undefined ? data.governanceAudit.debtToEquity.toFixed(2) : '0.00'}</div>
+            </div>
+          </div>
+          <div class="text-[10px] text-slate-300 bg-slate-950/70 p-2 rounded border border-slate-800/60 flex items-center justify-between">
+            <span class="text-slate-400 font-medium">Audit:</span>
+            <span class="font-semibold text-emerald-300 truncate ml-2 text-right">${data.governanceAudit?.governanceRating || 'Clean Governance Record'}</span>
+          </div>
+        </div>
+
+        <!-- Quad 3: Institutional Sponsorship & Smart Money Flows -->
+        <div class="p-3 bg-slate-900/60 rounded-xl border border-slate-800 space-y-2">
+          <div class="flex items-center justify-between pb-1 border-b border-slate-800/60">
+            <span class="text-[10px] font-bold uppercase tracking-wider text-slate-300 flex items-center">
+              <i class="fa-solid fa-money-bill-trend-up text-cyan-400 mr-1.5"></i> Institutional Sponsorship (FII / DII)
+            </span>
+            <span class="text-[9px] font-mono px-1.5 py-0.5 rounded bg-cyan-950/40 text-cyan-300 border border-cyan-800/40">Float Track</span>
+          </div>
+          <div class="grid grid-cols-3 gap-2 text-center font-mono">
+            <div class="bg-slate-950 p-1.5 rounded border border-slate-800/70">
+              <div class="text-[9px] text-slate-500">FII Stake</div>
+              <div class="font-bold text-white text-xs mt-0.5">${data.institutionalFlow?.fiiHoldingPercent ? data.institutionalFlow.fiiHoldingPercent.toFixed(1) + '%' : 'N/A'}</div>
+            </div>
+            <div class="bg-slate-950 p-1.5 rounded border border-slate-800/70">
+              <div class="text-[9px] text-slate-500">DII Stake</div>
+              <div class="font-bold text-white text-xs mt-0.5">${data.institutionalFlow?.diiHoldingPercent ? data.institutionalFlow.diiHoldingPercent.toFixed(1) + '%' : 'N/A'}</div>
+            </div>
+            <div class="bg-slate-950 p-1.5 rounded border border-slate-800/70">
+              <div class="text-[9px] text-slate-500">Total Inst.</div>
+              <div class="font-bold text-cyan-400 text-xs mt-0.5">${data.institutionalFlow?.totalInstitutionalFloat ? data.institutionalFlow.totalInstitutionalFloat.toFixed(1) + '%' : ((data.institutionalFlow?.fiiHoldingPercent || 0) + (data.institutionalFlow?.diiHoldingPercent || 0)).toFixed(1) + '%'}</div>
+            </div>
+          </div>
+          <div class="text-[10px] text-slate-300 bg-slate-950/70 p-2 rounded border border-slate-800/60 flex items-center justify-between">
+            <span class="text-slate-400 font-medium">Flow Trend:</span>
+            <span class="font-semibold text-cyan-300 truncate ml-2 text-right">${data.institutionalFlow?.flowTrend || 'Steady Institutional Backing'}</span>
+          </div>
+        </div>
+
+        <!-- Quad 4: National Policy & Union Budget Tailwinds -->
+        <div class="p-3 bg-slate-900/60 rounded-xl border border-slate-800 space-y-2">
+          <div class="flex items-center justify-between pb-1 border-b border-slate-800/60">
+            <span class="text-[10px] font-bold uppercase tracking-wider text-slate-300 flex items-center">
+              <i class="fa-solid fa-landmark-flag text-orange-400 mr-1.5"></i> Macro & Policy Alignment
+            </span>
+            <span class="text-[9px] font-mono px-1.5 py-0.5 rounded bg-orange-950/40 text-orange-300 border border-orange-800/40">PLI / Budget</span>
+          </div>
+          <p class="text-slate-300 text-xs leading-relaxed bg-slate-950/70 p-2 rounded border border-slate-800/60">
+            ${data.policyTailwindSummary || 'Beneficiary of national capex thrust, domestic manufacturing or regulatory continuity.'}
+          </p>
+          <div class="text-[10px] text-slate-400 flex items-center justify-between pt-0.5">
+            <span>Policy Support Index:</span>
+            <span class="font-bold font-mono text-orange-400">${data.macroPolicyScore || data.policyAlignmentScore} / 100</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Strengths & Risk Warnings -->
+      <div class="space-y-2 pt-1">
+        ${data.strengths && data.strengths.length > 0 ? `
+          <div class="p-2.5 bg-emerald-950/20 border border-emerald-500/25 rounded-xl text-emerald-200 text-xs space-y-1">
+            <div class="font-bold text-emerald-400 text-[10px] uppercase flex items-center tracking-wider">
+              <i class="fa-solid fa-circle-check mr-1.5"></i> Institutional Investment Strengths:
+            </div>
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-1 pt-0.5">
+              ${data.strengths.map(s => `<div class="flex items-start space-x-1.5"><i class="fa-solid fa-check text-emerald-400 text-[10px] mt-0.5"></i><span>${s}</span></div>`).join('')}
+            </div>
+          </div>
+        ` : ''}
+
+        ${data.riskFlags && data.riskFlags.length > 0 ? `
+          <div class="p-2.5 bg-rose-950/20 border border-rose-500/30 rounded-xl text-rose-300 text-xs space-y-1">
+            <div class="font-bold text-rose-400 text-[10px] uppercase flex items-center tracking-wider">
+              <i class="fa-solid fa-triangle-exclamation mr-1.5"></i> Key Risk Warnings & Sensitivities:
+            </div>
+            ${data.riskFlags.map(f => `<div class="flex items-start space-x-1.5"><i class="fa-solid fa-xmark text-rose-400 text-[10px] mt-0.5"></i><span>${f}</span></div>`).join('')}
+          </div>
+        ` : `
+          <div class="p-2 bg-slate-900/40 border border-slate-800 rounded-lg text-slate-400 text-[11px] flex items-center justify-between">
+            <span class="flex items-center"><i class="fa-solid fa-shield text-emerald-400 mr-1.5"></i> No severe capital erosion or governance audit flags detected.</span>
+            <span class="text-[9px] font-mono text-slate-500">Zero Red Flags</span>
+          </div>
+        `}
+      </div>
+
+      <!-- Footer: Live Market Metrics -->
+      <div class="flex flex-wrap items-center justify-between gap-3 text-xs text-slate-400 pt-2 border-t border-slate-800">
+        <div>Live CMP: <strong class="text-white font-mono ml-1">${formatINR(data.price)}</strong></div>
+        <div>Market Cap: <strong class="text-white font-mono ml-1">${formatMarketCapCrores(data.marketCap)}</strong></div>
+        <div>Div Yield: <strong class="text-white font-mono ml-1">${data.dividendYield ? data.dividendYield.toFixed(2) + '%' : '0.00%'}</strong></div>
       </div>
     `;
   } catch (err) {
-    resultContainer.innerHTML = `<div class="text-rose-400">Error fetching stock scorecard.</div>`;
+    resultContainer.innerHTML = `<div class="text-rose-400 p-3 bg-rose-950/20 border border-rose-500/30 rounded-lg">Error fetching stock scorecard: ${err.message || err}</div>`;
   }
 }
 

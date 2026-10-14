@@ -10,12 +10,47 @@ public sealed record StockEvaluationDetailDto(
     decimal? DividendYield,
     decimal? MarketCap,
     decimal OverallScore,
-    decimal FundamentalScore,
-    decimal TechnicalScore,
+    decimal QualityScore,
+    decimal RelativeValuationScore,
+    decimal SectorCycleScore,
+    decimal InstitutionalGovernanceScore,
     decimal MacroPolicyScore,
     string RatingCategory,
+    string InvestmentArchetype,
+    string SectorCycleStatus,
+    string InstitutionalCommentary,
     string PolicyTailwindSummary,
-    IReadOnlyList<string> RiskFlags
+    PeerBenchmarkDto PeerBenchmark,
+    GovernanceAuditDto GovernanceAudit,
+    InstitutionalFlowDto InstitutionalFlow,
+    IReadOnlyList<string> Strengths,
+    IReadOnlyList<string> RiskFlags,
+    decimal FundamentalScore,
+    decimal TechnicalScore
+);
+
+public sealed record PeerBenchmarkDto(
+    decimal StockPE,
+    decimal SectorMedianPE,
+    decimal PegRatio,
+    string ValuationVerdict,
+    IReadOnlyList<string> TopPeers
+);
+
+public sealed record GovernanceAuditDto(
+    decimal PromoterHoldingPercent,
+    decimal PromoterPledgePercent,
+    decimal RocePercent,
+    decimal RoePercent,
+    decimal DebtToEquity,
+    string GovernanceRating
+);
+
+public sealed record InstitutionalFlowDto(
+    decimal FiiHoldingPercent,
+    decimal DiiHoldingPercent,
+    string InstitutionalConsensus,
+    string FlowTrend
 );
 
 public sealed record PortfolioDiagnosticsDto(
