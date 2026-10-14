@@ -26,11 +26,17 @@
   <style>
     /* Privacy / Stealth Mode: Blurs sensitive financial amounts and position sizes for safe screenshots */
     body.privacy-mode .privacy-mask {
-      filter: blur(8px) grayscale(50%) !important;
+      filter: blur(8px) grayscale(100%) !important;
       user-select: none !important;
       -webkit-user-select: none !important;
       pointer-events: none;
       transition: filter 0.15s ease-in-out;
+    }
+    body.privacy-mode #statPnLBadge {
+      filter: blur(6px) grayscale(100%) !important;
+      background-color: rgb(30 41 59 / 0.8) !important;
+      color: rgb(148 163 184) !important;
+      border-color: rgb(51 65 85 / 0.6) !important;
     }
   </style>
 </head>
@@ -131,7 +137,7 @@
         <div class="p-4 bg-slate-950/70 rounded-xl border border-slate-800/80">
           <div class="flex items-center justify-between text-xs text-slate-400 font-medium">
             <span>Unrealized P&L</span>
-            <span id="statPnLBadge" class="text-[10px] font-bold px-1.5 py-0.2 rounded bg-emerald-500/20 text-emerald-400">NET GAIN</span>
+            <span id="statPnLBadge" class="text-[10px] font-bold px-1.5 py-0.2 rounded bg-emerald-500/20 text-emerald-400 privacy-mask">NET GAIN</span>
           </div>
           <div id="statTotalPnL" class="text-2xl font-bold text-emerald-400 mt-1 privacy-mask">&#8377;0 (0.00%)</div>
           <div class="text-[11px] text-slate-500 mt-0.5">Overall profit / loss</div>
@@ -631,11 +637,11 @@
             <div class="mt-2 flex items-center justify-between">
               <div class="text-xs">
                 <span class="text-slate-400 block text-[10px]">Multi-Baggers (&gt;50%)</span>
-                <span id="diagDoublerCount" class="text-lg font-bold font-mono text-emerald-400">0</span>
+                <span id="diagDoublerCount" class="text-lg font-bold font-mono text-emerald-400 privacy-mask">0</span>
               </div>
               <div class="text-xs text-right">
                 <span class="text-slate-400 block text-[10px]">Drawdowns (&lt;-25%)</span>
-                <span id="diagDrawdownCount" class="text-lg font-bold font-mono text-rose-400">0</span>
+                <span id="diagDrawdownCount" class="text-lg font-bold font-mono text-rose-400 privacy-mask">0</span>
               </div>
             </div>
 
@@ -652,7 +658,7 @@
           </div>
           <div class="mt-2 pt-2 border-t border-slate-800/80 text-[10px] text-slate-400 flex items-center justify-between">
             <span>Overall Win Rate:</span>
-            <span id="diagWinRate" class="font-mono text-slate-200 font-semibold">--%</span>
+            <span id="diagWinRate" class="font-mono text-slate-200 font-semibold privacy-mask">--%</span>
           </div>
         </div>
 

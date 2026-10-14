@@ -71,6 +71,18 @@ function applyPrivacyModeUI() {
     }
   }
 
+  const pnlBadge = document.getElementById("statPnLBadge");
+  if (pnlBadge) {
+    if (isPrivacyMode) {
+      pnlBadge.textContent = "••••••";
+      pnlBadge.className = "text-[10px] font-bold px-1.5 py-0.5 rounded privacy-mask bg-slate-800 text-slate-400 border border-slate-700/60";
+    } else if (currentPortfolioData) {
+      const isProfit = (currentPortfolioData.totalUnrealizedPnL || 0) >= 0;
+      pnlBadge.textContent = isProfit ? "NET GAIN" : "NET LOSS";
+      pnlBadge.className = `text-[10px] font-bold px-1.5 py-0.5 rounded privacy-mask ${isProfit ? 'bg-emerald-500/20 text-emerald-400' : 'bg-rose-500/20 text-rose-400'}`;
+    }
+  }
+
   renderPortfolioSelectOptions();
 }
 
@@ -420,11 +432,16 @@ function renderPortfolioDetails(data) {
 
   if (pnlElem) {
     pnlElem.textContent = `${isProfit ? '+' : ''}${formatINR(pnlVal)} (${isProfit ? '+' : ''}${pnlPct.toFixed(2)}%)`;
-    pnlElem.className = `text-2xl font-bold mt-1 ${isProfit ? 'text-emerald-400' : 'text-rose-400'}`;
+    pnlElem.className = `text-2xl font-bold mt-1 privacy-mask ${isProfit ? 'text-emerald-400' : 'text-rose-400'}`;
   }
   if (pnlBadge) {
-    pnlBadge.textContent = isProfit ? "NET GAIN" : "NET LOSS";
-    pnlBadge.className = `text-[10px] font-bold px-1.5 py-0.5 rounded ${isProfit ? 'bg-emerald-500/20 text-emerald-400' : 'bg-rose-500/20 text-rose-400'}`;
+    if (isPrivacyMode) {
+      pnlBadge.textContent = "••••••";
+      pnlBadge.className = "text-[10px] font-bold px-1.5 py-0.5 rounded privacy-mask bg-slate-800 text-slate-400 border border-slate-700/60";
+    } else {
+      pnlBadge.textContent = isProfit ? "NET GAIN" : "NET LOSS";
+      pnlBadge.className = `text-[10px] font-bold px-1.5 py-0.5 rounded privacy-mask ${isProfit ? 'bg-emerald-500/20 text-emerald-400' : 'bg-rose-500/20 text-rose-400'}`;
+    }
   }
 
   // Populate Sector Filter Dropdown
