@@ -1,0 +1,13 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/PortfolioRebalancer.Api/PortfolioRebalancer.Api.csproj" />
+    <Project Path="src/PortfolioRebalancer.Application/PortfolioRebalancer.Application.csproj" />
+    <Project Path="src/PortfolioRebalancer.Domain/PortfolioRebalancer.Domain.csproj" />
+    <Project Path="src/PortfolioRebalancer.Infrastructure/PortfolioRebalancer.Infrastructure.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/PortfolioRebalancer.Api.Tests/PortfolioRebalancer.Api.Tests.csproj" />
+    <Project Path="tests/PortfolioRebalancer.Application.Tests/PortfolioRebalancer.Application.Tests.csproj" />
+    <Project Path="tests/PortfolioRebalancer.Domain.Tests/PortfolioRebalancer.Domain.Tests.csproj" />
+  </Folder>
+</Solution>

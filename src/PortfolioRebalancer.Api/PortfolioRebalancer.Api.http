@@ -1,0 +1,6 @@
+@PortfolioRebalancer.Api_HostAddress = http://localhost:5008
+
+GET {{PortfolioRebalancer.Api_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###

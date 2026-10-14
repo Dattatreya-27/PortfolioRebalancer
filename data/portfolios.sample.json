@@ -1,0 +1,54 @@
+﻿{
+    "Id":  "11111111-1111-1111-1111-111111111111",
+    "Name":  "Sample Growth Portfolio",
+    "CreatedAt":  "2026-01-01T00:00:00Z",
+    "Holdings":  [
+                     {
+                         "Ticker":  "RELIANCE",
+                         "Name":  "Reliance Industries",
+                         "Sector":  "Energy",
+                         "Quantity":  50,
+                         "AverageBuyPrice":  1250,
+                         "CurrentPrice":  1282.26,
+                         "PERatio":  22.5,
+                         "DividendYield":  0.8,
+                         "MarketCap":  17500000000000
+                     },
+                     {
+                         "Ticker":  "TCS",
+                         "Name":  "Tata Consultancy",
+                         "Sector":  "Technology",
+                         "Quantity":  30,
+                         "AverageBuyPrice":  3800,
+                         "CurrentPrice":  3950,
+                         "PERatio":  28.5,
+                         "DividendYield":  1.2,
+                         "MarketCap":  14200000000000
+                     },
+                     {
+                         "Ticker":  "HDFCBANK",
+                         "Name":  "HDFC Bank",
+                         "Sector":  "Financials",
+                         "Quantity":  100,
+                         "AverageBuyPrice":  1650,
+                         "CurrentPrice":  1710,
+                         "PERatio":  18.2,
+                         "DividendYield":  1.1,
+                         "MarketCap":  13000000000000
+                     }
+                 ],
+    "TargetAllocations":  [
+                              {
+                                  "Sector":  "Energy",
+                                  "TargetWeight":  30
+                              },
+                              {
+                                  "Sector":  "Technology",
+                                  "TargetWeight":  35
+                              },
+                              {
+                                  "Sector":  "Financials",
+                                  "TargetWeight":  35
+                              }
+                          ]
+}

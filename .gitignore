@@ -1,0 +1,27 @@
+﻿## Build and Binary Outputs
+[Bb]in/
+[Oo]bj/
+[Ll]og/
+[Ll]ogs/
+
+## Visual Studio & IDE files
+.vs/
+.vscode/
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+
+## Temporary and scratch files
+*.tmp
+*.log
+.DS_Store
+Thumbs.db
+scratch/
+
+## User Private Financial Data & Portfolios
+data/*.json
+!data/portfolios.sample.json
+*.xlsx
+*.xls
+*.csv
