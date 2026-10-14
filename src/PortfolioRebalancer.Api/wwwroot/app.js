@@ -94,7 +94,7 @@ let sortAscending = false;
 
 // Currency Formatter in Indian Locale (en-IN)
 function formatINR(val) {
-  if (val === undefined || val === null || isNaN(val)) return "Ã¢â€šÂ¹0.00";
+  if (val === undefined || val === null || isNaN(val)) return "\u20B90.00";
   return new Intl.NumberFormat('en-IN', {
     style: 'currency',
     currency: 'INR',
@@ -106,7 +106,7 @@ function formatINR(val) {
 function formatMarketCapCrores(marketCap) {
   if (!marketCap) return 'N/A';
   const crores = marketCap / 10000000;
-  return `Ã¢â€šÂ¹${crores.toLocaleString('en-IN', { maximumFractionDigits: 0 })} Cr`;
+  return `\u20B9${crores.toLocaleString('en-IN', { maximumFractionDigits: 0 })} Cr`;
 }
 
 // Initialize on DOM ready
@@ -124,6 +124,12 @@ function setupEventListeners() {
   document.getElementById("btnAddHolding").addEventListener("click", handleAddHolding);
   document.getElementById("btnRunRebalance").addEventListener("click", handleRunRebalance);
   document.getElementById("btnInspectStock").addEventListener("click", handleInspectStock);
+  document.getElementById("inspectorTicker")?.addEventListener("keydown", (e) => {
+    if (e.key === "Enter") {
+      e.preventDefault();
+      handleInspectStock();
+    }
+  });
 
   document.getElementById("btnToggleAddHolding")?.addEventListener("click", () => {
     const p = document.getElementById("addPositionPanel");
@@ -165,19 +171,38 @@ function setupEventListeners() {
   });
 }
 
+const SECTOR_ICONS = {
+  "Technology": "fa-laptop-code text-cyan-400",
+  "Healthcare": "fa-heart-pulse text-rose-400",
+  "Financials": "fa-building-columns text-emerald-400",
+  "ConsumerDiscretionary": "fa-bag-shopping text-amber-400",
+  "ConsumerStaples": "fa-basket-shopping text-emerald-300",
+  "Energy": "fa-bolt text-yellow-400",
+  "Industrials": "fa-industry text-orange-400",
+  "Materials": "fa-cubes-stacked text-purple-400",
+  "Utilities": "fa-plug-circle-bolt text-blue-400",
+  "RealEstate": "fa-city text-teal-400",
+  "CommunicationServices": "fa-tower-broadcast text-indigo-400"
+};
+
 function renderSectorTargetInputs() {
   const container = document.getElementById("sectorTargetsContainer");
+  if (!container) return;
   container.innerHTML = "";
 
   SECTORS.forEach(sec => {
+    const iconClass = SECTOR_ICONS[sec] || "fa-chart-pie text-slate-400";
     const row = document.createElement("div");
-    row.className = "flex items-center justify-between bg-slate-950/60 p-2.5 rounded-lg border border-slate-800";
+    row.className = "flex items-center justify-between bg-slate-950/70 hover:bg-slate-950 px-3 py-2 rounded-xl border border-slate-800/80 transition";
     row.innerHTML = `
-      <span class="text-xs text-slate-300 font-medium">${sec}</span>
+      <div class="flex items-center space-x-2">
+        <i class="fa-solid ${iconClass} text-xs w-4 text-center"></i>
+        <span class="text-xs text-slate-300 font-medium">${sec}</span>
+      </div>
       <div class="flex items-center space-x-1.5">
-        <input type="number" min="0" max="100" step="1" value="0" data-sector="${sec}"
-          class="sector-weight-input w-16 bg-slate-900 border border-slate-700 rounded px-2 py-1 text-xs text-right text-amber-400 font-mono focus:outline-none focus:ring-1 focus:ring-amber-500" />
-        <span class="text-xs text-slate-500">%</span>
+        <input type="number" min="0" max="100" step="0.5" value="0" data-sector="${sec}"
+          class="sector-weight-input w-16 bg-slate-900 border border-slate-700 hover:border-slate-600 rounded-lg px-2 py-1 text-xs text-right text-amber-400 font-mono focus:outline-none focus:ring-1 focus:ring-amber-500" />
+        <span class="text-xs text-slate-500 font-mono">%</span>
       </div>
     `;
     container.appendChild(row);
@@ -194,12 +219,54 @@ function updateTargetSumBadge() {
   inputs.forEach(i => sum += parseFloat(i.value) || 0);
 
   const badge = document.getElementById("targetSumBadge");
+  if (!badge) return;
   badge.textContent = `Total: ${sum.toFixed(1)}%`;
 
   if (Math.abs(sum - 100) < 0.01) {
-    badge.className = "text-xs font-semibold px-2.5 py-1 rounded bg-emerald-500/20 text-emerald-400 border border-emerald-500/30";
+    badge.className = "text-xs font-mono font-bold px-3 py-1 rounded-lg bg-emerald-500/20 text-emerald-400 border border-emerald-500/40 shadow-sm shadow-emerald-500/20";
   } else {
-    badge.className = "text-xs font-semibold px-2.5 py-1 rounded bg-rose-500/20 text-rose-400 border border-rose-500/30";
+    badge.className = "text-xs font-mono font-bold px-3 py-1 rounded-lg bg-amber-500/20 text-amber-300 border border-amber-500/40";
+  }
+}
+
+function applySectorPreset(type) {
+  const inputs = document.querySelectorAll(".sector-weight-input");
+  if (!inputs || inputs.length === 0) return;
+
+  const presets = {
+    'EQUAL': {
+      "Technology": 9.1, "Healthcare": 9.1, "Financials": 9.1, "ConsumerDiscretionary": 9.1,
+      "ConsumerStaples": 9.1, "Energy": 9.1, "Industrials": 9.1, "Materials": 9.1,
+      "Utilities": 9.1, "RealEstate": 9.1, "CommunicationServices": 9.0
+    },
+    'GROWTH': {
+      "Technology": 25.0, "Financials": 25.0, "Industrials": 20.0, "ConsumerDiscretionary": 15.0,
+      "Healthcare": 15.0, "ConsumerStaples": 0, "Energy": 0, "Materials": 0,
+      "Utilities": 0, "RealEstate": 0, "CommunicationServices": 0
+    },
+    'DEFENSIVE': {
+      "ConsumerStaples": 25.0, "Healthcare": 25.0, "Utilities": 20.0, "Energy": 15.0,
+      "Financials": 15.0, "Technology": 0, "Industrials": 0, "ConsumerDiscretionary": 0,
+      "Materials": 0, "RealEstate": 0, "CommunicationServices": 0
+    },
+    'RESET': {}
+  };
+
+  const selected = presets[type] || {};
+  inputs.forEach(inp => {
+    const sec = inp.getAttribute("data-sector");
+    inp.value = selected[sec] !== undefined ? selected[sec] : 0;
+  });
+
+  updateTargetSumBadge();
+}
+
+function quickInspectTicker(ticker) {
+  const inp = document.getElementById("inspectorTicker");
+  if (inp) {
+    inp.value = ticker;
+    handleInspectStock();
+    inp.scrollIntoView({ behavior: 'smooth', block: 'center' });
   }
 }
 
@@ -512,7 +579,7 @@ function renderHoldingsTable() {
       <!-- Target Advisory -->
       <td class="py-3 px-3 text-center text-[10px] font-mono whitespace-nowrap">
         <span class="px-2 py-0.5 rounded bg-amber-500/10 text-amber-400 border border-amber-500/20" title="${advisory.rationale}">
-          T1: Ã¢â€šÂ¹${advisory.t1}
+          T1: \u20B9${advisory.t1}
         </span>
       </td>
 
@@ -660,7 +727,7 @@ async function loadDiagnostics(portfolioId) {
     if (c) {
       document.getElementById("diagHhiScore").textContent = c.hhiScore.toFixed(1);
       document.getElementById("diagEffectiveHoldings").textContent = c.effectiveHoldings.toFixed(1);
-      document.getElementById("diagHhiVerdict").textContent = `${c.diversificationStatus} Ã¢â‚¬Â¢ ${c.verdict}`;
+      document.getElementById("diagHhiVerdict").textContent = `${c.diversificationStatus} \u2022 ${c.verdict}`;
       document.getElementById("diagMaxStockInfo").textContent = `${c.maxStockTicker} (${c.maxStockWeight}%)`;
 
       // Guardrail bars
@@ -740,7 +807,7 @@ async function loadDiagnostics(portfolioId) {
                 <i class="fa-solid fa-triangle-exclamation mr-1.5"></i>
                 <span>${v.ruleName}: ${v.target}</span>
               </div>
-              <div class="text-[11px] text-slate-400 mt-0.5">Current: <span class="text-white font-mono font-semibold">${v.currentValue}%</span> Ã¢â‚¬Â¢ Allowed Limit: ${v.allowedLimit}%</div>
+              <div class="text-[11px] text-slate-400 mt-0.5">Current: <span class="text-white font-mono font-semibold">${v.currentValue}%</span> \u2022 Allowed Limit: ${v.allowedLimit}%</div>
             </div>
             <span class="text-[10px] font-bold px-2 py-0.5 rounded ${isCrit ? 'bg-rose-500/20 text-rose-400' : 'bg-amber-500/20 text-amber-400'} uppercase">${v.severity}</span>
           `;
@@ -818,21 +885,34 @@ async function loadDiagnostics(portfolioId) {
     if (eContainer) {
       eContainer.innerHTML = "";
       if (diag.upcomingEvents.length === 0) {
-        eContainer.innerHTML = `<div class="text-xs text-slate-500 italic">No scheduled events for active holdings.</div>`;
+        eContainer.innerHTML = `<div class="text-xs text-slate-500 italic py-8 text-center">No scheduled catalysts for current portfolio holdings.</div>`;
       } else {
         diag.upcomingEvents.forEach(e => {
           const div = document.createElement("div");
-          div.className = `p-2.5 rounded-lg border border-slate-800 bg-slate-950/70 flex items-start justify-between text-xs`;
+          div.className = "p-3 rounded-xl border border-slate-800/80 bg-slate-950/70 hover:bg-slate-950 flex items-start justify-between text-xs transition";
+          const isPolicy = !e.ticker || e.eventType === "MacroPolicy";
+          const isEarnings = e.eventType === "QuarterlyResults";
           div.innerHTML = `
-            <div>
-              <div class="font-semibold text-white flex items-center space-x-1.5">
-                ${e.ticker ? `<span class="font-mono text-amber-400 px-1 py-0.2 rounded bg-amber-500/10 text-[10px]">${e.ticker}</span>` : `<span class="text-orange-400 text-[10px] px-1 py-0.2 rounded bg-orange-500/10 uppercase">Macro Policy</span>`}
-                <span>${e.eventTitle}</span>
+            <div class="space-y-1">
+              <div class="font-semibold text-white flex items-center space-x-2">
+                ${e.ticker ? `
+                  <button type="button" onclick="quickInspectTicker('${e.ticker}')" class="font-mono text-amber-400 hover:text-amber-300 hover:underline px-1.5 py-0.5 rounded bg-amber-500/10 border border-amber-500/30 text-[10px] font-bold" title="Inspect ${e.ticker} Scorecard">
+                    ${e.ticker} <i class="fa-solid fa-arrow-up-right-from-square text-[8px] ml-0.5"></i>
+                  </button>
+                ` : `
+                  <span class="text-orange-400 text-[10px] font-bold px-1.5 py-0.5 rounded bg-orange-500/10 border border-orange-500/30 uppercase tracking-wider">Macro Policy</span>
+                `}
+                <span class="text-xs text-slate-200">${e.eventTitle}</span>
               </div>
-              <div class="text-[10px] text-slate-400 mt-0.5">${e.expectedImpact}</div>
+              <div class="text-[11px] text-slate-400">${e.expectedImpact}</div>
             </div>
-            <div class="text-right text-[10px] font-mono text-slate-300 ml-2 whitespace-nowrap">
-              ${e.scheduledDate}
+            <div class="text-right ml-3 flex flex-col items-end whitespace-nowrap">
+              <span class="px-2 py-0.5 rounded bg-slate-900 border border-slate-800 text-[10px] font-mono font-medium text-slate-300 flex items-center">
+                <i class="fa-regular fa-calendar text-[9px] text-amber-400 mr-1.5"></i> ${e.scheduledDate}
+              </span>
+              <span class="text-[9px] uppercase tracking-wider mt-1 ${isEarnings ? 'text-emerald-400' : isPolicy ? 'text-cyan-400' : 'text-slate-500'} font-semibold font-mono">
+                ${e.eventType || 'CATALYST'}
+              </span>
             </div>
           `;
           eContainer.appendChild(div);
@@ -979,14 +1059,14 @@ function renderRebalanceResults(data) {
           </div>
           <div>
             <div class="text-sm font-bold text-white font-mono">${t.ticker} <span class="text-xs font-normal text-slate-400 font-sans">(${t.stockName})</span></div>
-            <div class="text-[11px] text-slate-400">${t.sector} Ã¢â‚¬Â¢ Current: ${t.currentQuantity} shares</div>
+            <div class="text-[11px] text-slate-400">${t.sector} &bull; Current: ${t.currentQuantity} shares</div>
           </div>
         </div>
         <div class="text-right">
           <span class="inline-block px-2 py-0.5 rounded text-[11px] font-bold ${isBuy ? 'bg-emerald-500/20 text-emerald-400' : isHold ? 'bg-slate-700 text-slate-300' : 'bg-rose-500/20 text-rose-400'}">
             ${t.action} ${Math.abs(t.deltaQuantity)} shs
           </span>
-          <div class="text-xs font-mono text-slate-300 mt-0.5">${formatINR(t.currentValue)} Ã¢â€ â€™ ${formatINR(t.targetValue)}</div>
+          <div class="text-xs font-mono text-slate-300 mt-0.5">${formatINR(t.currentValue)} &rarr; ${formatINR(t.targetValue)}</div>
         </div>
       `;
       tradesContainer.appendChild(card);
@@ -1149,7 +1229,7 @@ async function handleInspectStock() {
       </div>
 
       <!-- Deep Pillar Breakdown: 4 Diagnostic Quads -->
-      <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+      <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-3">
         <!-- Quad 1: Valuation & Peer Benchmark -->
         <div class="p-3 bg-slate-900/60 rounded-xl border border-slate-800 space-y-2">
           <div class="flex items-center justify-between pb-1 border-b border-slate-800/60">
@@ -1363,7 +1443,7 @@ async function loadResearchReport(portfolioId) {
                   <span class="text-emerald-400 font-mono font-semibold">+${op.upsidePotentialPercent}% Upside</span>
                 </div>
                 <div class="text-[10px] text-slate-400 mt-0.5">${op.triggerSignal}</div>
-                <div class="text-[10px] text-slate-500 mt-0.5">Target: Ã¢â€šÂ¹${op.targetPrice} Ã¢â‚¬Â¢ ${op.catalystRationale}</div>
+                <div class="text-[10px] text-slate-500 mt-0.5">Target: \u20B9${op.targetPrice} &bull; ${op.catalystRationale}</div>
               </div>
             `).join('')}
           </div>
