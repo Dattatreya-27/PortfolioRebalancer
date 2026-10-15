@@ -51,6 +51,8 @@ public sealed class Portfolio
         }
     }
 
+    public DateTime? LastSyncedAt { get; set; } = DateTime.UtcNow;
+
     public void AddHolding(Holding holding)
     {
         ArgumentNullException.ThrowIfNull(holding);
@@ -60,10 +62,113 @@ public sealed class Portfolio
             _holdings[existing] = holding;
         else
             _holdings.Add(holding);
+
+        LastSyncedAt = DateTime.UtcNow;
+    }
+
+    public void ExecuteTrade(Stock stock, string tradeType, decimal quantity, decimal tradePrice)
+    {
+        ArgumentNullException.ThrowIfNull(stock);
+        if (quantity <= 0) throw new ArgumentException("Trade quantity must be greater than zero.", nameof(quantity));
+        if (tradePrice <= 0) throw new ArgumentException("Trade price must be greater than zero.", nameof(tradePrice));
+
+        var normalizedType = tradeType.Trim().ToUpperInvariant();
+        var existingIndex = _holdings.FindIndex(h => h.Stock.Ticker == stock.Ticker);
+
+        if (normalizedType == "BUY")
+        {
+            if (existingIndex >= 0)
+            {
+                var existing = _holdings[existingIndex];
+                var oldQty = existing.Quantity;
+                var oldAvg = existing.AverageBuyPrice?.Amount ?? existing.Stock.CurrentPrice.Amount;
+                var newQty = oldQty + quantity;
+                var newAvgPrice = Math.Round(((oldQty * oldAvg) + (quantity * tradePrice)) / newQty, 2);
+
+                _holdings[existingIndex] = new Holding
+                {
+                    Stock = stock,
+                    Quantity = newQty,
+                    AverageBuyPrice = Money.INR(newAvgPrice)
+                };
+            }
+            else
+            {
+                _holdings.Add(new Holding
+                {
+                    Stock = stock,
+                    Quantity = quantity,
+                    AverageBuyPrice = Money.INR(Math.Round(tradePrice, 2))
+                });
+            }
+        }
+        else if (normalizedType == "SELL")
+        {
+            if (existingIndex >= 0)
+            {
+                var existing = _holdings[existingIndex];
+                if (quantity >= existing.Quantity)
+                {
+                    _holdings.RemoveAt(existingIndex);
+                }
+                else
+                {
+                    _holdings[existingIndex] = new Holding
+                    {
+                        Stock = stock,
+                        Quantity = existing.Quantity - quantity,
+                        AverageBuyPrice = existing.AverageBuyPrice
+                    };
+                }
+            }
+            else
+            {
+                throw new InvalidOperationException($"Cannot sell {stock.Ticker.Value}: holding does not exist in portfolio.");
+            }
+        }
+        else if (normalizedType == "ADJUST")
+        {
+            if (quantity <= 0)
+            {
+                if (existingIndex >= 0) _holdings.RemoveAt(existingIndex);
+            }
+            else
+            {
+                var newHolding = new Holding
+                {
+                    Stock = stock,
+                    Quantity = quantity,
+                    AverageBuyPrice = Money.INR(Math.Round(tradePrice, 2))
+                };
+                if (existingIndex >= 0) _holdings[existingIndex] = newHolding;
+                else _holdings.Add(newHolding);
+            }
+        }
+        else
+        {
+            throw new ArgumentException($"Invalid trade type '{tradeType}'. Supported types: BUY, SELL, ADJUST.", nameof(tradeType));
+        }
+
+        LastSyncedAt = DateTime.UtcNow;
     }
 
     public bool RemoveHolding(Ticker ticker)
-        => _holdings.RemoveAll(h => h.Stock.Ticker == ticker) > 0;
+    {
+        var removed = _holdings.RemoveAll(h => h.Stock.Ticker == ticker) > 0;
+        if (removed) LastSyncedAt = DateTime.UtcNow;
+        return removed;
+    }
+
+    /// <summary>
+    /// Replaces all portfolio holdings in bulk (e.g., from an external broker sync like Angel One).
+    /// </summary>
+    public void ReplaceHoldings(IEnumerable<Holding> holdings)
+    {
+        ArgumentNullException.ThrowIfNull(holdings);
+        _holdings.Clear();
+        _holdings.AddRange(holdings);
+        LastSyncedAt = DateTime.UtcNow;
+    }
 
     /// <summary>
     /// Sets the target sector allocations. Validates that weights sum to 100%.

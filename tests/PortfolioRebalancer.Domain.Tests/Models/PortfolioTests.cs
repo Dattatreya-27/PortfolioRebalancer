@@ -151,4 +151,100 @@ public class PortfolioTests
         var weights = portfolio.GetCurrentSectorWeights();
         weights.Should().BeEmpty();
     }
+
+    [Fact]
+    public void ExecuteTrade_Buy_CalculatesWeightedAveragePrice()
+    {
+        var portfolio = new Portfolio { Name = "Trade Test" };
+        var hdfc = CreateStock("HDFCBANK", Sector.Financials, 1600m);
+        // Initial holding: 10 shares @ 1600
+        portfolio.AddHolding(new Holding
+        {
+            Stock = hdfc,
+            Quantity = 10,
+            AverageBuyPrice = Money.INR(1600m)
+        });
+
+        // Buy 10 more shares @ 1700
+        portfolio.ExecuteTrade(hdfc, "BUY", 10, 1700m);
+
+        var holding = portfolio.Holdings.Single(h => h.Stock.Ticker.Value == "HDFCBANK");
+        holding.Quantity.Should().Be(20);
+        // Weighted average: (10 * 1600 + 10 * 1700) / 20 = 1650
+        holding.AverageBuyPrice!.Value.Amount.Should().Be(1650m);
+    }
+
+    [Fact]
+    public void ExecuteTrade_SellPartial_ReducesQuantityPreservesAverageBuyPrice()
+    {
+        var portfolio = new Portfolio { Name = "Trade Test" };
+        var infy = CreateStock("INFY", Sector.Technology, 1500m);
+        portfolio.AddHolding(new Holding
+        {
+            Stock = infy,
+            Quantity = 50,
+            AverageBuyPrice = Money.INR(1400m)
+        });
+
+        // Sell 15 shares
+        portfolio.ExecuteTrade(infy, "SELL", 15, 1550m);
+
+        var holding = portfolio.Holdings.Single(h => h.Stock.Ticker.Value == "INFY");
+        holding.Quantity.Should().Be(35);
+        holding.AverageBuyPrice!.Value.Amount.Should().Be(1400m);
+    }
+
+    [Fact]
+    public void ExecuteTrade_SellEntirePosition_RemovesHolding()
+    {
+        var portfolio = new Portfolio { Name = "Trade Test" };
+        var infy = CreateStock("INFY", Sector.Technology, 1500m);
+        portfolio.AddHolding(new Holding
+        {
+            Stock = infy,
+            Quantity = 20,
+            AverageBuyPrice = Money.INR(1400m)
+        });
+
+        // Sell all 20 shares
+        portfolio.ExecuteTrade(infy, "SELL", 20, 1500m);
+
+        portfolio.Holdings.Should().NotContain(h => h.Stock.Ticker.Value == "INFY");
+    }
+
+    [Fact]
+    public void ExecuteTrade_Adjust_SetsExactQuantityAndBuyPrice()
+    {
+        var portfolio = new Portfolio { Name = "Trade Test" };
+        var tcs = CreateStock("TCS", Sector.Technology, 3800m);
+        portfolio.AddHolding(new Holding
+        {
+            Stock = tcs,
+            Quantity = 10,
+            AverageBuyPrice = Money.INR(3600m)
+        });
+
+        portfolio.ExecuteTrade(tcs, "ADJUST", 15, 3750m);
+
+        var holding = portfolio.Holdings.Single(h => h.Stock.Ticker.Value == "TCS");
+        holding.Quantity.Should().Be(15);
+        holding.AverageBuyPrice!.Value.Amount.Should().Be(3750m);
+    }
+
+    [Fact]
+    public void ReplaceHoldings_ReplacesAllPositions()
+    {
+        var portfolio = CreateTestPortfolio();
+        portfolio.Holdings.Should().HaveCount(2);
+
+        var rel = CreateStock("RELIANCE", Sector.Energy, 2800m);
+        portfolio.ReplaceHoldings(new[]
+        {
+            new Holding { Stock = rel, Quantity = 25, AverageBuyPrice = Money.INR(2700m) }
+        });
+
+        portfolio.Holdings.Should().HaveCount(1);
+        portfolio.Holdings[0].Stock.Ticker.Value.Should().Be("RELIANCE");
+        portfolio.Holdings[0].Quantity.Should().Be(25);
+    }
 }

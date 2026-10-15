@@ -95,6 +95,80 @@ public class PortfoliosController(
         return Ok(updated);
     }
 
+    [HttpPost("{id:guid}/trades")]
+    public async Task<ActionResult<PortfolioSummaryDto>> ExecuteTrade(Guid id, [FromBody] ExecuteTradeRequest request)
+    {
+        if (string.IsNullOrWhiteSpace(request.Ticker))
+            return BadRequest(new { error = "Ticker cannot be empty." });
+
+        if (request.Quantity <= 0)
+            return BadRequest(new { error = "Quantity must be greater than zero." });
+
+        if (request.TradePrice <= 0)
+            return BadRequest(new { error = "Trade price must be greater than zero." });
+
+        try
+        {
+            var updated = await portfolioService.ExecuteTradeAsync(
+                id, request.Ticker, request.Action, request.Quantity, request.TradePrice);
+
+            if (updated is null)
+                return NotFound(new { error = $"Portfolio with ID '{id}' not found." });
+
+            return Ok(updated);
+        }
+        catch (Exception ex) when (ex is ArgumentException or InvalidOperationException)
+        {
+            return BadRequest(new { error = ex.Message });
+        }
+    }
+
+    [HttpPut("{id:guid}/holdings/{ticker}")]
+    public async Task<ActionResult<PortfolioSummaryDto>> UpdateHolding(Guid id, string ticker, [FromBody] UpdateHoldingRequest request)
+    {
+        if (string.IsNullOrWhiteSpace(ticker))
+            return BadRequest(new { error = "Ticker cannot be empty." });
+
+        if (request.Quantity < 0)
+            return BadRequest(new { error = "Quantity cannot be negative." });
+
+        if (request.BuyPrice <= 0 && request.Quantity > 0)
+            return BadRequest(new { error = "Buy price must be greater than zero." });
+
+        try
+        {
+            var updated = await portfolioService.UpdateHoldingAsync(id, ticker, request.Quantity, request.BuyPrice);
+            if (updated is null)
+                return NotFound(new { error = $"Portfolio with ID '{id}' not found." });
+
+            return Ok(updated);
+        }
+        catch (Exception ex) when (ex is ArgumentException or InvalidOperationException)
+        {
+            return BadRequest(new { error = ex.Message });
+        }
+    }
+
+    [HttpPost("{id:guid}/sync-angelone")]
+    public async Task<ActionResult<PortfolioSummaryDto>> SyncAngelOne(Guid id, [FromBody] AngelOneSyncRequest request)
+    {
+        if (request.Holdings is null)
+            return BadRequest(new { error = "Holdings list cannot be null." });
+
+        try
+        {
+            var updated = await portfolioService.SyncAngelOneHoldingsAsync(id, request.Holdings);
+            if (updated is null)
+                return NotFound(new { error = $"Portfolio with ID '{id}' not found." });
+
+            return Ok(updated);
+        }
+        catch (Exception ex) when (ex is ArgumentException or InvalidOperationException)
+        {
+            return BadRequest(new { error = ex.Message });
+        }
+    }
+
     [HttpPost("{id:guid}/rebalance")]
     public async Task<ActionResult<RebalanceRecommendationDto>> Rebalance(Guid id, [FromBody] RebalanceRequest request)
     {

@@ -111,6 +111,75 @@ public sealed class PortfolioService(
         return MapToSummary(portfolio);
     }
 
+    public async Task<PortfolioSummaryDto?> ExecuteTradeAsync(
+        Guid portfolioId, string ticker, string action, decimal quantity, decimal tradePrice)
+    {
+        var portfolio = await repository.GetByIdAsync(portfolioId);
+        if (portfolio is null) return null;
+
+        var cleanTicker = ticker.Trim().ToUpperInvariant();
+        var stock = await stockProvider.GetStockAsync(cleanTicker)
+            ?? throw new ArgumentException($"Unknown stock ticker: {cleanTicker}");
+
+        portfolio.ExecuteTrade(stock, action, quantity, tradePrice);
+        await repository.SaveAsync(portfolio);
+        return MapToSummary(portfolio);
+    }
+
+    public async Task<PortfolioSummaryDto?> UpdateHoldingAsync(
+        Guid portfolioId, string ticker, decimal quantity, decimal buyPrice)
+    {
+        return await ExecuteTradeAsync(portfolioId, ticker, "ADJUST", quantity, buyPrice);
+    }
+
+    public async Task<PortfolioSummaryDto?> SyncAngelOneHoldingsAsync(
+        Guid portfolioId, List<AngelOneHoldingItemRequest> items)
+    {
+        var portfolio = await repository.GetByIdAsync(portfolioId);
+        if (portfolio is null) return null;
+
+        var cleanItems = items
+            .Where(i => i.Quantity > 0)
+            .Select(i =>
+            {
+                var sym = i.TradingSymbol.Trim().ToUpperInvariant();
+                sym = System.Text.RegularExpressions.Regex.Replace(sym, "-(EQ|BE)$", "");
+                return new { Ticker = sym, i.Quantity, i.AveragePrice, i.Ltp };
+            })
+            .ToList();
+
+        var tickers = cleanItems.Select(x => x.Ticker).Distinct().ToList();
+        var stocks = await stockProvider.GetStocksAsync(tickers);
+        var stockLookup = stocks.ToDictionary(s => s.Ticker.Value, StringComparer.OrdinalIgnoreCase);
+
+        var newHoldings = new List<Holding>();
+        foreach (var item in cleanItems)
+        {
+            if (stockLookup.TryGetValue(item.Ticker, out var stock))
+            {
+                if (item.Ltp.HasValue && item.Ltp.Value > 0)
+                {
+                    stock.UpdateMarketData(Money.INR(item.Ltp.Value), stock.PERatio, stock.DividendYield, stock.MarketCap);
+                }
+
+                newHoldings.Add(new Holding
+                {
+                    Stock = stock,
+                    Quantity = item.Quantity,
+                    AverageBuyPrice = Money.INR(item.AveragePrice)
+                });
+            }
+        }
+
+        if (newHoldings.Count > 0)
+        {
+            portfolio.ReplaceHoldings(newHoldings);
+            await repository.SaveAsync(portfolio);
+        }
+
+        return MapToSummary(portfolio);
+    }
+
     public async Task<RebalanceRecommendationDto?> RebalanceAsync(
         Guid portfolioId, List<SectorAllocationItem> targets)
     {
@@ -191,7 +260,8 @@ public sealed class PortfolioService(
             TotalUnrealizedPnLPercent: portfolio.TotalUnrealizedPnLPercent,
             Currency: "INR",
             Holdings: holdings,
-            SectorWeights: sectorWeights);
+            SectorWeights: sectorWeights,
+            LastSyncedAt: portfolio.LastSyncedAt);
     }
 
     private static RebalanceRecommendationDto MapToRecommendation(RebalanceResult result)

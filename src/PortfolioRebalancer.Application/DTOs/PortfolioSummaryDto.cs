@@ -13,7 +13,8 @@ public sealed record PortfolioSummaryDto(
     decimal TotalUnrealizedPnLPercent,
     string Currency,
     IReadOnlyList<HoldingDto> Holdings,
-    IReadOnlyList<SectorWeightDto> SectorWeights);
+    IReadOnlyList<SectorWeightDto> SectorWeights,
+    DateTime? LastSyncedAt = null);
 
 public sealed record HoldingDto(
     string Ticker,

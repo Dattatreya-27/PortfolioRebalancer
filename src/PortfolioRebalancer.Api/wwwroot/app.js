@@ -623,6 +623,42 @@ function renderPortfolioDetails(data) {
   });
   updateTargetSumBadge();
 
+  // 8-Hour Freshness & Auto-Sync Check
+  const lastSyncElem = document.getElementById("lastSyncTime");
+  const staleBanner = document.getElementById("staleSyncAlertBanner");
+  const staleDetail = document.getElementById("staleSyncAlertDetail");
+
+  if (data.lastSyncedAt) {
+    const syncDate = new Date(data.lastSyncedAt);
+    const diffMs = Date.now() - syncDate.getTime();
+    const diffHours = diffMs / (1000 * 60 * 60);
+
+    let timeAgoText = "";
+    if (diffHours < 1) {
+      const mins = Math.max(1, Math.round(diffMs / (1000 * 60)));
+      timeAgoText = `${mins}m ago`;
+    } else if (diffHours < 24) {
+      timeAgoText = `${Math.round(diffHours)}h ago`;
+    } else {
+      timeAgoText = `${Math.round(diffHours / 24)}d ago`;
+    }
+
+    if (lastSyncElem) {
+      lastSyncElem.textContent = `Synced: ${timeAgoText}`;
+    }
+
+    if (diffHours >= 8) {
+      if (staleBanner) staleBanner.classList.remove("hidden");
+      if (staleDetail) staleDetail.textContent = `Last synced ${timeAgoText} (${syncDate.toLocaleTimeString()}). Review any broker trades or sync with Angel One.`;
+      checkAndTrigger8HourAutoSync();
+    } else {
+      if (staleBanner) staleBanner.classList.add("hidden");
+    }
+  } else {
+    if (lastSyncElem) lastSyncElem.textContent = "Prices live";
+    if (staleBanner) staleBanner.classList.remove("hidden");
+  }
+
   renderHoldingsTable();
 }
 
@@ -804,10 +840,13 @@ function renderHoldingsTable() {
 
       <!-- Actions -->
       <td class="py-3 px-3 text-center whitespace-nowrap">
-        <button onclick="inspectFromRow('${h.ticker}')" class="text-amber-400 hover:text-amber-300 text-xs px-2 py-1 rounded hover:bg-amber-500/10 transition mr-1" title="Inspect Scorecard">
+        <button onclick="openTradeModal('${h.ticker}')" class="text-amber-400 hover:text-amber-300 text-xs px-2 py-1 rounded bg-amber-500/10 hover:bg-amber-500/20 border border-amber-500/30 transition mr-1 font-semibold" title="Trade / Adjust (Buy/Sell/Trim)">
+          <i class="fa-solid fa-bolt mr-0.5"></i> Trade
+        </button>
+        <button onclick="inspectFromRow('${h.ticker}')" class="text-slate-400 hover:text-amber-300 text-xs px-1.5 py-1 rounded hover:bg-slate-800 transition mr-1" title="Inspect Scorecard">
           <i class="fa-solid fa-magnifying-glass-chart"></i>
         </button>
-        <button onclick="handleRemoveHolding('${h.ticker}')" class="text-rose-400 hover:text-rose-300 text-xs px-2 py-1 rounded hover:bg-rose-500/10 transition" title="Delete Position">
+        <button onclick="handleRemoveHolding('${h.ticker}')" class="text-rose-400 hover:text-rose-300 text-xs px-1.5 py-1 rounded hover:bg-rose-500/10 transition" title="Delete Position">
           <i class="fa-solid fa-trash-can"></i>
         </button>
       </td>
@@ -1848,4 +1887,459 @@ async function loadResearchReport(portfolioId) {
   } catch (err) {
     stratContainer.innerHTML = `<div class="p-4 text-xs text-rose-400">Error loading research report.</div>`;
   }
+}
+// ==========================================
+// INTERACTIVE TRADE LOGGER & POSITION ADJUSTER
+// ==========================================
+let currentTradeAction = 'BUY';
+
+function openTradeModal(ticker = null, defaultAction = 'BUY') {
+  const modal = document.getElementById("tradeModal");
+  if (!modal) return;
+
+  // Populate existing stocks dropdown
+  const select = document.getElementById("tradeHoldingSelect");
+  if (select && currentPortfolioData && currentPortfolioData.holdings) {
+    select.innerHTML = '<option value="">Or pick existing...</option>';
+    const sorted = [...currentPortfolioData.holdings].sort((a,b) => a.ticker.localeCompare(b.ticker));
+    sorted.forEach(h => {
+      const opt = document.createElement("option");
+      opt.value = h.ticker;
+      opt.textContent = `${h.ticker} (${h.quantity} shs @ â‚¹${h.buyPrice})`;
+      select.appendChild(opt);
+    });
+  }
+
+  setTradeAction(defaultAction);
+
+  const tickerInput = document.getElementById("tradeTickerInput");
+  const qtyInput = document.getElementById("tradeQuantityInput");
+  const priceInput = document.getElementById("tradePriceInput");
+
+  if (ticker) {
+    tickerInput.value = ticker.toUpperCase();
+    if (select) select.value = ticker.toUpperCase();
+    const holding = currentPortfolioData?.holdings?.find(h => h.ticker.toUpperCase() === ticker.toUpperCase());
+    if (holding) {
+      qtyInput.value = defaultAction === 'SELL' ? Math.min(10, holding.quantity) : 10;
+      priceInput.value = holding.price || holding.buyPrice || "";
+    } else {
+      qtyInput.value = 10;
+      priceInput.value = "";
+    }
+  } else {
+    tickerInput.value = "";
+    if (select) select.value = "";
+    qtyInput.value = 10;
+    priceInput.value = "";
+  }
+
+  updateTradePreview();
+  modal.classList.remove("hidden");
+}
+
+function closeTradeModal() {
+  const modal = document.getElementById("tradeModal");
+  if (modal) modal.classList.add("hidden");
+}
+
+function setTradeAction(action) {
+  currentTradeAction = action;
+
+  const btnBuy = document.getElementById("tradeBtnBuy");
+  const btnSell = document.getElementById("tradeBtnSell");
+  const btnAdjust = document.getElementById("tradeBtnAdjust");
+  const badge = document.getElementById("tradeImpactActionBadge");
+  const submitText = document.getElementById("tradeSubmitText");
+  const qtyLabel = document.getElementById("tradeQuantityLabel");
+  const priceLabel = document.getElementById("tradePriceLabel");
+
+  [btnBuy, btnSell, btnAdjust].forEach(b => {
+    if (b) b.className = "py-2 text-xs font-bold rounded-lg transition text-slate-400 hover:text-white";
+  });
+
+  if (action === 'BUY') {
+    if (btnBuy) btnBuy.className = "py-2 text-xs font-bold rounded-lg transition bg-emerald-500/20 text-emerald-400 border border-emerald-500/40 shadow-sm";
+    if (badge) { badge.textContent = "BUY"; badge.className = "text-[10px] px-2 py-0.5 rounded font-mono font-bold bg-emerald-500/20 text-emerald-400"; }
+    if (submitText) submitText.textContent = "Confirm Buy Trade";
+    if (qtyLabel) qtyLabel.textContent = "Quantity to Buy (+ Shares)";
+    if (priceLabel) priceLabel.textContent = "Buy Execution Price (â‚¹)";
+  } else if (action === 'SELL') {
+    if (btnSell) btnSell.className = "py-2 text-xs font-bold rounded-lg transition bg-rose-500/20 text-rose-400 border border-rose-500/40 shadow-sm";
+    if (badge) { badge.textContent = "SELL / TRIM"; badge.className = "text-[10px] px-2 py-0.5 rounded font-mono font-bold bg-rose-500/20 text-rose-400"; }
+    if (submitText) submitText.textContent = "Confirm Sell Trade";
+    if (qtyLabel) qtyLabel.textContent = "Quantity to Sell (- Shares)";
+    if (priceLabel) priceLabel.textContent = "Sell Execution Price (â‚¹)";
+  } else if (action === 'ADJUST') {
+    if (btnAdjust) btnAdjust.className = "py-2 text-xs font-bold rounded-lg transition bg-amber-500/20 text-amber-300 border border-amber-500/40 shadow-sm";
+    if (badge) { badge.textContent = "ADJUST EXACT"; badge.className = "text-[10px] px-2 py-0.5 rounded font-mono font-bold bg-amber-500/20 text-amber-300"; }
+    if (submitText) submitText.textContent = "Set Exact Position";
+    if (qtyLabel) qtyLabel.textContent = "Exact Quantity Held";
+    if (priceLabel) priceLabel.textContent = "Average Buy Price (â‚¹)";
+  }
+
+  updateTradePreview();
+}
+
+function onTradeTickerChange() {
+  const input = document.getElementById("tradeTickerInput");
+  const select = document.getElementById("tradeHoldingSelect");
+  const priceInput = document.getElementById("tradePriceInput");
+
+  const val = (input?.value || "").trim().toUpperCase();
+  if (select) select.value = val;
+
+  const holding = currentPortfolioData?.holdings?.find(h => h.ticker.toUpperCase() === val);
+  if (holding && priceInput && (!priceInput.value || parseFloat(priceInput.value) === 0)) {
+    priceInput.value = holding.price || holding.buyPrice || "";
+  }
+  updateTradePreview();
+}
+
+function onTradeSelectHolding(ticker) {
+  if (!ticker) return;
+  const input = document.getElementById("tradeTickerInput");
+  const priceInput = document.getElementById("tradePriceInput");
+  if (input) input.value = ticker;
+
+  const holding = currentPortfolioData?.holdings?.find(h => h.ticker.toUpperCase() === ticker.toUpperCase());
+  if (holding && priceInput) {
+    priceInput.value = holding.price || holding.buyPrice || "";
+  }
+  updateTradePreview();
+}
+
+function updateTradePreview() {
+  const ticker = (document.getElementById("tradeTickerInput")?.value || "").trim().toUpperCase();
+  const tradeQty = parseFloat(document.getElementById("tradeQuantityInput")?.value) || 0;
+  const tradePrice = parseFloat(document.getElementById("tradePriceInput")?.value) || 0;
+
+  const holding = currentPortfolioData?.holdings?.find(h => h.ticker.toUpperCase() === ticker);
+  const oldQty = holding ? holding.quantity : 0;
+  const oldPrice = holding ? holding.buyPrice : tradePrice;
+
+  const previewQty = document.getElementById("previewQtyChange");
+  const previewPrice = document.getElementById("previewPriceChange");
+  const previewTotal = document.getElementById("previewTradeTotal");
+  const warningNote = document.getElementById("tradeWarningNote");
+
+  let newQty = oldQty;
+  let newAvgPrice = oldPrice;
+  let totalTradeVal = tradeQty * tradePrice;
+  let warnText = "";
+
+  if (currentTradeAction === 'BUY') {
+    newQty = oldQty + tradeQty;
+    if (newQty > 0) {
+      newAvgPrice = ((oldQty * oldPrice) + (tradeQty * tradePrice)) / newQty;
+    }
+    if (oldQty === 0) {
+      warnText = `âœ¨ Opening NEW position: ${tradeQty} shares of ${ticker || 'stock'} will be added to portfolio.`;
+    }
+  } else if (currentTradeAction === 'SELL') {
+    if (tradeQty >= oldQty && oldQty > 0) {
+      newQty = 0;
+      newAvgPrice = 0;
+      warnText = `âš ï¸ 100% Liquidation: Selling ${tradeQty} shares will completely close and remove ${ticker} from your portfolio.`;
+    } else if (oldQty === 0) {
+      warnText = `âš ï¸ You currently hold 0 shares of ${ticker || 'this stock'}. A sell trade cannot be executed.`;
+    } else {
+      newQty = oldQty - tradeQty;
+      newAvgPrice = oldPrice;
+      warnText = `â„¹ï¸ Trimming position: Realizes capital from ${tradeQty} shares. Purchase cost basis remains â‚¹${oldPrice.toFixed(2)}.`;
+    }
+  } else if (currentTradeAction === 'ADJUST') {
+    newQty = tradeQty;
+    newAvgPrice = tradePrice;
+    if (tradeQty === 0) {
+      warnText = `âš ï¸ Setting quantity to 0 will delete ${ticker} from portfolio.`;
+    }
+  }
+
+  if (previewQty) previewQty.textContent = `${oldQty} â†’ ${newQty} shares`;
+  if (previewPrice) previewPrice.textContent = `â‚¹${oldPrice.toFixed(2)} â†’ â‚¹${newAvgPrice.toFixed(2)}`;
+  if (previewTotal) previewTotal.textContent = formatINR(totalTradeVal);
+
+  if (warningNote) {
+    if (warnText) {
+      warningNote.textContent = warnText;
+      warningNote.classList.remove("hidden");
+    } else {
+      warningNote.classList.add("hidden");
+    }
+  }
+}
+
+async function submitTradeModal() {
+  if (!currentPortfolioId) return alert("Please select a portfolio first.");
+
+  const ticker = (document.getElementById("tradeTickerInput")?.value || "").trim().toUpperCase();
+  const tradeQty = parseFloat(document.getElementById("tradeQuantityInput")?.value) || 0;
+  const tradePrice = parseFloat(document.getElementById("tradePriceInput")?.value) || 0;
+
+  if (!ticker) return alert("Please enter or select a valid NSE stock symbol.");
+  if (tradeQty <= 0) return alert("Quantity must be greater than 0.");
+  if (tradePrice <= 0) return alert("Trade price must be greater than 0.");
+
+  const btn = document.getElementById("btnSubmitTrade");
+  if (btn) btn.disabled = true;
+
+  try {
+    const res = await fetch(`/api/portfolios/${currentPortfolioId}/trades`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        ticker: ticker,
+        action: currentTradeAction,
+        quantity: tradeQty,
+        tradePrice: tradePrice
+      })
+    });
+
+    if (res.ok) {
+      currentPortfolioData = await res.json();
+      normalizePortfolioData(currentPortfolioData);
+      renderPortfolioDetails(currentPortfolioData);
+      closeTradeModal();
+      showToast(`âœ… Trade executed: ${currentTradeAction} ${tradeQty} ${ticker} @ â‚¹${tradePrice.toFixed(2)}`);
+    } else {
+      const err = await res.json();
+      alert(`Trade failed: ${err.error || "Please verify stock symbol and quantity."}`);
+    }
+  } catch (err) {
+    console.error("Trade execution error:", err);
+    alert("Network error executing trade.");
+  } finally {
+    if (btn) btn.disabled = false;
+  }
+}
+
+// ==========================================
+// ANGEL ONE SMARTAPI INTEGRATION & AUTO-SYNC
+// ==========================================
+function openAngelOneModal() {
+  const modal = document.getElementById("angelOneModal");
+  if (!modal) return;
+
+  const savedCode = localStorage.getItem("angelClientCode") || "";
+  const savedKey = localStorage.getItem("angelApiKey") || "";
+  const savedToken = localStorage.getItem("angelJwtToken") || "";
+  const savedAutoSync = localStorage.getItem("angelAutoSync8h") === "true";
+
+  const codeInput = document.getElementById("angelClientCode");
+  const keyInput = document.getElementById("angelApiKey");
+  const tokenInput = document.getElementById("angelJwtToken");
+  const chkAuto = document.getElementById("chkAutoSync8Hours");
+
+  if (codeInput) codeInput.value = savedCode;
+  if (keyInput) keyInput.value = savedKey;
+  if (tokenInput) tokenInput.value = savedToken;
+  if (chkAuto) chkAuto.checked = savedAutoSync;
+
+  switchAngelTab('smartapi');
+  modal.classList.remove("hidden");
+}
+
+function closeAngelOneModal() {
+  const modal = document.getElementById("angelOneModal");
+  if (modal) modal.classList.add("hidden");
+}
+
+function switchAngelTab(tab) {
+  const tabSmartApi = document.getElementById("tabAngelSmartApi");
+  const tabPaste = document.getElementById("tabAngelPaste");
+  const contentSmartApi = document.getElementById("angelTabSmartApiContent");
+  const contentPaste = document.getElementById("angelTabPasteContent");
+
+  if (tab === 'smartapi') {
+    if (tabSmartApi) tabSmartApi.className = "pb-2 border-b-2 border-cyan-400 text-cyan-400 transition flex items-center space-x-1.5 font-semibold";
+    if (tabPaste) tabPaste.className = "pb-2 border-b-2 border-transparent text-slate-400 hover:text-slate-200 transition flex items-center space-x-1.5 font-semibold";
+    contentSmartApi?.classList.remove("hidden");
+    contentPaste?.classList.add("hidden");
+  } else {
+    if (tabPaste) tabPaste.className = "pb-2 border-b-2 border-cyan-400 text-cyan-400 transition flex items-center space-x-1.5 font-semibold";
+    if (tabSmartApi) tabSmartApi.className = "pb-2 border-b-2 border-transparent text-slate-400 hover:text-slate-200 transition flex items-center space-x-1.5 font-semibold";
+    contentPaste?.classList.remove("hidden");
+    contentSmartApi?.classList.add("hidden");
+  }
+}
+
+async function handleFetchAngelSmartApi() {
+  const code = (document.getElementById("angelClientCode")?.value || "").trim();
+  const apiKey = (document.getElementById("angelApiKey")?.value || "").trim();
+  const jwt = (document.getElementById("angelJwtToken")?.value || "").trim();
+  const autoSync = document.getElementById("chkAutoSync8Hours")?.checked || false;
+
+  if (!jwt) {
+    return alert("Please enter your Angel One SmartAPI JWT Token (or use the 1-Click JSON Paste tab).");
+  }
+
+  localStorage.setItem("angelClientCode", code);
+  localStorage.setItem("angelApiKey", apiKey);
+  localStorage.setItem("angelJwtToken", jwt);
+  localStorage.setItem("angelAutoSync8h", autoSync ? "true" : "false");
+
+  const btn = document.getElementById("btnFetchAngelSmartApi");
+  const icon = document.getElementById("angelFetchIcon");
+  if (btn) btn.disabled = true;
+  if (icon) icon.className = "fa-solid fa-spinner fa-spin";
+
+  try {
+    const response = await fetch("https://apiconnect.angelone.in/rest/secure/angelbroking/portfolio/v1/getAllHolding", {
+      method: "GET",
+      headers: {
+        "Authorization": `Bearer ${jwt}`,
+        "X-PrivateKey": apiKey,
+        "X-UserType": "USER",
+        "X-SourceID": "WEB",
+        "X-ClientLocalIP": "127.0.0.1",
+        "X-ClientPublicIP": "127.0.0.1",
+        "X-MACAddress": "127.0.0.1",
+        "Accept": "application/json"
+      }
+    });
+
+    if (response.ok) {
+      const data = await response.json();
+      await processAngelOnePayload(data);
+    } else {
+      showAngelOneFallbackPrompt();
+    }
+  } catch (err) {
+    console.warn("Direct Angel One CORS fetch restriction detected; redirecting to 1-Click Paste mode:", err);
+    showAngelOneFallbackPrompt();
+  } finally {
+    if (btn) btn.disabled = false;
+    if (icon) icon.className = "fa-solid fa-cloud-arrow-down";
+  }
+}
+
+function showAngelOneFallbackPrompt() {
+  switchAngelTab('paste');
+  alert("Notice: Direct browser requests to Angel One SmartAPI are protected by browser CORS security.\n\nSimply run the curl command or copy your Angel One getAllHolding response JSON into this paste box for instant 1-click synchronization!");
+}
+
+async function handleParseAngelJson() {
+  const text = document.getElementById("angelJsonPaste")?.value || "";
+  if (!text.trim()) return alert("Please paste Angel One JSON holdings text.");
+
+  try {
+    const parsed = JSON.parse(text);
+    await processAngelOnePayload(parsed);
+  } catch (e) {
+    alert("Invalid JSON format. Please ensure you pasted valid JSON from Angel One's getAllHolding endpoint.");
+  }
+}
+
+async function processAngelOnePayload(payload) {
+  if (!currentPortfolioId) return alert("Please select a portfolio first.");
+
+  let rawList = [];
+  if (Array.isArray(payload)) {
+    rawList = payload;
+  } else if (payload.data && Array.isArray(payload.data)) {
+    rawList = payload.data;
+  } else if (payload.data && payload.data.holdings && Array.isArray(payload.data.holdings)) {
+    rawList = payload.data.holdings;
+  } else if (payload.holdings && Array.isArray(payload.holdings)) {
+    rawList = payload.holdings;
+  }
+
+  if (rawList.length === 0) {
+    return alert("No holdings found in the provided Angel One response.");
+  }
+
+  const items = rawList.map(item => {
+    const symbol = item.tradingsymbol || item.tradingSymbol || item.symbol || item.ticker || "";
+    const qty = parseFloat(item.quantity || item.holdingquantity || item.qty || 0);
+    const avgPrice = parseFloat(item.averageprice || item.avgprice || item.buyPrice || item.price || 0);
+    const ltp = parseFloat(item.ltp || item.cmp || 0);
+
+    return {
+      tradingSymbol: symbol,
+      quantity: qty,
+      averagePrice: avgPrice,
+      ltp: ltp > 0 ? ltp : null
+    };
+  }).filter(x => x.tradingSymbol && x.quantity > 0);
+
+  if (items.length === 0) {
+    return alert("Could not extract any active stock positions with quantity > 0.");
+  }
+
+  try {
+    const res = await fetch(`/api/portfolios/${currentPortfolioId}/sync-angelone`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ holdings: items })
+    });
+
+    if (res.ok) {
+      currentPortfolioData = await res.json();
+      normalizePortfolioData(currentPortfolioData);
+      renderPortfolioDetails(currentPortfolioData);
+      closeAngelOneModal();
+      showToast(`ðŸŽ‰ Successfully synced ${items.length} positions directly from Angel One!`);
+    } else {
+      const err = await res.json();
+      alert(`Sync failed: ${err.error || "Please verify payload."}`);
+    }
+  } catch (e) {
+    console.error("Sync error:", e);
+    alert("Network error updating portfolio from Angel One.");
+  }
+}
+
+let hasCheckedAutoSync = false;
+async function checkAndTrigger8HourAutoSync() {
+  if (hasCheckedAutoSync) return;
+  hasCheckedAutoSync = true;
+
+  const autoEnabled = localStorage.getItem("angelAutoSync8h") === "true";
+  const jwt = localStorage.getItem("angelJwtToken");
+  const apiKey = localStorage.getItem("angelApiKey");
+
+  if (!autoEnabled || !jwt || !apiKey || !currentPortfolioId) return;
+
+  console.log("Triggering 8-hour automated background sync with Angel One...");
+  try {
+    const response = await fetch("https://apiconnect.angelone.in/rest/secure/angelbroking/portfolio/v1/getAllHolding", {
+      method: "GET",
+      headers: {
+        "Authorization": `Bearer ${jwt}`,
+        "X-PrivateKey": apiKey,
+        "X-UserType": "USER",
+        "X-SourceID": "WEB",
+        "X-ClientLocalIP": "127.0.0.1",
+        "X-ClientPublicIP": "127.0.0.1",
+        "X-MACAddress": "127.0.0.1",
+        "Accept": "application/json"
+      }
+    });
+
+    if (response.ok) {
+      const data = await response.json();
+      await processAngelOnePayload(data);
+      showToast("ðŸŸ¢ Auto-synced with Angel One (8-hour freshness trigger)");
+    }
+  } catch (err) {
+    console.log("Auto-sync background check deferred.");
+  }
+}
+
+function showToast(msg) {
+  let toast = document.getElementById("appToast");
+  if (!toast) {
+    toast = document.createElement("div");
+    toast.id = "appToast";
+    toast.className = "fixed bottom-5 right-5 z-50 bg-slate-900 border border-emerald-500/50 text-white text-xs font-semibold px-4 py-3 rounded-xl shadow-2xl transition-all duration-300 flex items-center space-x-2";
+    document.body.appendChild(toast);
+  }
+  toast.innerHTML = `<i class="fa-solid fa-circle-check text-emerald-400"></i> <span>${msg}</span>`;
+  toast.style.opacity = "1";
+  toast.style.transform = "translateY(0)";
+  setTimeout(() => {
+    toast.style.opacity = "0";
+    toast.style.transform = "translateY(20px)";
+  }, 4500);
 }

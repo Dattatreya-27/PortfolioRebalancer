@@ -16,3 +16,21 @@ public sealed record HoldingItemRequest(string Ticker, decimal Quantity, decimal
 public sealed record RebalanceRequest(List<SectorAllocationItem> TargetAllocations);
 
 public sealed record SectorAllocationItem(string Sector, decimal TargetWeightPercent);
+
+public sealed record ExecuteTradeRequest(
+    string Ticker,
+    string Action, // "BUY", "SELL", "ADJUST"
+    decimal Quantity,
+    decimal TradePrice
+);
+
+public sealed record UpdateHoldingRequest(decimal Quantity, decimal BuyPrice);
+
+public sealed record AngelOneSyncRequest(List<AngelOneHoldingItemRequest> Holdings);
+
+public sealed record AngelOneHoldingItemRequest(
+    string TradingSymbol,
+    decimal Quantity,
+    decimal AveragePrice,
+    decimal? Ltp = null
+);

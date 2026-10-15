@@ -108,6 +108,18 @@
             <i class="fa-solid fa-plus text-amber-400"></i>
             <span>Add Stock Position</span>
           </button>
+
+          <!-- Trade Logger Button -->
+          <button id="btnOpenTradeModal" onclick="openTradeModal()" class="bg-amber-600 hover:bg-amber-500 text-slate-950 text-xs font-bold px-3 py-1.5 rounded-lg border border-amber-500 transition flex items-center space-x-1.5 shadow-sm">
+            <i class="fa-solid fa-bolt"></i>
+            <span>Log Trade</span>
+          </button>
+
+          <!-- Angel One Sync Button -->
+          <button id="btnOpenAngelSync" onclick="openAngelOneModal()" class="bg-gradient-to-r from-cyan-600 to-teal-600 hover:from-cyan-500 hover:to-teal-500 text-white text-xs font-bold px-3 py-1.5 rounded-lg border border-cyan-500/50 transition flex items-center space-x-1.5 shadow-sm">
+            <i class="fa-solid fa-link"></i>
+            <span>Angel One Sync</span>
+          </button>
         </div>
       </div>
 
@@ -230,6 +242,27 @@
           <button id="btnSyncLiveQuotes" class="bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-semibold text-xs px-3.5 py-1.5 rounded-lg flex items-center space-x-1.5 transition shadow-sm">
             <i class="fa-solid fa-arrows-rotate" id="syncIcon"></i>
             <span>Sync Live Quotes</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- 8-Hour Staleness Auto-Sync Alert Notification Banner -->
+      <div id="staleSyncAlertBanner" class="hidden flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-amber-500/15 border border-amber-500/40 rounded-xl px-4 py-2.5 text-xs text-amber-200">
+        <div class="flex items-center space-x-2.5">
+          <i class="fa-solid fa-clock-rotate-left text-amber-400 text-base"></i>
+          <div>
+            <span class="font-bold text-white">Portfolio is 8+ hours old.</span>
+            <span id="staleSyncAlertDetail" class="text-amber-200/90 ml-1">Live positions may be outdated. Sync with Angel One or refresh market CMP.</span>
+          </div>
+        </div>
+        <div class="flex items-center space-x-2">
+          <button onclick="openAngelOneModal()" class="px-3 py-1.5 rounded-lg bg-cyan-600 hover:bg-cyan-500 text-white font-bold text-xs transition flex items-center space-x-1 shadow-sm">
+            <i class="fa-solid fa-link text-[10px]"></i>
+            <span>Sync Angel One</span>
+          </button>
+          <button onclick="handleSyncLiveQuotes()" class="px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 font-semibold text-xs transition border border-slate-700 flex items-center space-x-1">
+            <i class="fa-solid fa-arrows-rotate text-[10px]"></i>
+            <span>Refresh CMP</span>
           </button>
         </div>
       </div>
@@ -921,6 +954,220 @@
         <div class="text-right pt-1">
           <button type="button" onclick="closeFinancialExplainer()" class="px-4 py-1.5 bg-amber-500 hover:bg-amber-600 text-slate-950 text-xs font-bold rounded-lg transition">
             Got It, Thanks!
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Interactive Trade Logger & Position Adjuster Modal -->
+    <div id="tradeModal" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm">
+      <div class="relative w-full max-w-lg bg-slate-900 border border-slate-700/80 rounded-2xl p-6 shadow-2xl text-slate-100 space-y-4">
+        <div class="flex items-center justify-between border-b border-slate-800 pb-3">
+          <div class="flex items-center space-x-2.5">
+            <div id="tradeModalIcon" class="w-9 h-9 rounded-xl bg-amber-500/20 border border-amber-500/30 flex items-center justify-center text-amber-400">
+              <i class="fa-solid fa-bolt"></i>
+            </div>
+            <div>
+              <h3 id="tradeModalTitle" class="text-base font-bold text-white">Log Trade / Adjust Position</h3>
+              <span class="text-[10px] font-mono px-2 py-0.5 rounded bg-slate-800 text-slate-400">Broker Execution Synchronizer</span>
+            </div>
+          </div>
+          <button type="button" class="text-slate-400 hover:text-white p-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 transition" onclick="closeTradeModal()">
+            <i class="fa-solid fa-xmark text-sm"></i>
+          </button>
+        </div>
+
+        <!-- Action Selector: Buy / Sell / Adjust -->
+        <div>
+          <label class="block text-xs font-semibold text-slate-400 mb-1.5">Trade Action</label>
+          <div class="grid grid-cols-3 gap-2 p-1 bg-slate-950 rounded-xl border border-slate-800">
+            <button type="button" id="tradeBtnBuy" onclick="setTradeAction('BUY')" class="py-2 text-xs font-bold rounded-lg transition bg-emerald-500/20 text-emerald-400 border border-emerald-500/40">
+              🟢 Buy / Add
+            </button>
+            <button type="button" id="tradeBtnSell" onclick="setTradeAction('SELL')" class="py-2 text-xs font-bold rounded-lg transition text-slate-400 hover:text-white">
+              🔴 Sell / Trim
+            </button>
+            <button type="button" id="tradeBtnAdjust" onclick="setTradeAction('ADJUST')" class="py-2 text-xs font-bold rounded-lg transition text-slate-400 hover:text-white">
+              ✏️ Adjust Exact
+            </button>
+          </div>
+        </div>
+
+        <!-- Stock Selector / Input -->
+        <div>
+          <label class="block text-xs font-semibold text-slate-400 mb-1">Stock (NSE Symbol)</label>
+          <div class="flex items-center space-x-2">
+            <input id="tradeTickerInput" type="text" placeholder="e.g. HDFCBANK, RELIANCE" class="w-full uppercase bg-slate-950 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white font-mono font-bold focus:outline-none focus:ring-2 focus:ring-amber-500" oninput="onTradeTickerChange()" />
+            <select id="tradeHoldingSelect" onchange="onTradeSelectHolding(this.value)" class="bg-slate-950 border border-slate-700 rounded-lg px-2.5 py-2 text-xs text-slate-300 focus:outline-none focus:ring-2 focus:ring-amber-500 max-w-[170px]">
+              <option value="">Or pick existing...</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- Inputs: Quantity and Price -->
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label id="tradeQuantityLabel" class="block text-xs font-semibold text-slate-400 mb-1">Trade Quantity (Shares)</label>
+            <input id="tradeQuantityInput" type="number" min="1" step="1" placeholder="e.g. 15" class="w-full bg-slate-950 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white font-mono focus:outline-none focus:ring-2 focus:ring-amber-500" oninput="updateTradePreview()" />
+          </div>
+          <div>
+            <label id="tradePriceLabel" class="block text-xs font-semibold text-slate-400 mb-1">Trade Price (&#8377;)</label>
+            <input id="tradePriceInput" type="number" min="0.01" step="any" placeholder="e.g. 1650.00" class="w-full bg-slate-950 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white font-mono focus:outline-none focus:ring-2 focus:ring-amber-500" oninput="updateTradePreview()" />
+          </div>
+        </div>
+
+        <!-- Live Impact Calculation Preview Card -->
+        <div id="tradeImpactCard" class="p-3.5 bg-slate-950/80 rounded-xl border border-slate-800 space-y-2 text-xs">
+          <div class="flex items-center justify-between text-slate-400 font-semibold border-b border-slate-800/80 pb-1.5">
+            <span class="flex items-center"><i class="fa-solid fa-calculator text-amber-400 mr-1.5"></i> Trade Impact Preview</span>
+            <span id="tradeImpactActionBadge" class="text-[10px] px-2 py-0.5 rounded font-mono font-bold bg-emerald-500/20 text-emerald-400">BUY</span>
+          </div>
+          
+          <div class="grid grid-cols-2 gap-2 text-[11px] pt-1">
+            <div>
+              <span class="text-slate-500">Holdings Quantity:</span>
+              <div id="previewQtyChange" class="font-mono font-bold text-slate-200 mt-0.5">0 &rarr; 0 shares</div>
+            </div>
+            <div>
+              <span class="text-slate-500">Weighted Avg Buy Price:</span>
+              <div id="previewPriceChange" class="font-mono font-bold text-amber-400 mt-0.5">&#8377;0.00 &rarr; &#8377;0.00</div>
+            </div>
+          </div>
+
+          <div class="pt-2 border-t border-slate-800/60 flex items-center justify-between">
+            <span class="text-slate-400 font-medium">Estimated Trade Value:</span>
+            <span id="previewTradeTotal" class="font-mono font-bold text-white text-sm">&#8377;0.00</span>
+          </div>
+
+          <div id="tradeWarningNote" class="hidden p-2 rounded-lg bg-amber-500/10 border border-amber-500/20 text-[11px] text-amber-300 leading-tight">
+          </div>
+        </div>
+
+        <div class="flex items-center justify-end space-x-2.5 pt-2 border-t border-slate-800">
+          <button type="button" onclick="closeTradeModal()" class="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-semibold rounded-lg transition">
+            Cancel
+          </button>
+          <button type="button" id="btnSubmitTrade" onclick="submitTradeModal()" class="px-5 py-2 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-slate-950 text-xs font-bold rounded-lg shadow-md transition flex items-center space-x-1.5">
+            <i class="fa-solid fa-check"></i>
+            <span id="tradeSubmitText">Confirm Trade</span>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Angel One SmartAPI Integration & Auto-Sync Modal -->
+    <div id="angelOneModal" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm">
+      <div class="relative w-full max-w-xl bg-slate-900 border border-cyan-500/40 rounded-2xl p-6 shadow-2xl text-slate-100 space-y-4 max-h-[90vh] overflow-y-auto">
+        <div class="flex items-center justify-between border-b border-slate-800 pb-3">
+          <div class="flex items-center space-x-2.5">
+            <div class="w-10 h-10 rounded-xl bg-cyan-500/20 border border-cyan-500/40 flex items-center justify-center text-cyan-400 text-lg">
+              <i class="fa-solid fa-link"></i>
+            </div>
+            <div>
+              <div class="flex items-center space-x-2">
+                <h3 class="text-base font-bold text-white">Angel One SmartAPI Sync</h3>
+                <span class="text-[10px] font-bold px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">100% FREE</span>
+              </div>
+              <p class="text-xs text-slate-400">Sync actual holdings directly from your Angel One demat account</p>
+            </div>
+          </div>
+          <button type="button" class="text-slate-400 hover:text-white p-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 transition" onclick="closeAngelOneModal()">
+            <i class="fa-solid fa-xmark text-sm"></i>
+          </button>
+        </div>
+
+        <!-- Mode Switcher Tabs -->
+        <div class="flex border-b border-slate-800 space-x-4 text-xs font-semibold">
+          <button type="button" id="tabAngelSmartApi" onclick="switchAngelTab('smartapi')" class="pb-2 border-b-2 border-cyan-400 text-cyan-400 transition flex items-center space-x-1.5">
+            <i class="fa-solid fa-bolt"></i>
+            <span>SmartAPI Direct Fetch</span>
+          </button>
+          <button type="button" id="tabAngelPaste" onclick="switchAngelTab('paste')" class="pb-2 border-b-2 border-transparent text-slate-400 hover:text-slate-200 transition flex items-center space-x-1.5">
+            <i class="fa-solid fa-paste"></i>
+            <span>1-Click JSON Paste / Export</span>
+          </button>
+        </div>
+
+        <!-- Tab 1: SmartAPI Direct Fetch -->
+        <div id="angelTabSmartApiContent" class="space-y-3">
+          <div class="p-3 rounded-xl bg-cyan-500/10 border border-cyan-500/20 text-xs text-cyan-300/90 leading-relaxed">
+            <i class="fa-solid fa-shield-halved mr-1 text-cyan-400"></i>
+            <strong>Privacy & Security Guaranteed:</strong> Credentials operate strictly locally in your browser session. Zero credentials or tokens are uploaded to external servers or logged in git.
+          </div>
+
+          <div class="space-y-3">
+            <div>
+              <label class="block text-xs font-semibold text-slate-400 mb-1">Angel One Client Code / User ID</label>
+              <input id="angelClientCode" type="text" placeholder="e.g. A123456" class="w-full bg-slate-950 border border-slate-700 rounded-lg px-3 py-2 text-xs text-white font-mono focus:outline-none focus:ring-1 focus:ring-cyan-500" />
+            </div>
+
+            <div>
+              <label class="block text-xs font-semibold text-slate-400 mb-1">SmartAPI Key</label>
+              <input id="angelApiKey" type="password" placeholder="e.g. your_api_key_from_smartapi_portal" class="w-full bg-slate-950 border border-slate-700 rounded-lg px-3 py-2 text-xs text-white font-mono focus:outline-none focus:ring-1 focus:ring-cyan-500" />
+            </div>
+
+            <div>
+              <label class="block text-xs font-semibold text-slate-400 mb-1">SmartAPI JWT / Session Token (Bearer)</label>
+              <textarea id="angelJwtToken" rows="3" placeholder="Paste your active jwtToken from Angel One login..." class="w-full bg-slate-950 border border-slate-700 rounded-lg p-2.5 text-xs text-white font-mono focus:outline-none focus:ring-1 focus:ring-cyan-500"></textarea>
+            </div>
+
+            <!-- Auto-Sync 8 Hours Checkbox -->
+            <div class="p-3 bg-slate-950/70 border border-slate-800 rounded-xl flex items-start space-x-3">
+              <input id="chkAutoSync8Hours" type="checkbox" class="mt-0.5 h-4 w-4 rounded bg-slate-900 border-slate-700 text-cyan-500 focus:ring-cyan-500" />
+              <label for="chkAutoSync8Hours" class="text-xs text-slate-300 select-none cursor-pointer">
+                <span class="font-bold text-white block">Auto-Sync with Angel One every 8 hours</span>
+                Automatically fetch and synchronize my holdings whenever the portfolio is 8 hours or older when opening the app.
+              </label>
+            </div>
+
+            <button type="button" id="btnFetchAngelSmartApi" onclick="handleFetchAngelSmartApi()" class="w-full py-2.5 bg-gradient-to-r from-cyan-600 to-teal-600 hover:from-cyan-500 hover:to-teal-500 text-white text-xs font-bold rounded-lg shadow-md transition flex items-center justify-center space-x-2">
+              <i class="fa-solid fa-cloud-arrow-down" id="angelFetchIcon"></i>
+              <span>Fetch & Sync Live Holdings</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Tab 2: 1-Click JSON Paste -->
+        <div id="angelTabPasteContent" class="hidden space-y-3">
+          <div class="p-3 rounded-xl bg-slate-950 border border-slate-800 text-xs text-slate-300 space-y-1">
+            <p><strong>Instant 1-Click Sync:</strong> Paste the JSON response of Angel One's <code>getAllHolding</code> API endpoint or holdings export below:</p>
+            <p class="text-[11px] text-slate-400 font-mono">Endpoint: GET https://apiconnect.angelone.in/rest/secure/angelbroking/portfolio/v1/getAllHolding</p>
+          </div>
+
+          <textarea id="angelJsonPaste" rows="8" placeholder='Paste your Angel One JSON holdings response here... Example:
+{
+  "status": true,
+  "message": "SUCCESS",
+  "data": [
+    {
+      "tradingsymbol": "HDFCBANK-EQ",
+      "quantity": 100,
+      "averageprice": 1650.00,
+      "ltp": 1720.50
+    },
+    {
+      "tradingsymbol": "INFY-EQ",
+      "quantity": 50,
+      "averageprice": 1420.00,
+      "ltp": 1580.00
+    }
+  ]
+}' class="w-full bg-slate-950 border border-slate-700 rounded-lg p-2.5 text-xs text-emerald-300 font-mono focus:outline-none focus:ring-1 focus:ring-cyan-500"></textarea>
+
+          <button type="button" onclick="handleParseAngelJson()" class="w-full py-2.5 bg-cyan-600 hover:bg-cyan-500 text-white text-xs font-bold rounded-lg shadow-md transition flex items-center justify-center space-x-2">
+            <i class="fa-solid fa-file-import"></i>
+            <span>Parse & Update Portfolio</span>
+          </button>
+        </div>
+
+        <!-- Footer with Documentation Link -->
+        <div class="pt-3 border-t border-slate-800 flex items-center justify-between text-xs text-slate-400">
+          <a href="#" onclick="alert('See docs/ANGEL_ONE_SYNC_GUIDE.md in the project folder for 2-minute step-by-step setup!'); return false;" class="text-cyan-400 hover:text-cyan-300 underline flex items-center space-x-1">
+            <i class="fa-solid fa-circle-question"></i>
+            <span>How to get free SmartAPI keys in 2 mins</span>
+          </a>
+          <button type="button" onclick="closeAngelOneModal()" class="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-lg transition">
+            Close
           </button>
         </div>
       </div>

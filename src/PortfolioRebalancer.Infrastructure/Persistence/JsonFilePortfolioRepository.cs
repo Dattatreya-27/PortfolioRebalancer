@@ -123,7 +123,8 @@ public sealed class JsonFilePortfolioRepository : IPortfolioRepository
         {
             Id = model.Id,
             Name = model.Name,
-            CreatedAt = model.CreatedAt
+            CreatedAt = model.CreatedAt,
+            LastSyncedAt = model.LastSyncedAt
         };
 
         foreach (var h in model.Holdings)
@@ -180,6 +181,7 @@ public sealed class JsonFilePortfolioRepository : IPortfolioRepository
             Id = domain.Id,
             Name = domain.Name,
             CreatedAt = domain.CreatedAt,
+            LastSyncedAt = domain.LastSyncedAt,
             Holdings = domain.Holdings.Select(h => new HoldingStorageModel
             {
                 Ticker = h.Stock.Ticker.Value,
@@ -205,6 +207,7 @@ public sealed class JsonFilePortfolioRepository : IPortfolioRepository
         public Guid Id { get; set; }
         public string Name { get; set; } = string.Empty;
         public DateTime CreatedAt { get; set; }
+        public DateTime? LastSyncedAt { get; set; }
         public List<HoldingStorageModel> Holdings { get; set; } = [];
         public List<SectorAllocationStorageModel> TargetAllocations { get; set; } = [];
     }
