@@ -328,13 +328,91 @@ function formatMarketCapCrores(marketCap) {
   return `\u20B9${crores.toLocaleString('en-IN', { maximumFractionDigits: 0 })} Cr`;
 }
 
+// ==========================================
+// SPA Client-Side View Router (Hash-Based)
+// ==========================================
+const APP_VIEWS = ['portfolio', 'manage', 'discover'];
+let activeView = 'portfolio';
+
+function navigateTo(viewName, updateHash = true) {
+  if (!APP_VIEWS.includes(viewName)) {
+    viewName = 'portfolio';
+  }
+  activeView = viewName;
+
+  // 1. Hide all view panels and display the active view
+  document.querySelectorAll('.view-panel').forEach(panel => {
+    panel.classList.add('hidden');
+  });
+
+  const targetId = 'view' + viewName.charAt(0).toUpperCase() + viewName.slice(1);
+  const targetPanel = document.getElementById(targetId);
+  if (targetPanel) {
+    targetPanel.classList.remove('hidden');
+  }
+
+  // 2. Update active styles on navbar tabs
+  const tabs = [
+    { id: 'navTabPortfolio', view: 'portfolio' },
+    { id: 'navTabManage', view: 'manage' },
+    { id: 'navTabDiscover', view: 'discover' }
+  ];
+
+  tabs.forEach(t => {
+    const el = document.getElementById(t.id);
+    if (!el) return;
+    if (t.view === viewName) {
+      el.className = 'nav-tab px-3.5 py-1.5 rounded-lg text-xs font-semibold flex items-center space-x-2 transition bg-amber-500/20 text-amber-300 border border-amber-500/40 shadow-sm';
+    } else {
+      el.className = 'nav-tab px-3.5 py-1.5 rounded-lg text-xs font-semibold flex items-center space-x-2 transition text-slate-400 hover:text-slate-200 hover:bg-slate-800/60 border border-transparent';
+    }
+  });
+
+  // 3. Synchronize window hash
+  if (updateHash && window.location.hash !== `#/${viewName}`) {
+    window.location.hash = `#/${viewName}`;
+  }
+
+  // 4. View lifecycle triggers
+  if (viewName === 'manage') {
+    updateTargetSumBadge();
+  } else if (viewName === 'discover') {
+    const stratContainer = document.getElementById("quantStrategiesContainer");
+    if (currentPortfolioId && (!stratContainer || stratContainer.children.length === 0)) {
+      loadResearchReport(currentPortfolioId);
+    }
+  }
+
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+function initRouter() {
+  window.addEventListener('hashchange', () => {
+    const hash = window.location.hash.replace(/^#\/?/, '').toLowerCase();
+    if (APP_VIEWS.includes(hash)) {
+      navigateTo(hash, false);
+    } else {
+      navigateTo('portfolio', false);
+    }
+  });
+
+  const initialHash = window.location.hash.replace(/^#\/?/, '').toLowerCase();
+  if (APP_VIEWS.includes(initialHash)) {
+    navigateTo(initialHash, false);
+  } else {
+    navigateTo('portfolio', true);
+  }
+}
+
 // Initialize on DOM ready
 document.addEventListener("DOMContentLoaded", async () => {
   applyPrivacyModeUI();
+  initRouter();
   renderSectorTargetInputs();
   setupEventListeners();
   await loadPortfolios();
 });
+
 
 function setupEventListeners() {
   document.getElementById("btnTogglePrivacy")?.addEventListener("click", handleTogglePrivacy);
@@ -363,9 +441,11 @@ function setupEventListeners() {
   document.getElementById("btnFilterDrawdowns")?.addEventListener("click", filterDeepLosers);
 
   document.getElementById("btnRefreshDiagnostics")?.addEventListener("click", () => {
+    navigateTo('portfolio');
     if (currentPortfolioId) loadDiagnostics(currentPortfolioId);
   });
   document.getElementById("btnOpenResearch")?.addEventListener("click", () => {
+    navigateTo('discover');
     if (currentPortfolioId) loadResearchReport(currentPortfolioId);
   });
   document.getElementById("btnCloseResearch")?.addEventListener("click", () => {
@@ -581,6 +661,10 @@ function renderPortfolioDetails(data) {
   document.getElementById("statTotalValue").textContent = formatINR(data.totalValue);
   document.getElementById("statTotalInvested").textContent = formatINR(data.totalInvested);
   document.getElementById("statHoldingsCount").textContent = data.holdings.length;
+  const navCount = document.getElementById("navPortfolioCountBadge");
+  if (navCount && data.holdings) {
+    navCount.textContent = data.holdings.length;
+  }
 
   // Unrealized P&L Display
   const pnlElem = document.getElementById("statTotalPnL");
@@ -856,9 +940,13 @@ function renderHoldingsTable() {
 }
 
 function inspectFromRow(ticker) {
-  document.getElementById("inspectorTicker").value = ticker;
-  handleInspectStock();
-  document.getElementById("inspectorTicker").scrollIntoView({ behavior: 'smooth' });
+  navigateTo('discover');
+  const input = document.getElementById("inspectorTicker");
+  if (input) {
+    input.value = ticker;
+    handleInspectStock();
+    input.scrollIntoView({ behavior: 'smooth' });
+  }
 }
 
 // Diagnostic Table Filter Helper Functions
@@ -2446,4 +2534,14 @@ function showToast(msg) {
     toast.style.opacity = "0";
     toast.style.transform = "translateY(20px)";
   }, 4500);
+}
+
+// Manage View Excel & Broker Handlers
+async function detectAndImportAngelExcel() {
+  await handleAutoImportDownloadsExcel();
+}
+
+async function handleExcelUpload(event) {
+  await handleExcelFileSelected(event);
+  await handleConfirmUploadExcel();
 }

@@ -60,6 +60,24 @@
           <p class="text-xs text-slate-400">Live NSE Quotes &bull; Buy Price vs CMP &bull; Constraint Diagnostics &bull; Quant Alpha Models</p>
         </div>
       </div>
+      <!-- SPA Primary Navigation Tabs (Portfolio / Manage / Discover) -->
+      <nav class="hidden md:flex items-center space-x-1.5 bg-slate-900/90 p-1.5 rounded-xl border border-slate-800 shadow-inner">
+        <button id="navTabPortfolio" onclick="navigateTo('portfolio')" class="nav-tab px-3.5 py-1.5 rounded-lg text-xs font-semibold flex items-center space-x-2 transition bg-amber-500/20 text-amber-300 border border-amber-500/40 shadow-sm">
+          <i class="fa-solid fa-briefcase"></i>
+          <span>My Portfolio</span>
+          <span id="navPortfolioCountBadge" class="ml-1 px-1.5 py-0.5 text-[10px] bg-slate-800 text-slate-300 rounded-full font-mono">--</span>
+        </button>
+        <button id="navTabManage" onclick="navigateTo('manage')" class="nav-tab px-3.5 py-1.5 rounded-lg text-xs font-semibold flex items-center space-x-2 transition text-slate-400 hover:text-slate-200 hover:bg-slate-800/60 border border-transparent">
+          <i class="fa-solid fa-sliders"></i>
+          <span>Manage & Rebalance</span>
+        </button>
+        <button id="navTabDiscover" onclick="navigateTo('discover')" class="nav-tab px-3.5 py-1.5 rounded-lg text-xs font-semibold flex items-center space-x-2 transition text-slate-400 hover:text-slate-200 hover:bg-slate-800/60 border border-transparent">
+          <i class="fa-solid fa-compass"></i>
+          <span>Discover Stocks</span>
+          <span class="ml-1 px-1.5 py-0.5 text-[9px] bg-orange-500/20 text-orange-300 rounded-full font-bold uppercase tracking-wider">Alpha</span>
+        </button>
+      </nav>
+
       <div class="flex items-center space-x-2.5">
         <!-- Privacy Eye Toggle Button -->
         <button id="btnTogglePrivacy" class="text-xs bg-slate-900 hover:bg-slate-800 text-slate-300 hover:text-white border border-slate-700 px-3 py-1.5 rounded-lg flex items-center space-x-1.5 transition font-medium shadow-sm" title="Toggle Privacy Mode (Hide financial values for safe screenshots)">
@@ -82,7 +100,13 @@
   <!-- Main Container: Full Widescreen Layout -->
   <main class="w-full max-w-[1720px] mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6">
     
-    <!-- Top Executive Cockpit: Portfolio Selector + 5 KPI Cards -->
+    
+    <!-- ======================================================== -->
+    <!-- VIEW 1: MY PORTFOLIO (#/portfolio)                        -->
+    <!-- Executive Cockpit, Live Holdings & Health Diagnostics    -->
+    <!-- ======================================================== -->
+    <div id="viewPortfolio" class="view-panel space-y-6">
+      <!-- Top Executive Cockpit: Portfolio Selector + 5 KPI Cards -->
     <div class="bg-slate-900/70 border border-slate-800 rounded-2xl p-5 backdrop-blur">
       <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-4 mb-4 pb-4 border-b border-slate-800/80">
         <div class="flex items-center space-x-4">
@@ -203,7 +227,7 @@
       </div>
     </div>
 
-    <!-- FULL-WIDTH HERO: Portfolio Holdings Table (Side-by-side Buy Price, CMP, P&L) -->
+      <!-- FULL-WIDTH HERO: Portfolio Holdings Table (Side-by-side Buy Price, CMP, P&L) -->
     <div class="w-full bg-slate-900/70 border border-slate-800 rounded-2xl p-6 backdrop-blur space-y-4">
       <!-- Toolbar Header -->
       <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-4 pb-3 border-b border-slate-800">
@@ -340,198 +364,7 @@
       </div>
     </div>
 
-    <!-- SECTION GROUP TIER 1: Sector Rebalancing & Live Market Catalysts (Balanced 2-Column Grid) -->
-    <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-stretch">
-      
-      <!-- Left (7 cols): Target Sector Allocations & Rebalance Engine -->
-      <div class="lg:col-span-7 bg-slate-900/80 border border-slate-800 rounded-2xl p-6 backdrop-blur flex flex-col justify-between shadow-xl">
-        <div>
-          <div class="flex flex-wrap items-center justify-between gap-3 mb-2 pb-3 border-b border-slate-800/80">
-            <div class="flex items-center space-x-3">
-              <div class="w-9 h-9 rounded-xl bg-gradient-to-tr from-amber-500/20 to-orange-500/20 border border-amber-500/30 flex items-center justify-center shadow-md">
-                <i class="fa-solid fa-sliders text-amber-400 text-sm"></i>
-              </div>
-              <div>
-                <h3 class="text-base font-bold text-white flex items-center">
-                  Target Sector Allocations & Rebalancer
-                </h3>
-                <p class="text-xs text-slate-400">Model portfolio sector weights &bull; Buy/Sell execution ticket engine</p>
-              </div>
-            </div>
-            <div id="targetSumBadge" class="text-xs font-mono font-bold px-3 py-1 rounded-lg bg-slate-800 text-slate-300 border border-slate-700 shadow-inner">
-              Total: 0.0%
-            </div>
-          </div>
-
-          <!-- Quick Presets Toolbar -->
-          <div class="flex flex-wrap items-center justify-between gap-2 my-3 p-2 bg-slate-950/60 rounded-xl border border-slate-800/60 text-xs">
-            <span class="text-slate-400 text-[11px] font-medium flex items-center">
-              <i class="fa-solid fa-wand-magic-sparkles text-amber-400 mr-1.5"></i> Presets:
-            </span>
-            <div class="flex flex-wrap gap-1.5">
-              <button type="button" onclick="applySectorPreset('EQUAL')" class="px-2.5 py-1 rounded bg-slate-900 hover:bg-slate-800 text-slate-300 hover:text-white border border-slate-700 text-[11px] font-medium transition">
-                Equal (9.1%)
-              </button>
-              <button type="button" onclick="applySectorPreset('GROWTH')" class="px-2.5 py-1 rounded bg-slate-900 hover:bg-slate-800 text-amber-300 hover:text-amber-200 border border-amber-500/30 text-[11px] font-medium transition">
-                Growth Focus
-              </button>
-              <button type="button" onclick="applySectorPreset('DEFENSIVE')" class="px-2.5 py-1 rounded bg-slate-900 hover:bg-slate-800 text-cyan-300 hover:text-cyan-200 border border-cyan-500/30 text-[11px] font-medium transition">
-                Defensive
-              </button>
-              <button type="button" onclick="applySectorPreset('RESET')" class="px-2.5 py-1 rounded bg-slate-900 hover:bg-slate-800 text-rose-300 hover:text-rose-200 border border-rose-500/30 text-[11px] font-medium transition">
-                Reset (0%)
-              </button>
-            </div>
-          </div>
-
-          <!-- Dynamic Sector Inputs Grid -->
-          <div id="sectorTargetsContainer" class="grid grid-cols-1 sm:grid-cols-2 gap-2.5 max-h-[290px] overflow-y-auto pr-1">
-            <!-- Dynamic Sector inputs -->
-          </div>
-        </div>
-
-        <button id="btnRunRebalance" class="w-full mt-4 bg-gradient-to-r from-amber-600 via-orange-600 to-amber-500 hover:from-amber-500 hover:to-orange-400 text-slate-950 font-bold py-3 rounded-xl text-sm transition shadow-lg shadow-orange-500/20 flex items-center justify-center space-x-2">
-          <i class="fa-solid fa-arrows-rotate"></i>
-          <span>Calculate Sector Rebalance Orders</span>
-        </button>
-      </div>
-
-      <!-- Right (5 cols): Upcoming Results & Macro Policy Events Card -->
-      <div class="lg:col-span-5 bg-slate-900/80 border border-slate-800 rounded-2xl p-6 backdrop-blur flex flex-col justify-between shadow-xl">
-        <div>
-          <div class="flex items-center justify-between pb-3 mb-3 border-b border-slate-800/80">
-            <div class="flex items-center space-x-3">
-              <div class="w-9 h-9 rounded-xl bg-gradient-to-tr from-cyan-500/20 to-blue-500/20 border border-cyan-500/30 flex items-center justify-center shadow-md">
-                <i class="fa-solid fa-calendar-day text-cyan-400 text-sm"></i>
-              </div>
-              <div>
-                <h3 class="text-base font-bold text-white flex items-center">
-                  Upcoming Results & Catalysts
-                </h3>
-                <p class="text-xs text-slate-400">Quarterly earnings &bull; Ex-dates &bull; RBI MPC events</p>
-              </div>
-            </div>
-            <span class="px-2.5 py-1 rounded-full text-[10px] font-mono font-bold bg-cyan-500/10 text-cyan-400 border border-cyan-500/30">
-              Live Radar
-            </span>
-          </div>
-
-          <!-- Events Feed Container with matched height -->
-          <div id="eventsContainer" class="space-y-2.5 max-h-[350px] overflow-y-auto pr-1">
-            <div class="text-xs text-slate-500 italic py-8 text-center">Loading upcoming earnings and macro catalysts...</div>
-          </div>
-        </div>
-
-        <div class="mt-4 pt-3 border-t border-slate-800 text-[11px] text-slate-500 flex items-center justify-between">
-          <span class="flex items-center"><i class="fa-solid fa-circle-info text-slate-400 mr-1.5"></i> Tracks all active portfolio holdings</span>
-          <span class="text-amber-400/80 font-mono text-[10px]">NSE & BSE Filings</span>
-        </div>
-      </div>
-    </div>
-
-    <!-- SECTION GROUP TIER 2: Full-Width Multi-Factor Institutional Stock Scorecard Desk -->
-    <div class="w-full bg-slate-900/80 border border-slate-800 rounded-2xl p-6 backdrop-blur space-y-4 shadow-xl">
-      <!-- Cockpit Header & Quick Conviction Bar -->
-      <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-4 pb-4 border-b border-slate-800">
-        <div class="flex items-center space-x-3">
-          <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-amber-500/20 to-orange-500/20 border border-amber-500/40 flex items-center justify-center shadow-lg shadow-amber-500/10">
-            <i class="fa-solid fa-chart-line text-amber-400 text-lg"></i>
-          </div>
-          <div>
-            <div class="flex items-center space-x-2">
-              <h2 class="text-base sm:text-lg font-bold text-white tracking-tight">
-                Multi-Factor Institutional Stock Scorecard
-              </h2>
-              <span class="px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-amber-500/20 text-amber-400 border border-amber-500/30">
-                5-PILLAR ALPHA MODEL
-              </span>
-            </div>
-            <p class="text-xs text-slate-400 mt-0.5">
-              Comprehensive institutional evaluation: Business Quality & ROCE (25%) + Peer Valuation & PEG (20%) + Sector Cycle (20%) + Governance & Institutional Float (20%) + Union Policy Tailwinds (15%)
-            </p>
-          </div>
-        </div>
-
-        <!-- Search Bar with Instant Enter trigger -->
-        <div class="flex items-center space-x-2 w-full lg:w-auto">
-          <div class="relative flex-1 lg:w-72">
-            <input id="inspectorTicker" type="text" placeholder="Search NSE ticker (e.g. KPITTECH, TRENT)..." class="uppercase w-full bg-slate-950 border border-slate-700 rounded-xl pl-9 pr-3 py-2 text-xs text-slate-200 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-amber-500" />
-            <i class="fa-solid fa-magnifying-glass absolute left-3 top-2.5 text-xs text-slate-500"></i>
-          </div>
-          <button id="btnInspectStock" class="bg-gradient-to-r from-amber-600 to-orange-500 hover:from-amber-500 hover:to-orange-400 text-slate-950 font-bold px-4 py-2 rounded-xl text-xs transition shadow-md flex items-center space-x-1.5 whitespace-nowrap">
-            <i class="fa-solid fa-microscope"></i>
-            <span>Evaluate</span>
-          </button>
-        </div>
-      </div>
-
-      <!-- Quick-Pick Conviction Ticker Pills -->
-      <div class="flex flex-wrap items-center gap-1.5 py-1 text-xs">
-        <span class="text-slate-400 text-[11px] font-medium mr-1 flex items-center">
-          <i class="fa-solid fa-fire text-amber-400 mr-1"></i> Quick Inspect:
-        </span>
-        <button type="button" onclick="quickInspectTicker('KPITTECH')" class="px-2.5 py-1 rounded-lg bg-slate-950 hover:bg-slate-800 text-slate-300 hover:text-amber-400 border border-slate-800 text-[11px] font-mono font-semibold transition">KPITTECH</button>
-        <button type="button" onclick="quickInspectTicker('TRENT')" class="px-2.5 py-1 rounded-lg bg-slate-950 hover:bg-slate-800 text-slate-300 hover:text-amber-400 border border-slate-800 text-[11px] font-mono font-semibold transition">TRENT</button>
-        <button type="button" onclick="quickInspectTicker('BEL')" class="px-2.5 py-1 rounded-lg bg-slate-950 hover:bg-slate-800 text-slate-300 hover:text-amber-400 border border-slate-800 text-[11px] font-mono font-semibold transition">BEL</button>
-        <button type="button" onclick="quickInspectTicker('RELIANCE')" class="px-2.5 py-1 rounded-lg bg-slate-950 hover:bg-slate-800 text-slate-300 hover:text-amber-400 border border-slate-800 text-[11px] font-mono font-semibold transition">RELIANCE</button>
-        <button type="button" onclick="quickInspectTicker('SUZLON')" class="px-2.5 py-1 rounded-lg bg-slate-950 hover:bg-slate-800 text-slate-300 hover:text-amber-400 border border-slate-800 text-[11px] font-mono font-semibold transition">SUZLON</button>
-        <button type="button" onclick="quickInspectTicker('HDFCBANK')" class="px-2.5 py-1 rounded-lg bg-slate-950 hover:bg-slate-800 text-slate-300 hover:text-amber-400 border border-slate-800 text-[11px] font-mono font-semibold transition">HDFCBANK</button>
-        <button type="button" onclick="quickInspectTicker('TATAMOTORS')" class="px-2.5 py-1 rounded-lg bg-slate-950 hover:bg-slate-800 text-slate-300 hover:text-amber-400 border border-slate-800 text-[11px] font-mono font-semibold transition">TATAMOTORS</button>
-        <button type="button" onclick="quickInspectTicker('TATAPOWER')" class="px-2.5 py-1 rounded-lg bg-slate-950 hover:bg-slate-800 text-slate-300 hover:text-amber-400 border border-slate-800 text-[11px] font-mono font-semibold transition">TATAPOWER</button>
-      </div>
-
-      <!-- Scorecard Result Container -->
-      <div id="stockInspectorResult" class="p-5 bg-slate-950/80 rounded-xl border border-slate-800 space-y-4 text-xs shadow-inner">
-        <!-- Default State: 5-Pillar Architecture Overview -->
-        <div class="py-4 space-y-4">
-          <div class="text-center max-w-2xl mx-auto space-y-1">
-            <h4 class="text-sm font-bold text-slate-200">Institutional Multi-Factor Equity Scoring Ready</h4>
-            <p class="text-slate-400 text-xs leading-relaxed">
-              Select any stock from your portfolio holdings table above or click a quick-pick ticker to launch full institutional diagnostics across the 5 pillars:
-            </p>
-          </div>
-          <div class="grid grid-cols-1 sm:grid-cols-5 gap-3 pt-2">
-            <div class="p-3 bg-slate-900/60 rounded-xl border border-slate-800/80 text-center space-y-1">
-              <div class="w-8 h-8 rounded-lg bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 flex items-center justify-center mx-auto text-xs">
-                <i class="fa-solid fa-award"></i>
-              </div>
-              <div class="font-bold text-slate-200 text-xs">1. Quality & ROCE</div>
-              <div class="text-[10px] text-slate-500">Capital return &gt;15%, balance sheet strength</div>
-            </div>
-            <div class="p-3 bg-slate-900/60 rounded-xl border border-slate-800/80 text-center space-y-1">
-              <div class="w-8 h-8 rounded-lg bg-amber-500/10 border border-amber-500/30 text-amber-400 flex items-center justify-center mx-auto text-xs">
-                <i class="fa-solid fa-scale-balanced"></i>
-              </div>
-              <div class="font-bold text-slate-200 text-xs">2. Valuation & PEG</div>
-              <div class="text-[10px] text-slate-500">Sector median relative P/E &amp; PEG growth</div>
-            </div>
-            <div class="p-3 bg-slate-900/60 rounded-xl border border-slate-800/80 text-center space-y-1">
-              <div class="w-8 h-8 rounded-lg bg-cyan-500/10 border border-cyan-500/30 text-cyan-400 flex items-center justify-center mx-auto text-xs">
-                <i class="fa-solid fa-arrows-spin"></i>
-              </div>
-              <div class="font-bold text-slate-200 text-xs">3. Sector Cycle</div>
-              <div class="text-[10px] text-slate-500">Secular capex expansion vs consolidation</div>
-            </div>
-            <div class="p-3 bg-slate-900/60 rounded-xl border border-slate-800/80 text-center space-y-1">
-              <div class="w-8 h-8 rounded-lg bg-purple-500/10 border border-purple-500/30 text-purple-400 flex items-center justify-center mx-auto text-xs">
-                <i class="fa-solid fa-user-shield"></i>
-              </div>
-              <div class="font-bold text-slate-200 text-xs">4. Governance &amp; FII</div>
-              <div class="text-[10px] text-slate-500">Zero pledge audit &amp; institutional float</div>
-            </div>
-            <div class="p-3 bg-slate-900/60 rounded-xl border border-slate-800/80 text-center space-y-1">
-              <div class="w-8 h-8 rounded-lg bg-orange-500/10 border border-orange-500/30 text-orange-400 flex items-center justify-center mx-auto text-xs">
-                <i class="fa-solid fa-landmark-flag"></i>
-              </div>
-              <div class="font-bold text-slate-200 text-xs">5. Policy Tailwinds</div>
-              <div class="text-[10px] text-slate-500">Union Budget &amp; PLI capex allocations</div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <!-- Institutional Health Diagnostics, Concentration Guardrails & Advisory Guidance Cockpit -->
+      <!-- Institutional Health Diagnostics, Concentration Guardrails & Advisory Guidance Cockpit -->
     <div id="diagnosticsSection" class="bg-slate-900/80 border border-slate-800 hover:border-slate-700/80 rounded-2xl p-6 backdrop-blur space-y-6 shadow-xl transition">
       <!-- Section Header with Executive Health Grade & Badges -->
       <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-4 border-b border-slate-800">
@@ -844,8 +677,173 @@
       </div>
 
     </div>
+    </div>
 
-    <!-- Rebalance Recommendations Section -->
+    <!-- ======================================================== -->
+    <!-- VIEW 2: MANAGE & REBALANCE (#/manage)                     -->
+    <!-- Broker Sync, In-App Trade Logger & Sector Rebalancer     -->
+    <!-- ======================================================== -->
+    <div id="viewManage" class="view-panel space-y-6 hidden">
+      <!-- Manage & Trading Desk Header Cockpit -->
+      <div class="bg-slate-900/80 border border-slate-800 rounded-2xl p-6 backdrop-blur shadow-xl">
+        <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-4 border-b border-slate-800/80">
+          <div class="flex items-center space-x-3">
+            <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-amber-500/20 to-orange-500/20 border border-amber-500/40 flex items-center justify-center shadow-lg shadow-orange-500/10">
+              <i class="fa-solid fa-sliders text-amber-400 text-lg"></i>
+            </div>
+            <div>
+              <h2 class="text-base sm:text-lg font-bold text-white tracking-tight flex items-center">
+                Portfolio Management & Rebalancing Desk
+                <span class="ml-2.5 px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-amber-500/20 text-amber-400 border border-amber-500/30">Execution Hub</span>
+              </h2>
+              <p class="text-xs text-slate-400">Broker Data Synchronization &bull; In-App Trade Execution &bull; Sector Target Rebalancing</p>
+            </div>
+          </div>
+          <div class="flex items-center space-x-2">
+            <button onclick="navigateTo('portfolio')" class="text-xs bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white px-3 py-1.5 rounded-lg border border-slate-700 transition flex items-center space-x-1.5">
+              <i class="fa-solid fa-arrow-left text-slate-400"></i>
+              <span>Back to Portfolio</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- 2-Card Operations Hub: Angel One Sync + In-App Trade Logger Desk -->
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-5 mt-5">
+          <!-- Card 1: Angel One Broker Hub -->
+          <div class="bg-slate-950/60 border border-slate-800 rounded-xl p-5 flex flex-col justify-between space-y-4">
+            <div>
+              <div class="flex items-center justify-between pb-3 border-b border-slate-800/70">
+                <div class="flex items-center space-x-2.5">
+                  <div class="w-8 h-8 rounded-lg bg-cyan-500/10 border border-cyan-500/20 flex items-center justify-center text-cyan-400">
+                    <i class="fa-solid fa-file-excel text-sm"></i>
+                  </div>
+                  <div>
+                    <h3 class="text-sm font-bold text-white">Angel One Sync & Holdings Import</h3>
+                    <p class="text-[11px] text-slate-400">100% Free &bull; Auto-detect downloads or upload .xlsx</p>
+                  </div>
+                </div>
+                <span class="px-2 py-0.5 rounded text-[10px] font-mono bg-cyan-500/10 text-cyan-400 border border-cyan-500/30">Free Tier</span>
+              </div>
+
+              <div class="mt-4 space-y-2.5">
+                <button type="button" onclick="detectAndImportAngelExcel()" class="w-full bg-gradient-to-r from-cyan-600 to-teal-600 hover:from-cyan-500 hover:to-teal-500 text-white font-bold py-2.5 px-4 rounded-xl text-xs transition flex items-center justify-center space-x-2 shadow-lg shadow-cyan-900/20">
+                  <i class="fa-solid fa-bolt text-amber-300"></i>
+                  <span>1-Click Auto-Detect Angel One Excel from Downloads</span>
+                </button>
+
+                <div class="flex items-center space-x-2">
+                  <label class="flex-1 cursor-pointer bg-slate-900 hover:bg-slate-800/80 border border-slate-700/80 hover:border-cyan-500/50 rounded-xl py-2 px-3 text-center transition">
+                    <input type="file" id="manageExcelFileInput" accept=".xlsx" class="hidden" onchange="handleExcelUpload(event)">
+                    <span class="text-xs text-slate-300 flex items-center justify-center space-x-2">
+                      <i class="fa-solid fa-cloud-arrow-up text-cyan-400"></i>
+                      <span>Upload Angel One Excel File</span>
+                    </span>
+                  </label>
+                  <button type="button" onclick="openAngelOneModal()" class="bg-slate-900 hover:bg-slate-800 border border-slate-700 rounded-xl py-2 px-3 text-xs text-slate-300 hover:text-white transition" title="SmartAPI / API Key Settings">
+                    <i class="fa-solid fa-gear text-slate-400"></i>
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <p class="text-[11px] text-slate-500 italic">
+              Auto-reads columns: Symbol/ISIN, Quantity, Buy Price (Avg Cost), and CMP directly into your active portfolio.
+            </p>
+          </div>
+
+          <!-- Card 2: Fast In-App Trade Console -->
+          <div class="bg-slate-950/60 border border-slate-800 rounded-xl p-5 flex flex-col justify-between space-y-4">
+            <div>
+              <div class="flex items-center justify-between pb-3 border-b border-slate-800/70">
+                <div class="flex items-center space-x-2.5">
+                  <div class="w-8 h-8 rounded-lg bg-amber-500/10 border border-amber-500/20 flex items-center justify-center text-amber-400">
+                    <i class="fa-solid fa-bolt text-sm"></i>
+                  </div>
+                  <div>
+                    <h3 class="text-sm font-bold text-white">In-App Trade Logger Desk</h3>
+                    <p class="text-[11px] text-slate-400">Instant buy, sell/trim, and weighted avg price recalculation</p>
+                  </div>
+                </div>
+                <span class="px-2 py-0.5 rounded text-[10px] font-mono bg-amber-500/10 text-amber-400 border border-amber-500/30">Manual Execution</span>
+              </div>
+
+              <div class="grid grid-cols-3 gap-2 mt-4">
+                <button type="button" onclick="openTradeModal(null, 'BUY')" class="bg-emerald-500/15 hover:bg-emerald-500/25 text-emerald-400 border border-emerald-500/30 font-bold py-2.5 px-3 rounded-xl text-xs transition flex flex-col items-center justify-center space-y-1">
+                  <i class="fa-solid fa-plus-circle text-base"></i>
+                  <span>Log Buy</span>
+                </button>
+                <button type="button" onclick="openTradeModal(null, 'SELL')" class="bg-rose-500/15 hover:bg-rose-500/25 text-rose-400 border border-rose-500/30 font-bold py-2.5 px-3 rounded-xl text-xs transition flex flex-col items-center justify-center space-y-1">
+                  <i class="fa-solid fa-minus-circle text-base"></i>
+                  <span>Log Sell / Trim</span>
+                </button>
+                <button type="button" onclick="openTradeModal(null, 'ADJUST')" class="bg-amber-500/15 hover:bg-amber-500/25 text-amber-400 border border-amber-500/30 font-bold py-2.5 px-3 rounded-xl text-xs transition flex flex-col items-center justify-center space-y-1">
+                  <i class="fa-solid fa-pen-to-square text-base"></i>
+                  <span>Set Exact Qty</span>
+                </button>
+              </div>
+            </div>
+
+            <p class="text-[11px] text-slate-500 italic">
+              Partial trims maintain existing cost basis. Buying more automatically recalculates the exact weighted-average buy price.
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Left (7 cols): Target Sector Allocations & Rebalance Engine -->
+      <div class="w-full bg-slate-900/80 border border-slate-800 rounded-2xl p-6 backdrop-blur flex flex-col justify-between shadow-xl">
+        <div>
+          <div class="flex flex-wrap items-center justify-between gap-3 mb-2 pb-3 border-b border-slate-800/80">
+            <div class="flex items-center space-x-3">
+              <div class="w-9 h-9 rounded-xl bg-gradient-to-tr from-amber-500/20 to-orange-500/20 border border-amber-500/30 flex items-center justify-center shadow-md">
+                <i class="fa-solid fa-sliders text-amber-400 text-sm"></i>
+              </div>
+              <div>
+                <h3 class="text-base font-bold text-white flex items-center">
+                  Target Sector Allocations & Rebalancer
+                </h3>
+                <p class="text-xs text-slate-400">Model portfolio sector weights &bull; Buy/Sell execution ticket engine</p>
+              </div>
+            </div>
+            <div id="targetSumBadge" class="text-xs font-mono font-bold px-3 py-1 rounded-lg bg-slate-800 text-slate-300 border border-slate-700 shadow-inner">
+              Total: 0.0%
+            </div>
+          </div>
+
+          <!-- Quick Presets Toolbar -->
+          <div class="flex flex-wrap items-center justify-between gap-2 my-3 p-2 bg-slate-950/60 rounded-xl border border-slate-800/60 text-xs">
+            <span class="text-slate-400 text-[11px] font-medium flex items-center">
+              <i class="fa-solid fa-wand-magic-sparkles text-amber-400 mr-1.5"></i> Presets:
+            </span>
+            <div class="flex flex-wrap gap-1.5">
+              <button type="button" onclick="applySectorPreset('EQUAL')" class="px-2.5 py-1 rounded bg-slate-900 hover:bg-slate-800 text-slate-300 hover:text-white border border-slate-700 text-[11px] font-medium transition">
+                Equal (9.1%)
+              </button>
+              <button type="button" onclick="applySectorPreset('GROWTH')" class="px-2.5 py-1 rounded bg-slate-900 hover:bg-slate-800 text-amber-300 hover:text-amber-200 border border-amber-500/30 text-[11px] font-medium transition">
+                Growth Focus
+              </button>
+              <button type="button" onclick="applySectorPreset('DEFENSIVE')" class="px-2.5 py-1 rounded bg-slate-900 hover:bg-slate-800 text-cyan-300 hover:text-cyan-200 border border-cyan-500/30 text-[11px] font-medium transition">
+                Defensive
+              </button>
+              <button type="button" onclick="applySectorPreset('RESET')" class="px-2.5 py-1 rounded bg-slate-900 hover:bg-slate-800 text-rose-300 hover:text-rose-200 border border-rose-500/30 text-[11px] font-medium transition">
+                Reset (0%)
+              </button>
+            </div>
+          </div>
+
+          <!-- Dynamic Sector Inputs Grid -->
+          <div id="sectorTargetsContainer" class="grid grid-cols-1 sm:grid-cols-2 gap-2.5 max-h-[290px] overflow-y-auto pr-1">
+            <!-- Dynamic Sector inputs -->
+          </div>
+        </div>
+
+        <button id="btnRunRebalance" class="w-full mt-4 bg-gradient-to-r from-amber-600 via-orange-600 to-amber-500 hover:from-amber-500 hover:to-orange-400 text-slate-950 font-bold py-3 rounded-xl text-sm transition shadow-lg shadow-orange-500/20 flex items-center justify-center space-x-2">
+          <i class="fa-solid fa-arrows-rotate"></i>
+          <span>Calculate Sector Rebalance Orders</span>
+        </button>
+      </div>
+
+      <!-- Rebalance Recommendations Section -->
     <div id="rebalanceResultSection" class="hidden bg-slate-900/90 border border-amber-500/40 rounded-2xl p-6 backdrop-blur shadow-2xl">
       <div class="flex items-center justify-between mb-4 border-b border-slate-800 pb-3">
         <div>
@@ -870,8 +868,181 @@
         </div>
       </div>
     </div>
+    </div>
 
-    <!-- Master Quant Research & News Scenario Stress Testing Section -->
+    <!-- ======================================================== -->
+    <!-- VIEW 3: DISCOVER STOCKS (#/discover)                      -->
+    <!-- Multi-Factor Institutional Screener, Catalysts & Macro    -->
+    <!-- ======================================================== -->
+    <div id="viewDiscover" class="view-panel space-y-6 hidden">
+      <!-- Discover Market Header & Conviction Search -->
+      <div class="bg-slate-900/80 border border-slate-800 rounded-2xl p-6 backdrop-blur shadow-xl">
+        <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-4 border-b border-slate-800/80">
+          <div class="flex items-center space-x-3">
+            <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-amber-500/20 to-orange-500/20 border border-amber-500/40 flex items-center justify-center shadow-lg shadow-amber-500/10">
+              <i class="fa-solid fa-compass text-amber-400 text-lg"></i>
+            </div>
+            <div>
+              <h2 class="text-base sm:text-lg font-bold text-white tracking-tight flex items-center">
+                Open Market Discovery & Multi-Factor Alpha Radar
+                <span class="ml-2.5 px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-amber-500/20 text-amber-400 border border-amber-500/30">NSE & BSE</span>
+              </h2>
+              <p class="text-xs text-slate-400">Institutional Factor Screener &bull; Quarterly Results & Policy Radar &bull; Macro Regime Stress Tests</p>
+            </div>
+          </div>
+          <div class="flex items-center space-x-2">
+            <button onclick="navigateTo('portfolio')" class="text-xs bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white px-3 py-1.5 rounded-lg border border-slate-700 transition flex items-center space-x-1.5">
+              <i class="fa-solid fa-briefcase text-slate-400"></i>
+              <span>My Portfolio</span>
+            </button>
+            <button onclick="navigateTo('manage')" class="text-xs bg-slate-800 hover:bg-slate-700 text-amber-400 px-3 py-1.5 rounded-lg border border-slate-700 transition flex items-center space-x-1.5">
+              <i class="fa-solid fa-sliders"></i>
+              <span>Rebalance Desk</span>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- SECTION GROUP TIER 2: Full-Width Multi-Factor Institutional Stock Scorecard Desk -->
+    <div class="w-full bg-slate-900/80 border border-slate-800 rounded-2xl p-6 backdrop-blur space-y-4 shadow-xl">
+      <!-- Cockpit Header & Quick Conviction Bar -->
+      <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-4 pb-4 border-b border-slate-800">
+        <div class="flex items-center space-x-3">
+          <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-amber-500/20 to-orange-500/20 border border-amber-500/40 flex items-center justify-center shadow-lg shadow-amber-500/10">
+            <i class="fa-solid fa-chart-line text-amber-400 text-lg"></i>
+          </div>
+          <div>
+            <div class="flex items-center space-x-2">
+              <h2 class="text-base sm:text-lg font-bold text-white tracking-tight">
+                Multi-Factor Institutional Stock Scorecard
+              </h2>
+              <span class="px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-amber-500/20 text-amber-400 border border-amber-500/30">
+                5-PILLAR ALPHA MODEL
+              </span>
+            </div>
+            <p class="text-xs text-slate-400 mt-0.5">
+              Comprehensive institutional evaluation: Business Quality & ROCE (25%) + Peer Valuation & PEG (20%) + Sector Cycle (20%) + Governance & Institutional Float (20%) + Union Policy Tailwinds (15%)
+            </p>
+          </div>
+        </div>
+
+        <!-- Search Bar with Instant Enter trigger -->
+        <div class="flex items-center space-x-2 w-full lg:w-auto">
+          <div class="relative flex-1 lg:w-72">
+            <input id="inspectorTicker" type="text" placeholder="Search NSE ticker (e.g. KPITTECH, TRENT)..." class="uppercase w-full bg-slate-950 border border-slate-700 rounded-xl pl-9 pr-3 py-2 text-xs text-slate-200 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-amber-500" />
+            <i class="fa-solid fa-magnifying-glass absolute left-3 top-2.5 text-xs text-slate-500"></i>
+          </div>
+          <button id="btnInspectStock" class="bg-gradient-to-r from-amber-600 to-orange-500 hover:from-amber-500 hover:to-orange-400 text-slate-950 font-bold px-4 py-2 rounded-xl text-xs transition shadow-md flex items-center space-x-1.5 whitespace-nowrap">
+            <i class="fa-solid fa-microscope"></i>
+            <span>Evaluate</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Quick-Pick Conviction Ticker Pills -->
+      <div class="flex flex-wrap items-center gap-1.5 py-1 text-xs">
+        <span class="text-slate-400 text-[11px] font-medium mr-1 flex items-center">
+          <i class="fa-solid fa-fire text-amber-400 mr-1"></i> Quick Inspect:
+        </span>
+        <button type="button" onclick="quickInspectTicker('KPITTECH')" class="px-2.5 py-1 rounded-lg bg-slate-950 hover:bg-slate-800 text-slate-300 hover:text-amber-400 border border-slate-800 text-[11px] font-mono font-semibold transition">KPITTECH</button>
+        <button type="button" onclick="quickInspectTicker('TRENT')" class="px-2.5 py-1 rounded-lg bg-slate-950 hover:bg-slate-800 text-slate-300 hover:text-amber-400 border border-slate-800 text-[11px] font-mono font-semibold transition">TRENT</button>
+        <button type="button" onclick="quickInspectTicker('BEL')" class="px-2.5 py-1 rounded-lg bg-slate-950 hover:bg-slate-800 text-slate-300 hover:text-amber-400 border border-slate-800 text-[11px] font-mono font-semibold transition">BEL</button>
+        <button type="button" onclick="quickInspectTicker('RELIANCE')" class="px-2.5 py-1 rounded-lg bg-slate-950 hover:bg-slate-800 text-slate-300 hover:text-amber-400 border border-slate-800 text-[11px] font-mono font-semibold transition">RELIANCE</button>
+        <button type="button" onclick="quickInspectTicker('SUZLON')" class="px-2.5 py-1 rounded-lg bg-slate-950 hover:bg-slate-800 text-slate-300 hover:text-amber-400 border border-slate-800 text-[11px] font-mono font-semibold transition">SUZLON</button>
+        <button type="button" onclick="quickInspectTicker('HDFCBANK')" class="px-2.5 py-1 rounded-lg bg-slate-950 hover:bg-slate-800 text-slate-300 hover:text-amber-400 border border-slate-800 text-[11px] font-mono font-semibold transition">HDFCBANK</button>
+        <button type="button" onclick="quickInspectTicker('TATAMOTORS')" class="px-2.5 py-1 rounded-lg bg-slate-950 hover:bg-slate-800 text-slate-300 hover:text-amber-400 border border-slate-800 text-[11px] font-mono font-semibold transition">TATAMOTORS</button>
+        <button type="button" onclick="quickInspectTicker('TATAPOWER')" class="px-2.5 py-1 rounded-lg bg-slate-950 hover:bg-slate-800 text-slate-300 hover:text-amber-400 border border-slate-800 text-[11px] font-mono font-semibold transition">TATAPOWER</button>
+      </div>
+
+      <!-- Scorecard Result Container -->
+      <div id="stockInspectorResult" class="p-5 bg-slate-950/80 rounded-xl border border-slate-800 space-y-4 text-xs shadow-inner">
+        <!-- Default State: 5-Pillar Architecture Overview -->
+        <div class="py-4 space-y-4">
+          <div class="text-center max-w-2xl mx-auto space-y-1">
+            <h4 class="text-sm font-bold text-slate-200">Institutional Multi-Factor Equity Scoring Ready</h4>
+            <p class="text-slate-400 text-xs leading-relaxed">
+              Select any stock from your portfolio holdings table above or click a quick-pick ticker to launch full institutional diagnostics across the 5 pillars:
+            </p>
+          </div>
+          <div class="grid grid-cols-1 sm:grid-cols-5 gap-3 pt-2">
+            <div class="p-3 bg-slate-900/60 rounded-xl border border-slate-800/80 text-center space-y-1">
+              <div class="w-8 h-8 rounded-lg bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 flex items-center justify-center mx-auto text-xs">
+                <i class="fa-solid fa-award"></i>
+              </div>
+              <div class="font-bold text-slate-200 text-xs">1. Quality & ROCE</div>
+              <div class="text-[10px] text-slate-500">Capital return &gt;15%, balance sheet strength</div>
+            </div>
+            <div class="p-3 bg-slate-900/60 rounded-xl border border-slate-800/80 text-center space-y-1">
+              <div class="w-8 h-8 rounded-lg bg-amber-500/10 border border-amber-500/30 text-amber-400 flex items-center justify-center mx-auto text-xs">
+                <i class="fa-solid fa-scale-balanced"></i>
+              </div>
+              <div class="font-bold text-slate-200 text-xs">2. Valuation & PEG</div>
+              <div class="text-[10px] text-slate-500">Sector median relative P/E &amp; PEG growth</div>
+            </div>
+            <div class="p-3 bg-slate-900/60 rounded-xl border border-slate-800/80 text-center space-y-1">
+              <div class="w-8 h-8 rounded-lg bg-cyan-500/10 border border-cyan-500/30 text-cyan-400 flex items-center justify-center mx-auto text-xs">
+                <i class="fa-solid fa-arrows-spin"></i>
+              </div>
+              <div class="font-bold text-slate-200 text-xs">3. Sector Cycle</div>
+              <div class="text-[10px] text-slate-500">Secular capex expansion vs consolidation</div>
+            </div>
+            <div class="p-3 bg-slate-900/60 rounded-xl border border-slate-800/80 text-center space-y-1">
+              <div class="w-8 h-8 rounded-lg bg-purple-500/10 border border-purple-500/30 text-purple-400 flex items-center justify-center mx-auto text-xs">
+                <i class="fa-solid fa-user-shield"></i>
+              </div>
+              <div class="font-bold text-slate-200 text-xs">4. Governance &amp; FII</div>
+              <div class="text-[10px] text-slate-500">Zero pledge audit &amp; institutional float</div>
+            </div>
+            <div class="p-3 bg-slate-900/60 rounded-xl border border-slate-800/80 text-center space-y-1">
+              <div class="w-8 h-8 rounded-lg bg-orange-500/10 border border-orange-500/30 text-orange-400 flex items-center justify-center mx-auto text-xs">
+                <i class="fa-solid fa-landmark-flag"></i>
+              </div>
+              <div class="font-bold text-slate-200 text-xs">5. Policy Tailwinds</div>
+              <div class="text-[10px] text-slate-500">Union Budget &amp; PLI capex allocations</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+      <!-- 2-Column Catalysts Radar & Macro Stress Tests -->
+      <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-stretch">
+        <div class="lg:col-span-12">
+          <!-- Right (5 cols): Upcoming Results & Macro Policy Events Card -->
+      <div class="w-full bg-slate-900/80 border border-slate-800 rounded-2xl p-6 backdrop-blur flex flex-col justify-between shadow-xl">
+        <div>
+          <div class="flex items-center justify-between pb-3 mb-3 border-b border-slate-800/80">
+            <div class="flex items-center space-x-3">
+              <div class="w-9 h-9 rounded-xl bg-gradient-to-tr from-cyan-500/20 to-blue-500/20 border border-cyan-500/30 flex items-center justify-center shadow-md">
+                <i class="fa-solid fa-calendar-day text-cyan-400 text-sm"></i>
+              </div>
+              <div>
+                <h3 class="text-base font-bold text-white flex items-center">
+                  Upcoming Results & Catalysts
+                </h3>
+                <p class="text-xs text-slate-400">Quarterly earnings &bull; Ex-dates &bull; RBI MPC events</p>
+              </div>
+            </div>
+            <span class="px-2.5 py-1 rounded-full text-[10px] font-mono font-bold bg-cyan-500/10 text-cyan-400 border border-cyan-500/30">
+              Live Radar
+            </span>
+          </div>
+
+          <!-- Events Feed Container with matched height -->
+          <div id="eventsContainer" class="space-y-2.5 max-h-[350px] overflow-y-auto pr-1">
+            <div class="text-xs text-slate-500 italic py-8 text-center">Loading upcoming earnings and macro catalysts...</div>
+          </div>
+        </div>
+
+        <div class="mt-4 pt-3 border-t border-slate-800 text-[11px] text-slate-500 flex items-center justify-between">
+          <span class="flex items-center"><i class="fa-solid fa-circle-info text-slate-400 mr-1.5"></i> Tracks all active portfolio holdings</span>
+          <span class="text-amber-400/80 font-mono text-[10px]">NSE & BSE Filings</span>
+        </div>
+      </div>
+        </div>
+      </div>
+
+      <!-- Master Quant Research & News Scenario Stress Testing Section -->
     <div id="researchReportSection" class="hidden bg-slate-900/95 border border-amber-500/50 rounded-2xl p-6 backdrop-blur shadow-2xl space-y-6">
       <div class="flex items-center justify-between border-b border-slate-800 pb-4">
         <div>
@@ -900,7 +1071,9 @@
         </h4>
         <div id="scenariosContainer" class="grid grid-cols-1 md:grid-cols-3 gap-4"></div>
       </div>
-    <!-- Interactive Financial Explainer Modal for 9-5 Working Professionals -->
+    </div>
+
+      <!-- Interactive Financial Explainer Modal for 9-5 Working Professionals -->
     <div id="financialExplainerModal" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm">
       <div class="relative w-full max-w-lg bg-slate-900 border border-amber-500/40 rounded-2xl p-6 shadow-2xl text-slate-100 space-y-4">
         <div class="flex items-center justify-between border-b border-slate-800 pb-3">
@@ -1225,9 +1398,6 @@
         </div>
       </div>
     </div>
-
-  </main>
-
-  <script src="/app.js"></script>
-</body>
+    </main>
+  </body>
 </html>
