@@ -2136,7 +2136,7 @@ function openAngelOneModal() {
   if (tokenInput) tokenInput.value = savedToken;
   if (chkAuto) chkAuto.checked = savedAutoSync;
 
-  switchAngelTab('smartapi');
+  switchAngelTab('excel');
   modal.classList.remove("hidden");
 }
 
@@ -2146,21 +2146,125 @@ function closeAngelOneModal() {
 }
 
 function switchAngelTab(tab) {
+  const tabExcel = document.getElementById("tabAngelExcel");
   const tabSmartApi = document.getElementById("tabAngelSmartApi");
   const tabPaste = document.getElementById("tabAngelPaste");
+  const contentExcel = document.getElementById("angelTabExcelContent");
   const contentSmartApi = document.getElementById("angelTabSmartApiContent");
   const contentPaste = document.getElementById("angelTabPasteContent");
 
-  if (tab === 'smartapi') {
-    if (tabSmartApi) tabSmartApi.className = "pb-2 border-b-2 border-cyan-400 text-cyan-400 transition flex items-center space-x-1.5 font-semibold";
-    if (tabPaste) tabPaste.className = "pb-2 border-b-2 border-transparent text-slate-400 hover:text-slate-200 transition flex items-center space-x-1.5 font-semibold";
+  [tabExcel, tabSmartApi, tabPaste].forEach(t => {
+    if (t) t.className = "pb-2 border-b-2 border-transparent text-slate-400 hover:text-slate-200 transition flex items-center space-x-1.5 whitespace-nowrap font-semibold";
+  });
+  [contentExcel, contentSmartApi, contentPaste].forEach(c => {
+    if (c) c.classList.add("hidden");
+  });
+
+  if (tab === 'excel') {
+    if (tabExcel) tabExcel.className = "pb-2 border-b-2 border-cyan-400 text-cyan-400 transition flex items-center space-x-1.5 whitespace-nowrap font-semibold";
+    contentExcel?.classList.remove("hidden");
+  } else if (tab === 'smartapi') {
+    if (tabSmartApi) tabSmartApi.className = "pb-2 border-b-2 border-cyan-400 text-cyan-400 transition flex items-center space-x-1.5 whitespace-nowrap font-semibold";
     contentSmartApi?.classList.remove("hidden");
-    contentPaste?.classList.add("hidden");
-  } else {
-    if (tabPaste) tabPaste.className = "pb-2 border-b-2 border-cyan-400 text-cyan-400 transition flex items-center space-x-1.5 font-semibold";
-    if (tabSmartApi) tabSmartApi.className = "pb-2 border-b-2 border-transparent text-slate-400 hover:text-slate-200 transition flex items-center space-x-1.5 font-semibold";
+  } else if (tab === 'paste') {
+    if (tabPaste) tabPaste.className = "pb-2 border-b-2 border-cyan-400 text-cyan-400 transition flex items-center space-x-1.5 whitespace-nowrap font-semibold";
     contentPaste?.classList.remove("hidden");
-    contentSmartApi?.classList.add("hidden");
+  }
+}
+
+let selectedExcelFile = null;
+
+function handleExcelFileSelected(event) {
+  const file = event.target.files?.[0];
+  if (!file) return;
+  selectedExcelFile = file;
+
+  const dropLabel = document.getElementById("dropzoneLabel");
+  const dropSub = document.getElementById("dropzoneSub");
+  const summary = document.getElementById("excelUploadSummary");
+  const fileName = document.getElementById("excelFileName");
+
+  if (dropLabel) dropLabel.innerHTML = `Selected: <strong class="text-emerald-400">${file.name}</strong> (${(file.size / 1024).toFixed(1)} KB)`;
+  if (dropSub) dropSub.textContent = "Click 'Import & Sync Portfolio' below to apply";
+  if (fileName) fileName.textContent = file.name;
+  if (summary) summary.classList.remove("hidden");
+}
+
+async function handleConfirmUploadExcel() {
+  if (!selectedExcelFile) return alert("Please select an Angel One Excel (.xlsx) file first.");
+  if (!currentPortfolioId) return alert("Please select a portfolio first.");
+
+  const btn = document.getElementById("btnConfirmUploadExcel");
+  if (btn) {
+    btn.disabled = true;
+    btn.innerHTML = `<i class="fa-solid fa-spinner fa-spin mr-1"></i> Parsing Excel...`;
+  }
+
+  const formData = new FormData();
+  formData.append("file", selectedExcelFile);
+
+  try {
+    const res = await fetch(`/api/portfolios/${currentPortfolioId}/upload-excel`, {
+      method: "POST",
+      body: formData
+    });
+
+    if (res.ok) {
+      currentPortfolioData = await res.json();
+      normalizePortfolioData(currentPortfolioData);
+      renderPortfolioDetails(currentPortfolioData);
+      closeAngelOneModal();
+      showToast(`🎉 Successfully imported ${currentPortfolioData.holdings.length} holdings from ${selectedExcelFile.name}!`);
+    } else {
+      const err = await res.json();
+      alert(`Excel import failed: ${err.error || "Please verify the Excel format."}`);
+    }
+  } catch (err) {
+    console.error("Excel upload error:", err);
+    alert("Network error uploading Excel file.");
+  } finally {
+    if (btn) {
+      btn.disabled = false;
+      btn.innerHTML = `<i class="fa-solid fa-check"></i> <span>Import & Sync Portfolio</span>`;
+    }
+  }
+}
+
+async function handleAutoImportDownloadsExcel() {
+  if (!currentPortfolioId) return alert("Please select a portfolio first.");
+
+  const btn = document.getElementById("btnAutoImportExcel");
+  if (btn) {
+    btn.disabled = true;
+    btn.innerHTML = `<i class="fa-solid fa-spinner fa-spin mr-1"></i> Auto-detecting...`;
+  }
+
+  try {
+    const res = await fetch(`/api/portfolios/${currentPortfolioId}/import-angel-excel`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ filePath: null })
+    });
+
+    if (res.ok) {
+      const result = await res.json();
+      currentPortfolioData = result.portfolio || result;
+      normalizePortfolioData(currentPortfolioData);
+      renderPortfolioDetails(currentPortfolioData);
+      closeAngelOneModal();
+      showToast(`🎉 Auto-imported ${result.positionsImported || currentPortfolioData.holdings.length} positions from latest download!`);
+    } else {
+      const err = await res.json();
+      alert(`Auto-import failed: ${err.error || "Could not find recent download in Downloads folder."}`);
+    }
+  } catch (err) {
+    console.error("Auto import error:", err);
+    alert("Network error running auto-import.");
+  } finally {
+    if (btn) {
+      btn.disabled = false;
+      btn.innerHTML = `<i class="fa-solid fa-bolt"></i> <span>1-Click Import Downloads</span>`;
+    }
   }
 }
 

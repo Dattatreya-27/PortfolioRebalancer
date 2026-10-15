@@ -59,6 +59,7 @@ public sealed class MockStockDataProvider : IStockDataProvider
         ["ASTRAMICRO"] = new("Astra Microwave", Sector.Industrials, 951.5m, 32.0m, 0.8m, 210000m),
         ["NAUKRI"] = new("NAUKRI", Sector.Technology, 1224.59m, 28.5m, 1.8m, 320000m),
         ["MPSL"] = new("MPS Infotecnics", Sector.Technology, 0.35m, 15.0m, 0.0m, 1260m),
+        ["FRETAIL"] = new("Future Retail", Sector.ConsumerDiscretionary, 0.05m, null, null, 150m),
         ["PGHH"] = new("P & G Hygiene", Sector.ConsumerStaples, 7924.22m, 45.2m, 2.1m, 280000m),
         ["RELIANCE"] = new("Reliance Industr", Sector.Energy, 1282.26m, 14.5m, 3.2m, 580000m),
         ["BPCL"] = new("B P C L", Sector.Energy, 305.35m, 14.5m, 3.2m, 580000m),

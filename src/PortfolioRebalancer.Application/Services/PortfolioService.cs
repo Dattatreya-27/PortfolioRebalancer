@@ -180,6 +180,12 @@ public sealed class PortfolioService(
         return MapToSummary(portfolio);
     }
 
+    public async Task<PortfolioSummaryDto?> ImportAngelOneExcelAsync(Guid portfolioId, Stream excelStream)
+    {
+        var items = AngelOneExcelParser.ParseHoldings(excelStream);
+        return await SyncAngelOneHoldingsAsync(portfolioId, items);
+    }
+
     public async Task<RebalanceRecommendationDto?> RebalanceAsync(
         Guid portfolioId, List<SectorAllocationItem> targets)
     {

@@ -169,6 +169,76 @@ public class PortfoliosController(
         }
     }
 
+    [HttpPost("{id:guid}/upload-excel")]
+    public async Task<ActionResult<PortfolioSummaryDto>> UploadExcel(Guid id, IFormFile file)
+    {
+        if (file is null || file.Length == 0)
+            return BadRequest(new { error = "Please select a valid Angel One Excel (.xlsx) file to upload." });
+
+        try
+        {
+            using var stream = file.OpenReadStream();
+            var updated = await portfolioService.ImportAngelOneExcelAsync(id, stream);
+            if (updated is null)
+                return NotFound(new { error = $"Portfolio with ID '{id}' not found." });
+
+            return Ok(updated);
+        }
+        catch (Exception ex)
+        {
+            return BadRequest(new { error = $"Failed to parse Angel One Excel: {ex.Message}" });
+        }
+    }
+
+    [HttpPost("{id:guid}/import-angel-excel")]
+    public async Task<ActionResult<object>> ImportAngelExcel(Guid id, [FromBody] ImportAngelOneFileRequest? request)
+    {
+        string? targetPath = request?.FilePath;
+
+        if (string.IsNullOrWhiteSpace(targetPath))
+        {
+            var downloadsDir = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), "Downloads");
+            if (Directory.Exists(downloadsDir))
+            {
+                var files = Directory.GetFiles(downloadsDir, "*Holding*Details*.xlsx")
+                                     .Concat(Directory.GetFiles(downloadsDir, "*D200136*.xlsx"))
+                                     .Distinct()
+                                     .Select(f => new FileInfo(f))
+                                     .OrderByDescending(f => f.LastWriteTimeUtc)
+                                     .ToList();
+
+                if (files.Count > 0)
+                {
+                    targetPath = files[0].FullName;
+                }
+            }
+        }
+
+        if (string.IsNullOrWhiteSpace(targetPath) || !System.IO.File.Exists(targetPath))
+        {
+            return BadRequest(new { error = $"Angel One Excel file not found. Checked: '{targetPath ?? "Downloads folder"}'." });
+        }
+
+        try
+        {
+            using var stream = System.IO.File.OpenRead(targetPath);
+            var updated = await portfolioService.ImportAngelOneExcelAsync(id, stream);
+            if (updated is null)
+                return NotFound(new { error = $"Portfolio with ID '{id}' not found." });
+
+            return Ok(new
+            {
+                portfolio = updated,
+                sourceFile = targetPath,
+                positionsImported = updated.Holdings.Count
+            });
+        }
+        catch (Exception ex)
+        {
+            return BadRequest(new { error = $"Failed to import Angel One Excel: {ex.Message}" });
+        }
+    }
+
     [HttpPost("{id:guid}/rebalance")]
     public async Task<ActionResult<RebalanceRecommendationDto>> Rebalance(Guid id, [FromBody] RebalanceRequest request)
     {

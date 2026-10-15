@@ -34,3 +34,5 @@ public sealed record AngelOneHoldingItemRequest(
     decimal AveragePrice,
     decimal? Ltp = null
 );
+
+public sealed record ImportAngelOneFileRequest(string? FilePath = null);

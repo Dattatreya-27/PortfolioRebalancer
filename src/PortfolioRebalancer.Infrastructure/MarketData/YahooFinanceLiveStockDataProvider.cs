@@ -31,7 +31,8 @@ public sealed class YahooFinanceLiveStockDataProvider : IStockDataProvider, IDis
         ["NSDL"] = "NSDL.BO",
         ["AJRINFRA"] = "AJRINFRA.BO",
         ["GUJENERGY"] = "GUJENERGY.NS",
-        ["GUJGASLTD"] = "GUJENERGY.NS"
+        ["GUJGASLTD"] = "GUJENERGY.NS",
+        ["FRETAIL"] = "FRETAIL.BO"
     };
 
     private string? _crumb;

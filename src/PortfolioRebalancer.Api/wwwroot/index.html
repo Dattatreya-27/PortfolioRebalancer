@@ -1077,19 +1077,72 @@
         </div>
 
         <!-- Mode Switcher Tabs -->
-        <div class="flex border-b border-slate-800 space-x-4 text-xs font-semibold">
-          <button type="button" id="tabAngelSmartApi" onclick="switchAngelTab('smartapi')" class="pb-2 border-b-2 border-cyan-400 text-cyan-400 transition flex items-center space-x-1.5">
+        <div class="flex border-b border-slate-800 space-x-3 text-xs font-semibold overflow-x-auto">
+          <button type="button" id="tabAngelExcel" onclick="switchAngelTab('excel')" class="pb-2 border-b-2 border-cyan-400 text-cyan-400 transition flex items-center space-x-1.5 whitespace-nowrap">
+            <i class="fa-solid fa-file-excel text-emerald-400"></i>
+            <span>Upload Angel One Excel (.xlsx)</span>
+          </button>
+          <button type="button" id="tabAngelSmartApi" onclick="switchAngelTab('smartapi')" class="pb-2 border-b-2 border-transparent text-slate-400 hover:text-slate-200 transition flex items-center space-x-1.5 whitespace-nowrap">
             <i class="fa-solid fa-bolt"></i>
             <span>SmartAPI Direct Fetch</span>
           </button>
-          <button type="button" id="tabAngelPaste" onclick="switchAngelTab('paste')" class="pb-2 border-b-2 border-transparent text-slate-400 hover:text-slate-200 transition flex items-center space-x-1.5">
+          <button type="button" id="tabAngelPaste" onclick="switchAngelTab('paste')" class="pb-2 border-b-2 border-transparent text-slate-400 hover:text-slate-200 transition flex items-center space-x-1.5 whitespace-nowrap">
             <i class="fa-solid fa-paste"></i>
-            <span>1-Click JSON Paste / Export</span>
+            <span>1-Click JSON Paste</span>
           </button>
         </div>
 
+        <!-- Tab 0: Upload Angel One Excel (.xlsx) -->
+        <div id="angelTabExcelContent" class="space-y-3.5">
+          <div class="p-3.5 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-xs text-emerald-300 leading-relaxed">
+            <i class="fa-solid fa-circle-check text-emerald-400 mr-1.5"></i>
+            <strong>Angel One Excel Export Supported:</strong> Drag & drop your downloaded <code>Your Holding Details - D200136.xlsx</code> or pick the file below. All positions, quantities, average buy prices, and CMP will be parsed and synchronized instantly!
+          </div>
+
+          <!-- Quick Auto-Detect Button for Downloads Folder -->
+          <div class="p-3 bg-slate-950/80 border border-slate-800 rounded-xl flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+            <div>
+              <div class="text-xs font-bold text-white flex items-center">
+                <i class="fa-solid fa-wand-magic-sparkles text-amber-400 mr-1.5"></i> Auto-Detect Latest Download
+              </div>
+              <div class="text-[11px] text-slate-400 mt-0.5">Found: <code>Your Holding Details - D200136 (5).xlsx</code> in Downloads folder</div>
+            </div>
+            <button type="button" id="btnAutoImportExcel" onclick="handleAutoImportDownloadsExcel()" class="px-3.5 py-2 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-slate-950 text-xs font-bold rounded-lg shadow-sm transition flex items-center space-x-1.5 whitespace-nowrap">
+              <i class="fa-solid fa-bolt"></i>
+              <span>1-Click Import Downloads</span>
+            </button>
+          </div>
+
+          <div class="text-center text-[10px] text-slate-500 font-semibold uppercase tracking-wider">
+            &mdash; OR UPLOAD EXCEL FILE MANUALLY &mdash;
+          </div>
+
+          <!-- File Upload Dropzone -->
+          <div id="excelDropzone" class="border-2 border-dashed border-slate-700 hover:border-cyan-500 rounded-xl p-5 text-center transition cursor-pointer bg-slate-950/60" onclick="document.getElementById('excelFileInput').click()">
+            <input type="file" id="excelFileInput" accept=".xlsx,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" class="hidden" onchange="handleExcelFileSelected(event)" />
+            <div class="w-10 h-10 mx-auto rounded-xl bg-cyan-500/10 border border-cyan-500/30 flex items-center justify-center text-cyan-400 text-lg mb-2">
+              <i class="fa-solid fa-cloud-arrow-up"></i>
+            </div>
+            <div id="dropzoneLabel" class="text-xs font-medium text-slate-200">
+              Click to select or drag & drop <strong>Angel One Excel file (.xlsx)</strong>
+            </div>
+            <p id="dropzoneSub" class="text-[10px] text-slate-500 mt-1">Accepts standard Angel One "Your Holding Details" spreadsheet export</p>
+          </div>
+
+          <div id="excelUploadSummary" class="hidden p-3 bg-slate-950 border border-emerald-500/30 rounded-xl flex items-center justify-between text-xs text-slate-200">
+            <div class="flex items-center space-x-2">
+              <i class="fa-solid fa-file-excel text-emerald-400 text-base"></i>
+              <span id="excelFileName" class="font-mono text-emerald-300 font-semibold">Your Holding Details.xlsx</span>
+            </div>
+            <button type="button" id="btnConfirmUploadExcel" onclick="handleConfirmUploadExcel()" class="px-4 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs rounded-lg transition shadow-sm flex items-center space-x-1.5">
+              <i class="fa-solid fa-check"></i>
+              <span>Import & Sync Portfolio</span>
+            </button>
+          </div>
+        </div>
+
         <!-- Tab 1: SmartAPI Direct Fetch -->
-        <div id="angelTabSmartApiContent" class="space-y-3">
+        <div id="angelTabSmartApiContent" class="hidden space-y-3">
           <div class="p-3 rounded-xl bg-cyan-500/10 border border-cyan-500/20 text-xs text-cyan-300/90 leading-relaxed">
             <i class="fa-solid fa-shield-halved mr-1 text-cyan-400"></i>
             <strong>Privacy & Security Guaranteed:</strong> Credentials operate strictly locally in your browser session. Zero credentials or tokens are uploaded to external servers or logged in git.
