@@ -1,4 +1,4 @@
-﻿using PortfolioRebalancer.Application.Interfaces;
+using PortfolioRebalancer.Application.Interfaces;
 using PortfolioRebalancer.Domain.Enums;
 using PortfolioRebalancer.Domain.Models;
 
@@ -358,6 +358,23 @@ public sealed class IndianMarketScoringService : IStockScoringService
             FlowTrend: totalInstStake >= 35m ? "High Institutional Conviction" : "Selective Positioning"
         );
 
+        // 7. Calculate Fair Value & Margin of Safety
+        decimal cmp = stock.CurrentPrice.Amount;
+        decimal epsGrowth = profile.EpsGrowth3Yr > 0 ? profile.EpsGrowth3Yr : 15m;
+        decimal targetFairPe = Math.Clamp(epsGrowth * 1.30m, 14m, sectorInfo.MedianPE * 1.30m);
+        decimal fairValue = Math.Round(stockPe > 0 ? (cmp * (targetFairPe / stockPe)) : cmp, 2);
+        decimal marginOfSafety = cmp > 0 ? Math.Round(((fairValue - cmp) / cmp) * 100m, 1) : 0m;
+
+        string valuationBandVerdict = marginOfSafety switch
+        {
+            >= 15.0m => "Attractive Buy / Undervalued (High Margin of Safety)",
+            >= -10.0m => "Fairly Valued / Growth-Backed",
+            _ => "Overvalued / Priced for Perfection (Wait for Dips or Trim)"
+        };
+
+        // 8. Curate Better Alternative Trading & Investment Ideas
+        var alternatives = GenerateBetterAlternatives(stock.Ticker.Value, sector, sectorInfo, pegRatio, profile.Roce);
+
         return new StockScore(
             QualityScore: qualityScore,
             RelativeValuationScore: valScore,
@@ -372,7 +389,82 @@ public sealed class IndianMarketScoringService : IStockScoringService
             GovernanceAudit: governanceAudit,
             InstitutionalFlow: institutionalFlow,
             Strengths: profile.Strengths,
-            RiskFlags: profile.RiskFlags
+            RiskFlags: profile.RiskFlags,
+            FairValueEstimate: fairValue,
+            MarginOfSafetyPercent: marginOfSafety,
+            ValuationBandVerdict: valuationBandVerdict,
+            BetterMarketAlternatives: alternatives
         );
+    }
+
+    private static IReadOnlyList<StockAlternative> GenerateBetterAlternatives(
+        string currentTicker,
+        Sector sector,
+        SectorInfo sectorInfo,
+        decimal currentPeg,
+        decimal currentRoce)
+    {
+        var pool = new List<StockAlternative>();
+
+        switch (sector)
+        {
+            case Sector.Technology:
+                pool.Add(new("TCS", "Tata Consultancy Services", 3950m, 28.5m, 1.25m, 48.0m,
+                    "Industry bellwether with 48% ROCE, zero debt, and multi-billion $ AI cloud deal pipeline.", "Core Tech Compounder"));
+                pool.Add(new("HCLTECH", "HCL Technologies", 1740m, 26.2m, 1.15m, 28.5m,
+                    "Higher dividend yield (3.4%) with industry-leading ER&D engineering services growth.", "High Dividend Alpha"));
+                pool.Add(new("INFY", "Infosys Ltd", 1880m, 27.0m, 1.20m, 32.0m,
+                    "Large-cap liquidity anchor with accelerating financial services spending in US & Europe.", "Large-Cap Anchor"));
+                break;
+
+            case Sector.Industrials:
+                pool.Add(new("BEL", "Bharat Electronics", 295m, 44.0m, 1.30m, 32.5m,
+                    "Sovereign defense electronic monopoly, 0% debt, and massive ₹76,000 Cr order backlog.", "Defense Sovereign King"));
+                pool.Add(new("HAL", "Hindustan Aeronautics", 4420m, 38.0m, 1.20m, 29.0m,
+                    "Indigenous Tejas fighter jets & helicopter manufacturing with 20+ year service visibility.", "Atmanirbhar Moat"));
+                pool.Add(new("LT", "Larsen & Toubro", 3550m, 33.0m, 1.35m, 17.5m,
+                    "Middle East hydrocarbon & domestic infrastructure capex order book over ₹4.75 Lakh Cr.", "Capex Super-Cycle"));
+                break;
+
+            case Sector.ConsumerDiscretionary:
+                pool.Add(new("M&M", "Mahindra & Mahindra", 2980m, 28.5m, 1.05m, 22.0m,
+                    "Dominant SUV market share (22%+), tractor cycle revival, and aggressive EV scaling.", "Auto Cycle Inflection"));
+                pool.Add(new("TITAN", "Titan Company", 3450m, 58.0m, 1.45m, 26.0m,
+                    "Gold customs duty cut margin booster and formal branded jewelry market share expansion.", "Luxury Retail Moat"));
+                pool.Add(new("TRENT", "Trent Ltd", 6850m, 95.0m, 2.10m, 24.5m,
+                    "Zudio pan-India low-cost fashion expansion with 50%+ YoY revenue run rate.", "High-Beta Growth Leader"));
+                break;
+
+            case Sector.Financials:
+                pool.Add(new("ICICIBANK", "ICICI Bank", 1245m, 17.8m, 0.98m, 19.2m,
+                    "Best-in-class ROA (>2.2%), high NIM resilience, and cleanest corporate credit book in India.", "Banking Growth Anchor"));
+                pool.Add(new("HDFCBANK", "HDFC Bank", 1710m, 18.2m, 1.10m, 17.5m,
+                    "Rapid deposit franchise mobilization and post-merger credit-deposit ratio rebalancing.", "Deep Value Re-rating"));
+                pool.Add(new("SBIN", "State Bank of India", 815m, 10.5m, 0.85m, 18.0m,
+                    "Massive CASA base, PSU corporate credit expansion, and lowest valuation among tier-1 banks.", "Value Re-Rating"));
+                break;
+
+            case Sector.Utilities:
+            case Sector.Energy:
+                pool.Add(new("TATAPOWER", "Tata Power", 412m, 34.0m, 1.25m, 16.5m,
+                    "PM Surya Ghar rooftop solar mandate, EV charging network, and 15GW renewable pipeline.", "Clean Energy Leader"));
+                pool.Add(new("POWERGRID", "Power Grid Corp", 310m, 17.5m, 0.95m, 18.0m,
+                    "Essential inter-state power grid monopoly with guaranteed 15.5% regulated equity returns.", "Defensive Yield (3.8%)"));
+                pool.Add(new("NTPC", "NTPC Ltd", 395m, 16.2m, 0.90m, 15.5m,
+                    "Base-load thermal cash-cow funding massive green hydrogen and solar gigawatt expansion.", "PSU Re-Rating"));
+                break;
+
+            default:
+                pool.Add(new("RELIANCE", "Reliance Industries", 1282m, 24.5m, 1.15m, 14.5m,
+                    "Conglomerate discount unwind ahead of Jio & Retail market IPO listings.", "Mega-Cap Compounder"));
+                pool.Add(new("ITC", "ITC Ltd", 485m, 25.5m, 1.10m, 36.5m,
+                    "Hotels business demerger unlock, strong FMCG cash flows, and 3.5% dividend yield.", "Defensive Cash Machine"));
+                break;
+        }
+
+        // Filter out current ticker and return top 2 alternatives
+        return pool.Where(p => !string.Equals(p.Ticker, currentTicker, StringComparison.OrdinalIgnoreCase))
+                   .Take(2)
+                   .ToList();
     }
 }

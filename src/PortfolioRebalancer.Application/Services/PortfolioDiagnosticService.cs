@@ -1,4 +1,4 @@
-﻿using PortfolioRebalancer.Application.DTOs;
+using PortfolioRebalancer.Application.DTOs;
 using PortfolioRebalancer.Application.Interfaces;
 using PortfolioRebalancer.Domain.Enums;
 using PortfolioRebalancer.Domain.Models;
@@ -44,7 +44,8 @@ public sealed class PortfolioDiagnosticService(
                 Harvesting: new PnlHarvestingSummaryDto(0, 0, 0, 0, [], []),
                 Violations: [],
                 AdvisoryPillars: [],
-                UpcomingEvents: []
+                UpcomingEvents: [],
+                CrashDefense: new CrashDefenseDto(50, "N/A", 0, 0, 0, 0, 0, "N/A", "Add holdings to assess crash defense.")
             );
         }
 
@@ -53,6 +54,8 @@ public sealed class PortfolioDiagnosticService(
         decimal largeCapVal = 0;
         decimal midCapVal = 0;
         decimal smallCapVal = 0;
+        decimal zeroDebtVal = 0;
+        decimal highRoceVal = 0;
         int profitCount = 0;
         int lossCount = 0;
 
@@ -79,9 +82,12 @@ public sealed class PortfolioDiagnosticService(
             // HHI calculation
             hhiSum += (weight * weight);
 
-            // Factor score contribution
+            // Factor score contribution & Crash Defense resilience trackers
             var score = scoringService.CalculateScore(holding.Stock);
             totalScoreContribution += (score.OverallScore * (weight / 100m));
+
+            if (score.GovernanceAudit.DebtToEquity <= 0.4m) zeroDebtVal += mv;
+            if (score.GovernanceAudit.RocePercent >= 15.0m) highRoceVal += mv;
 
             // Market Cap distribution
             var mc = holding.Stock.MarketCap ?? 0m;
@@ -304,6 +310,42 @@ public sealed class PortfolioDiagnosticService(
         var totalPnL = totalMarketValue - totalInvestedCost;
         var totalPnLPct = totalInvestedCost > 0 ? Math.Round((totalPnL / totalInvestedCost) * 100m, 2) : 0m;
 
+        // 10. Sleep-Well Crash Defense & 10% Correction Stress Test (Option B)
+        var zeroDebtRatio = totalMarketValue > 0 ? Math.Round((zeroDebtVal / totalMarketValue) * 100m, 1) : 0m;
+        var highRoceRatio = totalMarketValue > 0 ? Math.Round((highRoceVal / totalMarketValue) * 100m, 1) : 0m;
+
+        int crashScore = (int)Math.Clamp(
+            (zeroDebtRatio * 0.40m) + (highRoceRatio * 0.35m) + (largePct * 0.25m),
+            30m, 98m
+        );
+
+        string crashGrade = crashScore switch
+        {
+            >= 80 => "Fortress Defense (High Crash Resilience)",
+            >= 65 => "Balanced Cushion (Moderate Resilience)",
+            >= 50 => "Market Beta (Average Resilience)",
+            _ => "High Volatility (Vulnerable to Sharp Drawdowns)"
+        };
+
+        decimal portfolioBeta = Math.Round(Math.Clamp(1.20m - ((crashScore / 100m) * 0.50m), 0.65m, 1.25m), 2);
+        decimal dipPercent = Math.Round(10.0m * portfolioBeta, 1);
+        decimal dipRupees = Math.Round(totalMarketValue * (dipPercent / 100m), 2);
+
+        string recoveryHorizon = crashScore >= 75 ? "2 to 4 Months" : (crashScore >= 60 ? "4 to 7 Months" : "8+ Months");
+        string peaceOfMind = $"If NIFTY drops 10%, your estimated paper dip is ₹{dipRupees:N0} ({dipPercent:F1}%). With {zeroDebtRatio:F0}% of capital in debt-free/low-debt companies and {highRoceRatio:F0}% in high-ROCE leaders, your positions face near-zero insolvency risk and historically recover faster than speculative stocks.";
+
+        var crashDefense = new CrashDefenseDto(
+            Score: crashScore,
+            Grade: crashGrade,
+            ZeroDebtRatioPercent: zeroDebtRatio,
+            HighRoceRatioPercent: highRoceRatio,
+            LargeCapRatioPercent: largePct,
+            TenPercentCorrectionDipRupees: dipRupees,
+            TenPercentCorrectionDipPercent: dipPercent,
+            ExpectedRecoveryHorizon: recoveryHorizon,
+            PeaceOfMindSummary: peaceOfMind
+        );
+
         return new PortfolioDiagnosticsDto(
             PortfolioId: portfolio.Id,
             HealthScore: healthScore,
@@ -347,7 +389,8 @@ public sealed class PortfolioDiagnosticService(
             ),
             Violations: violations,
             AdvisoryPillars: advisoryPillars,
-            UpcomingEvents: eventDtos
+            UpcomingEvents: eventDtos,
+            CrashDefense: crashDefense
         );
     }
 }

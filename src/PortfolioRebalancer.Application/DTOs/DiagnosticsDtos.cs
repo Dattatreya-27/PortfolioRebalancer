@@ -1,4 +1,4 @@
-﻿namespace PortfolioRebalancer.Application.DTOs;
+namespace PortfolioRebalancer.Application.DTOs;
 
 public sealed record StockEvaluationDetailDto(
     string Ticker,
@@ -26,7 +26,22 @@ public sealed record StockEvaluationDetailDto(
     IReadOnlyList<string> Strengths,
     IReadOnlyList<string> RiskFlags,
     decimal FundamentalScore,
-    decimal TechnicalScore
+    decimal TechnicalScore,
+    decimal FairValueEstimate = 0m,
+    decimal MarginOfSafetyPercent = 0m,
+    string ValuationBandVerdict = "",
+    IReadOnlyList<StockAlternativeDto>? BetterMarketAlternatives = null
+);
+
+public sealed record StockAlternativeDto(
+    string Ticker,
+    string Name,
+    decimal Price,
+    decimal PeRatio,
+    decimal PegRatio,
+    decimal RocePercent,
+    string WhyBetter,
+    string MomentumBadge
 );
 
 public sealed record PeerBenchmarkDto(
@@ -65,7 +80,20 @@ public sealed record PortfolioDiagnosticsDto(
     PnlHarvestingSummaryDto Harvesting,
     IReadOnlyList<ConstraintViolationDto> Violations,
     IReadOnlyList<AdvisoryGuidancePillarDto> AdvisoryPillars,
-    IReadOnlyList<UpcomingEventDto> UpcomingEvents
+    IReadOnlyList<UpcomingEventDto> UpcomingEvents,
+    CrashDefenseDto? CrashDefense = null
+);
+
+public sealed record CrashDefenseDto(
+    int Score,
+    string Grade,
+    decimal ZeroDebtRatioPercent,
+    decimal HighRoceRatioPercent,
+    decimal LargeCapRatioPercent,
+    decimal TenPercentCorrectionDipRupees,
+    decimal TenPercentCorrectionDipPercent,
+    string ExpectedRecoveryHorizon,
+    string PeaceOfMindSummary
 );
 
 public sealed record HhiConcentrationDto(

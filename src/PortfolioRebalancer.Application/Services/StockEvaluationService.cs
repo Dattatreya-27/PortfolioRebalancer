@@ -1,4 +1,4 @@
-﻿using PortfolioRebalancer.Application.DTOs;
+using PortfolioRebalancer.Application.DTOs;
 using PortfolioRebalancer.Application.Interfaces;
 
 namespace PortfolioRebalancer.Application.Services;
@@ -62,7 +62,20 @@ public sealed class StockEvaluationService(
             Strengths: score.Strengths,
             RiskFlags: score.RiskFlags,
             FundamentalScore: score.FundamentalScore,
-            TechnicalScore: score.TechnicalScore
+            TechnicalScore: score.TechnicalScore,
+            FairValueEstimate: score.FairValueEstimate,
+            MarginOfSafetyPercent: score.MarginOfSafetyPercent,
+            ValuationBandVerdict: score.ValuationBandVerdict,
+            BetterMarketAlternatives: score.BetterMarketAlternatives?.Select(a => new StockAlternativeDto(
+                Ticker: a.Ticker,
+                Name: a.Name,
+                Price: a.Price,
+                PeRatio: a.PeRatio,
+                PegRatio: a.PegRatio,
+                RocePercent: a.RocePercent,
+                WhyBetter: a.WhyBetter,
+                MomentumBadge: a.MomentumBadge
+            )).ToList()
         );
     }
 }

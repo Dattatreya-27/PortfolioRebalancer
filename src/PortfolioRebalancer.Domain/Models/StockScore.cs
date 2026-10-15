@@ -1,4 +1,4 @@
-﻿namespace PortfolioRebalancer.Domain.Models;
+namespace PortfolioRebalancer.Domain.Models;
 
 /// <summary>
 /// Institutional multi-factor stock scorecard modeled after top equity research frameworks.
@@ -23,7 +23,11 @@ public sealed record StockScore(
     GovernanceAuditData GovernanceAudit, // Promoter stake, pledge, ROCE, Debt/Equity
     InstitutionalFlowData InstitutionalFlow, // FII/DII stakes, flow trend
     IReadOnlyList<string> Strengths,     // Core competitive moats
-    IReadOnlyList<string> RiskFlags      // Key operational or valuation risks
+    IReadOnlyList<string> RiskFlags,     // Key operational or valuation risks
+    decimal FairValueEstimate = 0m,      // Estimated intrinsic fair value in INR
+    decimal MarginOfSafetyPercent = 0m,  // Discount (+) or Premium (-) relative to CMP
+    string ValuationBandVerdict = "",    // e.g. "Attractive Buy / Undervalued"
+    IReadOnlyList<StockAlternative>? BetterMarketAlternatives = null // Curated alternative ideas
 )
 {
     /// <summary>
@@ -74,4 +78,15 @@ public sealed record InstitutionalFlowData(
     decimal DiiHoldingPercent,
     string InstitutionalConsensus,
     string FlowTrend
+);
+
+public sealed record StockAlternative(
+    string Ticker,
+    string Name,
+    decimal Price,
+    decimal PeRatio,
+    decimal PegRatio,
+    decimal RocePercent,
+    string WhyBetter,
+    string MomentumBadge
 );

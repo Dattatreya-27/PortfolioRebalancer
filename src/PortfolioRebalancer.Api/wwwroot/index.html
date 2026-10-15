@@ -664,6 +664,86 @@
 
       </div>
 
+      <!-- 9-5 Professional Sleep-Well Crash Defense & 10% Correction Stress Test (Option B) -->
+      <div id="crashDefenseCard" class="p-4 bg-gradient-to-r from-slate-900/90 via-indigo-950/30 to-slate-900/90 rounded-xl border border-indigo-500/30 shadow-lg space-y-3">
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-2 border-b border-slate-800">
+          <div class="flex items-center space-x-2.5">
+            <div class="w-8 h-8 rounded-lg bg-indigo-500/20 border border-indigo-500/40 flex items-center justify-center text-indigo-400">
+              <i class="fa-solid fa-shield-heart"></i>
+            </div>
+            <div>
+              <div class="text-xs font-bold text-white uppercase tracking-wider flex items-center">
+                <span>Sleep-Well Crash Defense &amp; 10% Correction Stress Test</span>
+                <button type="button" class="ml-1.5 text-slate-400 hover:text-amber-400 transition" onclick="openFinancialExplainer('CRASH_DEFENSE')" title="What is Crash Defense?">
+                  <i class="fa-solid fa-circle-info text-[11px]"></i>
+                </button>
+              </div>
+              <div class="text-[11px] text-slate-400">Tail-risk cushion designed for working professionals who cannot monitor the market 24/7</div>
+            </div>
+          </div>
+          <div class="flex items-center space-x-3">
+            <div class="text-right">
+              <div class="text-[10px] text-slate-400 uppercase tracking-wider">Crash Defense Score</div>
+              <div class="text-xl font-black font-mono text-indigo-300" id="statCrashScore">-- <span class="text-xs text-slate-500 font-normal">/ 100</span></div>
+            </div>
+            <span id="statCrashBadge" class="text-xs font-bold px-2.5 py-1 rounded-lg bg-indigo-500/20 text-indigo-300 border border-indigo-500/30">
+              Assessing...
+            </span>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-3 pt-1">
+          <!-- Pillar A: Debt-Free Shield -->
+          <div class="p-2.5 bg-slate-950/80 rounded-lg border border-slate-800/80 flex items-center justify-between">
+            <div>
+              <div class="text-[10px] text-slate-400 flex items-center">
+                <span>Zero/Low-Debt Capital</span>
+                <button type="button" class="ml-1 text-slate-500 hover:text-amber-400" onclick="openFinancialExplainer('DEBT_EQUITY')"><i class="fa-solid fa-circle-info text-[9px]"></i></button>
+              </div>
+              <div class="text-xs font-semibold text-slate-300 mt-0.5">Insolvency Protection</div>
+            </div>
+            <div class="text-right">
+              <div id="statZeroDebtPct" class="text-base font-bold font-mono text-emerald-400">--%</div>
+              <div class="text-[9px] text-slate-500">Debt/Eq &le; 0.4</div>
+            </div>
+          </div>
+
+          <!-- Pillar B: Quality Profit Engine -->
+          <div class="p-2.5 bg-slate-950/80 rounded-lg border border-slate-800/80 flex items-center justify-between">
+            <div>
+              <div class="text-[10px] text-slate-400 flex items-center">
+                <span>High ROCE Leaders</span>
+                <button type="button" class="ml-1 text-slate-500 hover:text-amber-400" onclick="openFinancialExplainer('ROCE')"><i class="fa-solid fa-circle-info text-[9px]"></i></button>
+              </div>
+              <div class="text-xs font-semibold text-slate-300 mt-0.5">Capital Efficiency</div>
+            </div>
+            <div class="text-right">
+              <div id="statHighRocePct" class="text-base font-bold font-mono text-cyan-400">--%</div>
+              <div class="text-[9px] text-slate-500">ROCE &ge; 15%</div>
+            </div>
+          </div>
+
+          <!-- Pillar C: 10% Dip Stress Test -->
+          <div class="p-2.5 bg-slate-950/80 rounded-lg border border-slate-800/80 flex items-center justify-between">
+            <div>
+              <div class="text-[10px] text-slate-400 flex items-center">
+                <span>10% Market Correction Dip</span>
+                <button type="button" class="ml-1 text-slate-500 hover:text-amber-400" onclick="openFinancialExplainer('STRESS_TEST')"><i class="fa-solid fa-circle-info text-[9px]"></i></button>
+              </div>
+              <div class="text-xs font-semibold text-slate-300 mt-0.5" id="statRecoveryHorizon">Recovery: ~3-5 Months</div>
+            </div>
+            <div class="text-right">
+              <div id="statDipRupees" class="text-base font-bold font-mono text-amber-300 privacy-mask">-&#8377;0</div>
+              <div id="statDipPct" class="text-[10px] font-mono text-slate-400">(-0.0%)</div>
+            </div>
+          </div>
+        </div>
+
+        <p id="statPeaceOfMindSummary" class="text-xs text-slate-300 italic bg-slate-950/60 p-2.5 rounded-lg border border-slate-800/60 leading-relaxed">
+          Evaluating portfolio cushion against sudden market declines...
+        </p>
+      </div>
+
       <!-- Institutional Guardrails & Concentration Limits (Live Progress Bars) -->
       <div class="p-4 bg-slate-950/60 rounded-xl border border-slate-800 space-y-3">
         <div class="flex items-center justify-between pb-2 border-b border-slate-800/80 text-xs">
@@ -786,6 +866,63 @@
           <i class="fa-solid fa-newspaper mr-1.5"></i> Forward-Looking Corporate News & Macro Policy Scenarios
         </h4>
         <div id="scenariosContainer" class="grid grid-cols-1 md:grid-cols-3 gap-4"></div>
+      </div>
+    <!-- Interactive Financial Explainer Modal for 9-5 Working Professionals -->
+    <div id="financialExplainerModal" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm">
+      <div class="relative w-full max-w-lg bg-slate-900 border border-amber-500/40 rounded-2xl p-6 shadow-2xl text-slate-100 space-y-4">
+        <div class="flex items-center justify-between border-b border-slate-800 pb-3">
+          <div class="flex items-center space-x-2.5">
+            <div id="explainerIconContainer" class="w-9 h-9 rounded-xl bg-amber-500/20 border border-amber-500/30 flex items-center justify-center text-amber-400">
+              <i id="explainerIcon" class="fa-solid fa-graduation-cap"></i>
+            </div>
+            <div>
+              <h3 id="explainerTitle" class="text-base font-bold text-white">Financial Metric Explainer</h3>
+              <span id="explainerTag" class="text-[10px] font-mono px-2 py-0.5 rounded bg-slate-800 text-slate-400">Jargon-Free Plain English</span>
+            </div>
+          </div>
+          <button id="btnCloseExplainer" type="button" class="text-slate-400 hover:text-white p-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 transition" onclick="closeFinancialExplainer()">
+            <i class="fa-solid fa-xmark text-sm"></i>
+          </button>
+        </div>
+
+        <!-- Plain English Analogy -->
+        <div class="p-3 bg-slate-950/70 rounded-xl border border-slate-800/80 space-y-1">
+          <div class="text-[10px] uppercase font-bold text-amber-400 flex items-center">
+            <i class="fa-solid fa-lightbulb mr-1.5"></i> In Plain English:
+          </div>
+          <p id="explainerAnalogy" class="text-xs text-slate-200 leading-relaxed">
+            Loading explanation...
+          </p>
+        </div>
+
+        <!-- Is High or Low Better Rule of Thumb -->
+        <div class="p-3 bg-slate-950/70 rounded-xl border border-slate-800/80 space-y-1.5">
+          <div class="text-[10px] uppercase font-bold text-emerald-400 flex items-center">
+            <i class="fa-solid fa-compass mr-1.5"></i> Rule of Thumb: Is High or Low Better?
+          </div>
+          <div id="explainerRule" class="text-xs font-semibold text-white">
+            Rule of thumb text
+          </div>
+          <div id="explainerScale" class="text-[11px] text-slate-300 space-y-1 pt-1 border-t border-slate-800/60 font-mono">
+            <!-- Scale badges -->
+          </div>
+        </div>
+
+        <!-- 9-5 Professional Takeaway -->
+        <div class="p-3 bg-amber-500/10 border border-amber-500/25 rounded-xl space-y-1">
+          <div class="text-[10px] uppercase font-bold text-amber-300 flex items-center">
+            <i class="fa-solid fa-briefcase mr-1.5"></i> 9-5 Working Professional Takeaway:
+          </div>
+          <p id="explainerTakeaway" class="text-xs text-amber-200/90 leading-relaxed">
+            What should you do if you are managing your portfolio alongside your job?
+          </p>
+        </div>
+
+        <div class="text-right pt-1">
+          <button type="button" onclick="closeFinancialExplainer()" class="px-4 py-1.5 bg-amber-500 hover:bg-amber-600 text-slate-950 text-xs font-bold rounded-lg transition">
+            Got It, Thanks!
+          </button>
+        </div>
       </div>
     </div>
 

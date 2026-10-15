@@ -45,6 +45,165 @@ const SECTORS = [
   "CommunicationServices"
 ];
 
+const FINANCIAL_DICTIONARY = {
+  PEG: {
+    title: "PEG Ratio (Price/Earnings-to-Growth)",
+    icon: "fa-scale-balanced text-amber-400",
+    tag: "Growth-Adjusted Price Tag",
+    analogy: "P/E ratio alone can trick you! A stock with a P/E of 45x looks expensive, but if its profits are growing at 50% year-on-year, you are actually getting a bargain! PEG connects what you pay with how fast profits are expanding.",
+    rule: "LOW IS BETTER. A lower PEG means you pay less for every unit of future profit growth.",
+    scale: [
+      "< 1.0x: 🟢 Undervalued / Growth Bargain",
+      "1.0x - 1.8x: 🟡 Fair Price / Growth-Backed",
+      "> 2.0x: 🔴 Expensive / Priced for Perfection"
+    ],
+    takeaway: "For a working professional with a 9-5 job, stocks with PEG < 1.5 give you a wide margin of safety if quarterly earnings slow down."
+  },
+  PE_RATIO: {
+    title: "P/E Ratio (Price-to-Earnings Multiple)",
+    icon: "fa-tag text-cyan-400",
+    tag: "Price Tag on Annual Profits",
+    analogy: "Think of P/E as the price tag on a company's profits. A P/E of 25x means you pay ₹25 for every ₹1 of annual net profit the company earns.",
+    rule: "LOWER IS GENERALLY CHEAPER, but compare with sector peers! Tech usually trades at 28x, whereas PSU banks trade at 10x-12x.",
+    scale: [
+      "Below Sector Median: 🟢 Cheaper multiple than peers",
+      "Near Sector Median: 🟡 Fairly valued",
+      "2x Above Sector Median: 🔴 High earnings expectations priced in"
+    ],
+    takeaway: "Never buy a stock just because it has a low P/E. Always check whether profits are growing and whether debt is safe."
+  },
+  ROCE: {
+    title: "ROCE (Return on Capital Employed)",
+    icon: "fa-chart-pie text-emerald-400",
+    tag: "Management Capital Efficiency",
+    analogy: "For every ₹100 of money invested in the business (equity + loans), how many rupees of operating profit does management generate each year?",
+    rule: "HIGH IS BETTER. High ROCE proves that the company has a strong economic moat and generates immense cash without wasting capital.",
+    scale: [
+      "> 20%: 🟢 Elite Capital Allocator (TCS, Titan, BEL)",
+      "15% - 20%: 🟡 Solid Healthy Business",
+      "< 10%: 🔴 Poor Capital Efficiency (Destroys value)"
+    ],
+    takeaway: "If you work a 9-5 job, stick to companies with ROCE > 15%. They compound wealth automatically without requiring daily monitoring."
+  },
+  DEBT_EQUITY: {
+    title: "Debt-to-Equity Ratio (D/E)",
+    icon: "fa-hand-holding-dollar text-rose-400",
+    tag: "Bankruptcy & Leverage Risk",
+    analogy: "How much borrowed loan money the company uses compared to its own shareholders' equity. 0.0 means completely debt-free!",
+    rule: "LOW IS BETTER (for non-financials). Zero or low debt means zero risk of bankruptcy during economic downturns.",
+    scale: [
+      "0.0 - 0.3: 🟢 Fortress Balance Sheet (Near-Zero Insolvency Risk)",
+      "0.4 - 1.0: 🟡 Moderate Manageable Debt",
+      "> 1.5: 🔴 Heavy Debt (Interest eats profits during bad quarters)"
+    ],
+    takeaway: "Debt-free companies let you sleep well at night. Even if market sentiment crashes 20%, they cannot go bust."
+  },
+  PROMOTER_PLEDGE: {
+    title: "Promoter Pledge %",
+    icon: "fa-user-lock text-amber-400",
+    tag: "Skin in the Game & Loan Risk",
+    analogy: "The percentage of company shares that founding promoters have mortgaged to banks to borrow money for personal or group ventures.",
+    rule: "LOW IS BETTER. 0% is pristine. High pledge is a major warning because banks can forcibly dump mortgaged shares if the stock drops.",
+    scale: [
+      "0%: 🟢 Pristine (Founders haven't mortgaged their ownership)",
+      "1% - 15%: 🟡 Watch closely",
+      "> 20%: 🔴 High Risk (Forced margin liquidation danger)"
+    ],
+    takeaway: "Always prioritize 0% pledge companies. You don't want your stock cratering because a promoter defaulted on a personal bank loan."
+  },
+  FII_DII: {
+    title: "Institutional Sponsorship (FII / DII Float)",
+    icon: "fa-building-columns text-cyan-400",
+    tag: "Smart Money Anchor",
+    analogy: "Big institutional capital: Foreign Institutional Investors & Domestic Mutual Funds/LIC. When institutions hold a large stake, they provide stability.",
+    rule: "HIGH IS BETTER. Institutional backing creates a liquidity floor under stock prices during retail panic selling.",
+    scale: [
+      "> 40%: 🟢 Institutional Core Anchor (Very high liquidity)",
+      "20% - 40%: 🟡 Healthy Sponsorship",
+      "< 10%: 🔴 Retail-Dominated (Prone to extreme operator swings)"
+    ],
+    takeaway: "Stocks owned heavily by Indian mutual funds benefit from steady monthly SIP inflows from millions of working citizens."
+  },
+  CRASH_DEFENSE: {
+    title: "Sleep-Well Crash Defense Score",
+    icon: "fa-shield-heart text-indigo-400",
+    tag: "Bear Market Cushion",
+    analogy: "Measures your portfolio's natural armor against market crashes based on debt-free companies, high ROCE profits, and bluechip liquidity.",
+    rule: "HIGH IS BETTER. 80+ is Fortress Defense. It tells you whether you can comfortably ignore market crashes while at work.",
+    scale: [
+      "80 - 100: 🟢 Fortress Defense (Historically rebounds in 2-4 months)",
+      "65 - 79: 🟡 Balanced Cushion (Historically rebounds in 4-6 months)",
+      "< 60: 🔴 High Beta / Speculative (Long paper drawdown risk)"
+    ],
+    takeaway: "A high crash score means your companies produce real cash and have zero debt. Dips are buying opportunities, not panic signals."
+  },
+  FAIR_VALUE: {
+    title: "Fair Value & Margin of Safety",
+    icon: "fa-bullseye text-emerald-400",
+    tag: "Intrinsic Worth vs Market Price",
+    analogy: "What the company is genuinely worth based on its earnings growth rate and sector multiples, compared to its live market price (CMP).",
+    rule: "BUYING AT A POSITIVE MARGIN OF SAFETY (>15% discount) protects your hard-earned capital.",
+    scale: [
+      "> +15% Discount: 🟢 Attractive Buy / High Margin of Safety",
+      "-10% to +15%: 🟡 Fairly Priced with Growth",
+      "< -10% Premium: 🔴 Overpriced / Priced for Perfection"
+    ],
+    takeaway: "Never chase stocks at a steep premium to fair value. Patiently wait for dips or consider higher-conviction peer alternatives."
+  },
+  STRESS_TEST: {
+    title: "10% Market Correction Stress Test",
+    icon: "fa-chart-line text-amber-400",
+    tag: "Worst-Case Paper Dip in ₹",
+    analogy: "Simulates what happens to your portfolio in rupees if the NIFTY 50 drops by 10% during an unexpected global shock.",
+    rule: "LOWER LOSS IS BETTER. High-quality portfolios drop less than the index (low beta) and bounce back faster.",
+    scale: [
+      "Estimated Dip < 8%: 🟢 Superior Cushion vs NIFTY",
+      "Estimated Dip 8% - 10%: 🟡 Matches Market Benchmark",
+      "Estimated Dip > 12%: 🔴 High Beta / Aggressive Small-Cap Tilt"
+    ],
+    takeaway: "Paper dips during corrections are normal. High-ROCE, debt-free leaders historically rebound to new all-time highs within 3-6 months."
+  },
+  HHI: {
+    title: "HHI Diversification Score",
+    icon: "fa-pie-chart text-purple-400",
+    tag: "Concentration vs Diversification",
+    analogy: "Herfindahl-Hirschman Index: Measures whether your wealth is spread evenly or dangerously concentrated in just 1-2 stocks.",
+    rule: "LOW IS BETTER. A lower score means you won't suffer a catastrophic loss if one individual company faces bad news.",
+    scale: [
+      "< 1,000: 🟢 Well Diversified",
+      "1,000 - 1,800: 🟡 Moderate Concentration",
+      "> 1,800: 🔴 Too Concentrated in Few Stocks"
+    ],
+    takeaway: "Ensure no single stock exceeds 10% of your portfolio so single-stock surprises don't derail your retirement plan."
+  }
+};
+
+function openFinancialExplainer(metricKey) {
+  const item = FINANCIAL_DICTIONARY[metricKey];
+  if (!item) return;
+
+  const modal = document.getElementById("financialExplainerModal");
+  if (!modal) return;
+
+  document.getElementById("explainerTitle").textContent = item.title;
+  document.getElementById("explainerTag").textContent = item.tag;
+  document.getElementById("explainerIcon").className = `fa-solid ${item.icon}`;
+  document.getElementById("explainerAnalogy").textContent = item.analogy;
+  document.getElementById("explainerRule").textContent = item.rule;
+
+  const scaleContainer = document.getElementById("explainerScale");
+  scaleContainer.innerHTML = item.scale.map(s => `<div class="py-0.5">${s}</div>`).join("");
+
+  document.getElementById("explainerTakeaway").textContent = item.takeaway;
+
+  modal.classList.remove("hidden");
+}
+
+function closeFinancialExplainer() {
+  const modal = document.getElementById("financialExplainerModal");
+  if (modal) modal.classList.add("hidden");
+}
+
 let currentPortfolioId = null;
 let currentPortfolioData = null;
 let isPrivacyMode = localStorage.getItem("portfolio_privacy_mode") === "true";
@@ -851,7 +1010,35 @@ async function loadDiagnostics(portfolioId) {
       document.getElementById("diagWinRate").textContent = `${winRate}% (${h.profitPositionsCount}W / ${h.lossPositionsCount}L)`;
     }
 
-    // 9. Render Constraint Violations (if any)
+    // 9. Pillar 5: Sleep-Well Crash Defense & 10% Correction Stress Test (Option B)
+    const cd = diag.crashDefense;
+    if (cd) {
+      const scoreElem = document.getElementById("statCrashScore");
+      const badgeElem = document.getElementById("statCrashBadge");
+      const zeroDebtElem = document.getElementById("statZeroDebtPct");
+      const highRoceElem = document.getElementById("statHighRocePct");
+      const dipRupeesElem = document.getElementById("statDipRupees");
+      const dipPctElem = document.getElementById("statDipPct");
+      const recoveryElem = document.getElementById("statRecoveryHorizon");
+      const summaryElem = document.getElementById("statPeaceOfMindSummary");
+
+      if (scoreElem) scoreElem.innerHTML = `${cd.score} <span class="text-xs text-slate-500 font-normal">/ 100</span>`;
+      if (badgeElem) {
+        badgeElem.textContent = cd.grade;
+        badgeElem.className = `text-xs font-bold px-2.5 py-1 rounded-lg border ${
+          cd.score >= 80 ? 'bg-emerald-500/20 text-emerald-300 border-emerald-500/30' :
+          (cd.score >= 65 ? 'bg-indigo-500/20 text-indigo-300 border-indigo-500/30' : 'bg-amber-500/20 text-amber-300 border-amber-500/30')
+        }`;
+      }
+      if (zeroDebtElem) zeroDebtElem.textContent = `${cd.zeroDebtRatioPercent}%`;
+      if (highRoceElem) highRoceElem.textContent = `${cd.highRoceRatioPercent}%`;
+      if (dipRupeesElem) dipRupeesElem.textContent = `-${formatINR(cd.tenPercentCorrectionDipRupees)}`;
+      if (dipPctElem) dipPctElem.textContent = `(-${cd.tenPercentCorrectionDipPercent}%)`;
+      if (recoveryElem) recoveryElem.textContent = `Recovery: ~${cd.expectedRecoveryHorizon}`;
+      if (summaryElem) summaryElem.textContent = cd.peaceOfMindSummary;
+    }
+
+    // 10. Render Constraint Violations (if any)
     const vContainer = document.getElementById("violationsContainer");
     if (vContainer) {
       vContainer.innerHTML = "";
@@ -1213,6 +1400,40 @@ async function handleInspectStock() {
         </div>
       </div>
 
+      <!-- Is Current Value Good? (Fair Value & Margin of Safety Check) -->
+      <div class="p-3 bg-gradient-to-r from-slate-900/90 via-slate-900/60 to-slate-900/90 rounded-xl border border-slate-800 flex flex-col md:flex-row md:items-center justify-between gap-3 shadow-inner">
+        <div class="space-y-1">
+          <div class="flex flex-wrap items-center gap-2">
+            <span class="text-xs font-bold text-white uppercase tracking-wider flex items-center">
+              <i class="fa-solid fa-bullseye text-emerald-400 mr-1.5"></i> Is Current Value Good? (Fair Value Check)
+            </span>
+            <button type="button" class="text-slate-400 hover:text-amber-400 transition" onclick="openFinancialExplainer('FAIR_VALUE')" title="What is Fair Value & Margin of Safety?">
+              <i class="fa-solid fa-circle-info text-[11px]"></i>
+            </button>
+            <span class="px-2 py-0.5 rounded text-[10px] font-bold ${
+              data.marginOfSafetyPercent >= 15 ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30' :
+              (data.marginOfSafetyPercent >= -10 ? 'bg-amber-500/20 text-amber-300 border border-amber-500/30' : 'bg-rose-500/20 text-rose-300 border border-rose-500/30')
+            }">
+              ${data.marginOfSafetyPercent >= 0 ? '+' : ''}${data.marginOfSafetyPercent}% Margin of Safety
+            </span>
+          </div>
+          <p class="text-xs text-slate-300">
+            ${data.valuationBandVerdict || 'Valuation assessed relative to growth rate and sector peers.'}
+          </p>
+        </div>
+        <div class="flex items-center space-x-4 self-end md:self-center bg-slate-950/80 px-4 py-2 rounded-xl border border-slate-800">
+          <div class="text-right">
+            <div class="text-[9px] uppercase tracking-wider text-slate-500">Live Market Price (CMP)</div>
+            <div class="text-sm font-bold font-mono text-amber-400">&#8377;${data.price}</div>
+          </div>
+          <div class="text-slate-600 font-bold">&rarr;</div>
+          <div class="text-right">
+            <div class="text-[9px] uppercase tracking-wider text-slate-500">Estimated Fair Value</div>
+            <div class="text-sm font-bold font-mono text-emerald-400">&#8377;${data.fairValueEstimate || data.price}</div>
+          </div>
+        </div>
+      </div>
+
       <!-- 5 Institutional Pillars Bar Matrix -->
       <div class="bg-slate-900/60 p-3 rounded-xl border border-slate-800/80 space-y-2">
         <div class="text-[10px] uppercase font-bold tracking-wider text-slate-400 flex items-center justify-between">
@@ -1223,7 +1444,10 @@ async function handleInspectStock() {
           <!-- Quality -->
           <div class="bg-slate-950/70 p-2 rounded-lg border border-slate-800">
             <div class="flex justify-between items-center text-[10px]">
-              <span class="text-slate-400 font-medium">1. Quality & ROCE</span>
+              <span class="text-slate-400 font-medium flex items-center">
+                1. Quality
+                <button type="button" class="ml-1 text-slate-500 hover:text-amber-400" onclick="openFinancialExplainer('ROCE')"><i class="fa-solid fa-circle-info text-[9px]"></i></button>
+              </span>
               <span class="font-bold text-white font-mono">${data.qualityScore || data.fundamentalScore}</span>
             </div>
             <div class="w-full bg-slate-800 h-1.5 rounded-full mt-1.5 overflow-hidden">
@@ -1233,7 +1457,10 @@ async function handleInspectStock() {
           <!-- Relative Valuation & PEG -->
           <div class="bg-slate-950/70 p-2 rounded-lg border border-slate-800">
             <div class="flex justify-between items-center text-[10px]">
-              <span class="text-slate-400 font-medium">2. Valuation & PEG</span>
+              <span class="text-slate-400 font-medium flex items-center">
+                2. Valuation
+                <button type="button" class="ml-1 text-slate-500 hover:text-amber-400" onclick="openFinancialExplainer('PEG')"><i class="fa-solid fa-circle-info text-[9px]"></i></button>
+              </span>
               <span class="font-bold text-white font-mono">${data.relativeValuationScore || 70}</span>
             </div>
             <div class="w-full bg-slate-800 h-1.5 rounded-full mt-1.5 overflow-hidden">
@@ -1253,7 +1480,10 @@ async function handleInspectStock() {
           <!-- Governance & FII/DII -->
           <div class="bg-slate-950/70 p-2 rounded-lg border border-slate-800">
             <div class="flex justify-between items-center text-[10px]">
-              <span class="text-slate-400 font-medium">4. Governance & Inst</span>
+              <span class="text-slate-400 font-medium flex items-center">
+                4. Governance
+                <button type="button" class="ml-1 text-slate-500 hover:text-amber-400" onclick="openFinancialExplainer('PROMOTER_PLEDGE')"><i class="fa-solid fa-circle-info text-[9px]"></i></button>
+              </span>
               <span class="font-bold text-white font-mono">${data.institutionalGovernanceScore || 75}</span>
             </div>
             <div class="w-full bg-slate-800 h-1.5 rounded-full mt-1.5 overflow-hidden">
@@ -1263,7 +1493,7 @@ async function handleInspectStock() {
           <!-- Macro Policy -->
           <div class="bg-slate-950/70 p-2 rounded-lg border border-slate-800">
             <div class="flex justify-between items-center text-[10px]">
-              <span class="text-slate-400 font-medium">5. Policy Tailwinds</span>
+              <span class="text-slate-400 font-medium">5. Policy</span>
               <span class="font-bold text-white font-mono">${data.macroPolicyScore || data.policyAlignmentScore}</span>
             </div>
             <div class="w-full bg-slate-800 h-1.5 rounded-full mt-1.5 overflow-hidden">
@@ -1294,21 +1524,27 @@ async function handleInspectStock() {
         <div class="p-3 bg-slate-900/60 rounded-xl border border-slate-800 space-y-2">
           <div class="flex items-center justify-between pb-1 border-b border-slate-800/60">
             <span class="text-[10px] font-bold uppercase tracking-wider text-slate-300 flex items-center">
-              <i class="fa-solid fa-scale-balanced text-amber-400 mr-1.5"></i> Relative Valuation & Peers
+              <i class="fa-solid fa-scale-balanced text-amber-400 mr-1.5"></i> Relative Valuation &amp; Peers
             </span>
             <span class="text-[9px] font-mono px-1.5 py-0.5 rounded bg-slate-800 text-slate-400">Growth-Adjusted</span>
           </div>
           <div class="grid grid-cols-3 gap-2 text-center font-mono">
             <div class="bg-slate-950 p-1.5 rounded border border-slate-800/70">
-              <div class="text-[9px] text-slate-500">Stock P/E</div>
+              <div class="text-[9px] text-slate-500 flex items-center justify-center">
+                <span>Stock P/E</span>
+                <button type="button" class="ml-1 text-slate-500 hover:text-amber-400" onclick="openFinancialExplainer('PE_RATIO')"><i class="fa-solid fa-circle-info text-[8px]"></i></button>
+              </div>
               <div class="font-bold text-white text-xs mt-0.5">${data.peerBenchmark?.stockPe ? data.peerBenchmark.stockPe.toFixed(1) + 'x' : (data.peRatio ? data.peRatio.toFixed(1) + 'x' : 'N/A')}</div>
             </div>
             <div class="bg-slate-950 p-1.5 rounded border border-slate-800/70">
-              <div class="text-[9px] text-slate-500">Sector Median P/E</div>
+              <div class="text-[9px] text-slate-500">Sector Median</div>
               <div class="font-bold text-slate-300 text-xs mt-0.5">${data.peerBenchmark?.sectorMedianPe ? data.peerBenchmark.sectorMedianPe.toFixed(1) + 'x' : 'N/A'}</div>
             </div>
             <div class="bg-slate-950 p-1.5 rounded border border-slate-800/70">
-              <div class="text-[9px] text-slate-500">PEG Ratio</div>
+              <div class="text-[9px] text-slate-500 flex items-center justify-center">
+                <span>PEG Ratio</span>
+                <button type="button" class="ml-1 text-slate-500 hover:text-amber-400" onclick="openFinancialExplainer('PEG')"><i class="fa-solid fa-circle-info text-[8px]"></i></button>
+              </div>
               <div class="font-bold text-xs mt-0.5 ${pegColor}">${peg ? peg.toFixed(2) + 'x' : 'N/A'}</div>
             </div>
           </div>
@@ -1319,7 +1555,7 @@ async function handleInspectStock() {
           ${data.peerBenchmark?.topPeers && data.peerBenchmark.topPeers.length > 0 ? `
             <div class="text-[10px] text-slate-400 flex flex-wrap items-center gap-1 pt-1">
               <span class="text-[9px] text-slate-500 mr-1">Sector Peers:</span>
-              ${data.peerBenchmark.topPeers.map(p => `<span class="px-1.5 py-0.2 rounded bg-slate-800 text-slate-300 font-mono text-[9px] border border-slate-700/60">${p}</span>`).join('')}
+              ${data.peerBenchmark.topPeers.map(p => `<span class="px-1.5 py-0.2 rounded bg-slate-800 text-slate-300 font-mono text-[9px] border border-slate-700/60 cursor-pointer hover:border-amber-400" onclick="quickInspectTicker('${p}')">${p}</span>`).join('')}
             </div>
           ` : ''}
         </div>
@@ -1328,7 +1564,7 @@ async function handleInspectStock() {
         <div class="p-3 bg-slate-900/60 rounded-xl border border-slate-800 space-y-2">
           <div class="flex items-center justify-between pb-1 border-b border-slate-800/60">
             <span class="text-[10px] font-bold uppercase tracking-wider text-slate-300 flex items-center">
-              <i class="fa-solid fa-user-shield text-emerald-400 mr-1.5"></i> Governance & Capital Return
+              <i class="fa-solid fa-user-shield text-emerald-400 mr-1.5"></i> Governance &amp; Returns
             </span>
             ${isPristinePledge ? `
               <span class="text-[9px] font-bold px-1.5 py-0.5 rounded bg-emerald-500/15 text-emerald-300 border border-emerald-500/30">
@@ -1340,21 +1576,30 @@ async function handleInspectStock() {
               </span>
             `}
           </div>
-          <div class="grid grid-cols-4 gap-1.5 text-center font-mono">
+          <div class="grid grid-cols-4 gap-1 text-center font-mono">
             <div class="bg-slate-950 p-1.5 rounded border border-slate-800/70">
               <div class="text-[9px] text-slate-500">Promoter</div>
               <div class="font-bold text-white text-xs mt-0.5">${data.governanceAudit?.promoterHoldingPercent ? data.governanceAudit.promoterHoldingPercent.toFixed(1) + '%' : 'N/A'}</div>
             </div>
             <div class="bg-slate-950 p-1.5 rounded border border-slate-800/70">
-              <div class="text-[9px] text-slate-500">Pledge</div>
+              <div class="text-[9px] text-slate-500 flex items-center justify-center">
+                <span>Pledge</span>
+                <button type="button" class="ml-1 text-slate-500 hover:text-amber-400" onclick="openFinancialExplainer('PROMOTER_PLEDGE')"><i class="fa-solid fa-circle-info text-[8px]"></i></button>
+              </div>
               <div class="font-bold text-xs mt-0.5 ${isPristinePledge ? 'text-emerald-400' : 'text-amber-400'}">${pledge.toFixed(1)}%</div>
             </div>
             <div class="bg-slate-950 p-1.5 rounded border border-slate-800/70">
-              <div class="text-[9px] text-slate-500">ROCE</div>
+              <div class="text-[9px] text-slate-500 flex items-center justify-center">
+                <span>ROCE</span>
+                <button type="button" class="ml-1 text-slate-500 hover:text-amber-400" onclick="openFinancialExplainer('ROCE')"><i class="fa-solid fa-circle-info text-[8px]"></i></button>
+              </div>
               <div class="font-bold text-xs mt-0.5 ${data.governanceAudit?.rocePercent >= 15 ? 'text-emerald-400' : 'text-slate-300'}">${data.governanceAudit?.rocePercent ? data.governanceAudit.rocePercent.toFixed(1) + '%' : 'N/A'}</div>
             </div>
             <div class="bg-slate-950 p-1.5 rounded border border-slate-800/70">
-              <div class="text-[9px] text-slate-500">Debt/Eq</div>
+              <div class="text-[9px] text-slate-500 flex items-center justify-center">
+                <span>Debt/Eq</span>
+                <button type="button" class="ml-1 text-slate-500 hover:text-amber-400" onclick="openFinancialExplainer('DEBT_EQUITY')"><i class="fa-solid fa-circle-info text-[8px]"></i></button>
+              </div>
               <div class="font-bold text-white text-xs mt-0.5">${data.governanceAudit?.debtToEquity !== null && data.governanceAudit?.debtToEquity !== undefined ? data.governanceAudit.debtToEquity.toFixed(2) : '0.00'}</div>
             </div>
           </div>
@@ -1368,9 +1613,11 @@ async function handleInspectStock() {
         <div class="p-3 bg-slate-900/60 rounded-xl border border-slate-800 space-y-2">
           <div class="flex items-center justify-between pb-1 border-b border-slate-800/60">
             <span class="text-[10px] font-bold uppercase tracking-wider text-slate-300 flex items-center">
-              <i class="fa-solid fa-money-bill-trend-up text-cyan-400 mr-1.5"></i> Institutional Sponsorship (FII / DII)
+              <i class="fa-solid fa-money-bill-trend-up text-cyan-400 mr-1.5"></i> Institutional Sponsorship (FII/DII)
             </span>
-            <span class="text-[9px] font-mono px-1.5 py-0.5 rounded bg-cyan-950/40 text-cyan-300 border border-cyan-800/40">Float Track</span>
+            <button type="button" class="text-slate-500 hover:text-amber-400" onclick="openFinancialExplainer('FII_DII')">
+              <i class="fa-solid fa-circle-info text-[10px]"></i>
+            </button>
           </div>
           <div class="grid grid-cols-3 gap-2 text-center font-mono">
             <div class="bg-slate-950 p-1.5 rounded border border-slate-800/70">
@@ -1396,7 +1643,7 @@ async function handleInspectStock() {
         <div class="p-3 bg-slate-900/60 rounded-xl border border-slate-800 space-y-2">
           <div class="flex items-center justify-between pb-1 border-b border-slate-800/60">
             <span class="text-[10px] font-bold uppercase tracking-wider text-slate-300 flex items-center">
-              <i class="fa-solid fa-landmark-flag text-orange-400 mr-1.5"></i> Macro & Policy Alignment
+              <i class="fa-solid fa-landmark-flag text-orange-400 mr-1.5"></i> Macro &amp; Policy Alignment
             </span>
             <span class="text-[9px] font-mono px-1.5 py-0.5 rounded bg-orange-950/40 text-orange-300 border border-orange-800/40">PLI / Budget</span>
           </div>
@@ -1409,6 +1656,62 @@ async function handleInspectStock() {
           </div>
         </div>
       </div>
+
+      <!-- Better Market Ideas & Stock Swap Radar -->
+      ${data.betterMarketAlternatives && data.betterMarketAlternatives.length > 0 ? `
+        <div class="p-3.5 bg-gradient-to-r from-indigo-950/40 via-slate-900/90 to-indigo-950/40 rounded-xl border border-indigo-500/30 space-y-2.5">
+          <div class="flex items-center justify-between">
+            <div class="text-xs font-bold text-white uppercase tracking-wider flex items-center">
+              <i class="fa-solid fa-wand-magic-sparkles text-indigo-400 mr-2"></i> Better Market Ideas &amp; Stock Swap Radar
+              <span class="ml-2 text-[10px] font-normal text-slate-400 hidden sm:inline">&bull; High-Conviction Sector Alternatives</span>
+            </div>
+            <span class="text-[9px] font-mono px-2 py-0.5 rounded bg-indigo-500/10 text-indigo-300 border border-indigo-500/20">
+              ${data.sector} Sector Alternatives
+            </span>
+          </div>
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+            ${data.betterMarketAlternatives.map(alt => `
+              <div class="p-3 bg-slate-950/90 rounded-xl border border-slate-800/90 hover:border-indigo-500/50 transition space-y-2 shadow-sm">
+                <div class="flex items-center justify-between">
+                  <div class="flex items-center space-x-2">
+                    <span class="font-bold font-mono text-white text-xs">${alt.ticker}</span>
+                    <span class="text-[11px] text-slate-400 truncate max-w-[140px]">${alt.name}</span>
+                  </div>
+                  <span class="px-2 py-0.5 rounded text-[10px] font-bold bg-indigo-500/20 text-indigo-300 border border-indigo-500/30">
+                    ${alt.momentumBadge}
+                  </span>
+                </div>
+                <div class="grid grid-cols-4 gap-1 text-center font-mono text-[10px] bg-slate-900/60 p-1.5 rounded-lg border border-slate-800/60">
+                  <div>
+                    <span class="text-slate-500 block text-[9px]">CMP</span>
+                    <span class="text-amber-400 font-bold">&#8377;${alt.price}</span>
+                  </div>
+                  <div>
+                    <span class="text-slate-500 block text-[9px]">P/E</span>
+                    <span class="text-slate-200 font-bold">${alt.peRatio}x</span>
+                  </div>
+                  <div>
+                    <span class="text-slate-500 block text-[9px]">PEG</span>
+                    <span class="text-emerald-400 font-bold">${alt.pegRatio}x</span>
+                  </div>
+                  <div>
+                    <span class="text-slate-500 block text-[9px]">ROCE</span>
+                    <span class="text-cyan-400 font-bold">${alt.rocePercent}%</span>
+                  </div>
+                </div>
+                <p class="text-[11px] text-slate-300 leading-snug italic">
+                  &ldquo;${alt.whyBetter}&rdquo;
+                </p>
+                <div class="text-right">
+                  <button type="button" onclick="quickInspectTicker('${alt.ticker}')" class="text-[10px] font-bold text-amber-400 hover:text-amber-300 px-2 py-1 rounded bg-amber-500/10 hover:bg-amber-500/20 border border-amber-500/20 transition">
+                    Inspect ${alt.ticker} &rarr;
+                  </button>
+                </div>
+              </div>
+            `).join('')}
+          </div>
+        </div>
+      ` : ''}
 
       <!-- Strengths & Risk Warnings -->
       <div class="space-y-2 pt-1">
@@ -1426,7 +1729,7 @@ async function handleInspectStock() {
         ${data.riskFlags && data.riskFlags.length > 0 ? `
           <div class="p-2.5 bg-rose-950/20 border border-rose-500/30 rounded-xl text-rose-300 text-xs space-y-1">
             <div class="font-bold text-rose-400 text-[10px] uppercase flex items-center tracking-wider">
-              <i class="fa-solid fa-triangle-exclamation mr-1.5"></i> Key Risk Warnings & Sensitivities:
+              <i class="fa-solid fa-triangle-exclamation mr-1.5"></i> Key Risk Warnings &amp; Sensitivities:
             </div>
             ${data.riskFlags.map(f => `<div class="flex items-start space-x-1.5"><i class="fa-solid fa-xmark text-rose-400 text-[10px] mt-0.5"></i><span>${f}</span></div>`).join('')}
           </div>
@@ -1440,7 +1743,7 @@ async function handleInspectStock() {
 
       <!-- Footer: Live Market Metrics -->
       <div class="flex flex-wrap items-center justify-between gap-3 text-xs text-slate-400 pt-2 border-t border-slate-800">
-        <div>Live CMP: <strong class="text-white font-mono ml-1">${formatINR(data.price)}</strong></div>
+        <div>Live CMP: <strong class="text-white font-mono ml-1">&#8377;${data.price}</strong></div>
         <div>Market Cap: <strong class="text-white font-mono ml-1">${formatMarketCapCrores(data.marketCap)}</strong></div>
         <div>Div Yield: <strong class="text-white font-mono ml-1">${data.dividendYield ? data.dividendYield.toFixed(2) + '%' : '0.00%'}</strong></div>
       </div>
