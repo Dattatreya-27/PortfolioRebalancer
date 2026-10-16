@@ -1512,6 +1512,393 @@ function renderRebalanceResults(data) {
   });
 }
 
+// ========================================================
+// TECHNO-FUNDA TIMING & CANDLESTICK CHART ENGINE
+// TradingView Lightweight Charts + Algorithmic Pattern Engine
+// ========================================================
+let currentChartInstance = null;
+let currentChartResizeObserver = null;
+let activeChartTicker = null;
+let activeChartMos = 0;
+let activeChartRange = '1y';
+
+async function switchChartTimeframe(ticker, range, mos) {
+  activeChartRange = range;
+  ['3m', '6m', '1y'].forEach(r => {
+    const btn = document.getElementById(`btnTf${r}`);
+    if (btn) {
+      if (r === range) {
+        btn.className = "chart-tf-btn px-2.5 py-1 rounded bg-teal-500/20 text-teal-300 font-bold border border-teal-500/30";
+      } else {
+        btn.className = "chart-tf-btn px-2.5 py-1 rounded text-slate-400 hover:text-white transition";
+      }
+    }
+  });
+  await loadAndRenderStockChart(ticker, range, mos);
+}
+
+function renderTechnoFundaMatrix(chartData, container, ticker, mos) {
+  if (!container) return;
+  const tf = chartData.technoFunda || chartData.TechnoFunda;
+  if (!tf) {
+    container.innerHTML = "";
+    return;
+  }
+
+  const toneConfig = {
+    'buy': { bg: 'bg-emerald-950/40', border: 'border-emerald-500/40', text: 'text-emerald-300', badge: 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40', icon: 'fa-solid fa-circle-check', label: 'STRONG BUY' },
+    'accumulate': { bg: 'bg-teal-950/40', border: 'border-teal-500/40', text: 'text-teal-300', badge: 'bg-teal-500/20 text-teal-300 border-teal-500/40', icon: 'fa-solid fa-layer-group', label: 'ACCUMULATE ON DIP' },
+    'caution': { bg: 'bg-rose-950/40', border: 'border-rose-500/40', text: 'text-rose-300', badge: 'bg-rose-500/20 text-rose-300 border-rose-500/40', icon: 'fa-solid fa-triangle-exclamation', label: 'VALUE TRAP ALERT' },
+    'trim': { bg: 'bg-amber-950/40', border: 'border-amber-500/40', text: 'text-amber-300', badge: 'bg-amber-500/20 text-amber-300 border-amber-500/40', icon: 'fa-solid fa-scale-unbalanced', label: 'OVERBOUGHT TRIM' },
+    'neutral': { bg: 'bg-slate-900/60', border: 'border-slate-800', text: 'text-slate-300', badge: 'bg-slate-800 text-slate-300 border-slate-700', icon: 'fa-solid fa-hourglass-half', label: 'WATCHLIST' },
+  };
+
+  const tone = tf.actionTone || 'neutral';
+  const styling = toneConfig[tone] || toneConfig['neutral'];
+  const patterns = tf.patterns || [];
+
+  // Trend template status
+  const trendPill = tf.isStage2Uptrend
+    ? `<span class="px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-500/30"><i class="fa-solid fa-arrow-trend-up mr-1"></i>Stage 2 Markup</span>`
+    : `<span class="px-2 py-0.5 rounded text-[10px] font-mono bg-slate-800 text-slate-400 border border-slate-700">Consolidation / Pre-Stage</span>`;
+
+  // Breakout status
+  const breakoutPill = tf.isVolumeBreakout
+    ? `<span class="px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-cyan-500/20 text-cyan-300 border border-cyan-500/30"><i class="fa-solid fa-bolt mr-1"></i>Base Breakout Active</span>`
+    : `<span class="px-2 py-0.5 rounded text-[10px] font-mono bg-slate-800 text-slate-400 border border-slate-700">Consolidation Range</span>`;
+
+  container.innerHTML = `
+    <!-- Techno-Funda Executive Verdict Banner -->
+    <div class="p-4 ${styling.bg} border ${styling.border} rounded-xl space-y-2.5 transition shadow-sm">
+      <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-800/80 pb-2.5">
+        <div class="flex items-center space-x-2.5">
+          <div class="w-8 h-8 rounded-lg ${styling.badge} border flex items-center justify-center text-sm shadow-inner">
+            <i class="${styling.icon}"></i>
+          </div>
+          <div>
+            <div class="flex items-center space-x-2">
+              <span class="text-xs font-black uppercase tracking-wider ${styling.text}">${tf.timingVerdict}</span>
+              <span class="px-2 py-0.5 rounded text-[9px] font-mono font-bold ${styling.badge} border uppercase">
+                ${styling.label}
+              </span>
+            </div>
+            <p class="text-[11px] text-slate-300 mt-0.5">${tf.actionRecommendation}</p>
+          </div>
+        </div>
+        <div class="self-start sm:self-center bg-slate-950/90 px-3 py-1.5 rounded-lg border border-slate-800 flex items-center space-x-2">
+          <i class="fa-solid fa-gauge-high text-teal-400 text-xs"></i>
+          <span class="text-[11px] font-mono text-slate-300">Vol: <strong class="text-white">${tf.volumeMultiplierVs20DayAvg}x</strong> 20D Avg</span>
+        </div>
+      </div>
+
+      <!-- 4-Factor Real-Time Technical Health Strip -->
+      <div class="grid grid-cols-2 sm:grid-cols-4 gap-2 text-center text-[10px] font-mono pt-0.5">
+        <div class="bg-slate-950/80 p-2 rounded-lg border border-slate-800/80">
+          <span class="text-slate-500 block text-[9px] uppercase tracking-wider">Trend Template</span>
+          <div class="mt-1">${trendPill}</div>
+        </div>
+        <div class="bg-slate-950/80 p-2 rounded-lg border border-slate-800/80">
+          <span class="text-slate-500 block text-[9px] uppercase tracking-wider">Volume & Base</span>
+          <div class="mt-1">${breakoutPill}</div>
+        </div>
+        <div class="bg-slate-950/80 p-2 rounded-lg border border-slate-800/80">
+          <span class="text-slate-500 block text-[9px] uppercase tracking-wider">Wilder RSI(14)</span>
+          <div class="font-bold text-white text-xs mt-1">
+            ${tf.currentRsi} <span class="text-[10px] font-normal text-slate-400">(${tf.rsiCondition})</span>
+          </div>
+        </div>
+        <div class="bg-slate-950/80 p-2 rounded-lg border border-slate-800/80">
+          <span class="text-slate-500 block text-[9px] uppercase tracking-wider">Moving Average Regime</span>
+          <div class="font-bold text-xs mt-1 ${tf.movingAverageSummary.includes('Bullish') ? 'text-emerald-400' : (tf.movingAverageSummary.includes('Bearish') ? 'text-rose-400' : 'text-amber-400')}">
+            ${tf.movingAverageSummary}
+          </div>
+        </div>
+      </div>
+
+      <!-- Techno-Funda Dual-Engine Pillar Cards -->
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-2.5 pt-1 text-[11px]">
+        <div class="bg-slate-950/80 p-2.5 rounded-lg border border-slate-800/80 space-y-1">
+          <div class="flex items-center justify-between">
+            <span class="text-slate-400 font-semibold flex items-center"><i class="fa-solid fa-gem text-emerald-400 mr-1.5"></i> Fundamental Pillar (WHAT to buy)</span>
+            <span class="font-mono font-bold ${mos >= 15 ? 'text-emerald-400' : (mos >= 0 ? 'text-teal-400' : 'text-rose-400')}">
+              ${mos >= 0 ? '+' : ''}${mos}% Margin of Safety
+            </span>
+          </div>
+          <p class="text-[10px] text-slate-400 leading-tight">
+            Assesses business durability, ROCE quality, and intrinsic fair value discount to protect downside capital.
+          </p>
+        </div>
+        <div class="bg-slate-950/80 p-2.5 rounded-lg border border-slate-800/80 space-y-1">
+          <div class="flex items-center justify-between">
+            <span class="text-slate-400 font-semibold flex items-center"><i class="fa-solid fa-chart-line text-cyan-400 mr-1.5"></i> Technical Timing (WHEN market rewards it)</span>
+            <span class="font-mono font-bold text-cyan-400">
+              ${patterns.length} Pattern(s) Triggered
+            </span>
+          </div>
+          <p class="text-[10px] text-slate-400 leading-tight">
+            Tracks institutional volume absorption, 50/200 SMA stage trends, and base breakout pivots to eliminate value traps.
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Algorithmic Patterns Grid -->
+    <div class="space-y-1.5">
+      <div class="text-[10px] uppercase font-bold tracking-wider text-slate-400 flex items-center justify-between">
+        <span class="flex items-center"><i class="fa-solid fa-microchip text-teal-400 mr-1.5"></i> Algorithmic Pattern Recognition Scan Results</span>
+        <span class="text-slate-500 font-mono text-[9px]">C# .NET 10 Institutional Engine</span>
+      </div>
+
+      ${patterns.length > 0 ? `
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2">
+          ${patterns.map(p => {
+            const isWarning = p.category === 'Warning' || !p.isBullish;
+            const cardBorder = isWarning ? 'border-rose-500/50 bg-rose-950/20' : 'border-teal-500/40 bg-slate-900/90';
+            const badgeStyle = isWarning ? 'bg-rose-500/20 text-rose-300 border-rose-500/30' : 'bg-emerald-500/20 text-emerald-300 border-emerald-500/30';
+            const icon = isWarning ? 'fa-solid fa-triangle-exclamation text-rose-400' : 'fa-solid fa-circle-check text-emerald-400';
+            const conf = Math.round((p.confidenceScore || 0.8) * 100);
+
+            return `
+              <div class="p-2.5 rounded-xl border ${cardBorder} space-y-1.5 text-xs">
+                <div class="flex items-center justify-between">
+                  <div class="flex items-center space-x-1.5 font-semibold text-white truncate mr-2">
+                    <i class="${icon} text-xs"></i>
+                    <span class="truncate text-[11px]">${p.name}</span>
+                  </div>
+                  <span class="px-1.5 py-0.5 rounded text-[9px] font-mono font-bold ${badgeStyle} border whitespace-nowrap">
+                    ${conf}% Match
+                  </span>
+                </div>
+                <p class="text-[10px] text-slate-400 leading-snug">
+                  ${p.description}
+                </p>
+                <div class="flex items-center justify-between text-[9px] text-slate-500 font-mono pt-0.5">
+                  <span>Category: ${p.category}</span>
+                  <span>${p.dateDetected || 'Active Session'}</span>
+                </div>
+              </div>
+            `;
+          }).join('')}
+        </div>
+      ` : `
+        <div class="p-3 bg-slate-900/50 rounded-xl border border-slate-800 text-center text-slate-400 text-xs flex items-center justify-center space-x-2">
+          <i class="fa-solid fa-circle-info text-teal-400"></i>
+          <span>Scanning for Minervini Stage 2, Base Breakouts, Double Bottoms, and 200 SMA Rebounds. No extreme climax or liquidation patterns active.</span>
+        </div>
+      `}
+    </div>
+  `;
+}
+
+async function loadAndRenderStockChart(ticker, range = '1y', mos = 0) {
+  activeChartTicker = ticker;
+  activeChartMos = mos;
+  activeChartRange = range;
+
+  const container = document.getElementById("stockCandleChart");
+  const matrixContainer = document.getElementById("technoFundaMatrixContainer");
+  if (!container) return;
+
+  // Cleanup existing chart
+  if (currentChartResizeObserver) {
+    currentChartResizeObserver.disconnect();
+    currentChartResizeObserver = null;
+  }
+  if (currentChartInstance) {
+    try {
+      currentChartInstance.remove();
+    } catch (e) {
+      console.warn("Chart removal exception:", e);
+    }
+    currentChartInstance = null;
+  }
+
+  container.innerHTML = `
+    <div id="chartLoadingOverlay" class="absolute inset-0 flex items-center justify-center bg-slate-950/80 z-10">
+      <div class="text-xs text-slate-400 flex items-center space-x-2">
+        <i class="fa-solid fa-circle-notch fa-spin text-teal-400"></i>
+        <span>Loading OHLCV candles &amp; computing technical patterns for ${ticker}...</span>
+      </div>
+    </div>
+  `;
+
+  try {
+    const res = await fetch(`/api/stocks/${encodeURIComponent(ticker)}/chart?range=${range}&marginOfSafety=${mos}`);
+    if (!res.ok) {
+      container.innerHTML = `<div class="p-6 text-center text-xs text-rose-400">Unable to load chart data for ${ticker}.</div>`;
+      return;
+    }
+    const chartData = await res.json();
+
+    container.innerHTML = ""; // Clear loader
+
+    if (!window.LightweightCharts) {
+      container.innerHTML = `<div class="p-6 text-center text-xs text-amber-400">Lightweight Charts library is initializing...</div>`;
+      return;
+    }
+
+    if (!chartData.candles || chartData.candles.length === 0) {
+      container.innerHTML = `<div class="p-6 text-center text-xs text-slate-400">No candlestick data available for ${ticker}.</div>`;
+      return;
+    }
+
+    const chartWidth = container.clientWidth || 800;
+    const chartHeight = 360;
+
+    const chart = LightweightCharts.createChart(container, {
+      width: chartWidth,
+      height: chartHeight,
+      layout: {
+        background: { color: '#090d16' },
+        textColor: '#94a3b8',
+        fontSize: 11,
+        fontFamily: 'Inter, system-ui, sans-serif'
+      },
+      grid: {
+        vertLines: { color: 'rgba(30, 41, 59, 0.45)' },
+        horzLines: { color: 'rgba(30, 41, 59, 0.45)' }
+      },
+      crosshair: {
+        mode: LightweightCharts.CrosshairMode.Normal,
+      },
+      rightPriceScale: {
+        borderColor: 'rgba(51, 65, 85, 0.6)',
+        scaleMargins: {
+          top: 0.08,
+          bottom: 0.22,
+        },
+      },
+      timeScale: {
+        borderColor: 'rgba(51, 65, 85, 0.6)',
+        timeVisible: true,
+        secondsVisible: false,
+      },
+    });
+
+    currentChartInstance = chart;
+
+    // 1. Candlestick series
+    const candleSeries = chart.addCandlestickSeries({
+      upColor: '#34d399',
+      downColor: '#fb7185',
+      borderVisible: false,
+      wickUpColor: '#34d399',
+      wickDownColor: '#fb7185',
+    });
+    candleSeries.setData(chartData.candles.map(c => ({
+      time: c.date || c.time,
+      open: c.open,
+      high: c.high,
+      low: c.low,
+      close: c.close,
+    })));
+
+    // 2. Moving Average lines
+    const rawEma20 = chartData.ema20 || chartData.emA20 || [];
+    let ema20Series = null;
+    if (rawEma20.length > 0) {
+      ema20Series = chart.addLineSeries({
+        color: '#2dd4bf', // teal
+        lineWidth: 1.5,
+        title: '20 EMA',
+        priceLineVisible: false,
+      });
+      ema20Series.setData(rawEma20.map(p => ({ time: p.date || p.time, value: p.value })));
+    }
+
+    const rawSma50 = chartData.sma50 || chartData.smA50 || [];
+    let sma50Series = null;
+    if (rawSma50.length > 0) {
+      sma50Series = chart.addLineSeries({
+        color: '#f59e0b', // amber
+        lineWidth: 1.5,
+        title: '50 SMA',
+        priceLineVisible: false,
+      });
+      sma50Series.setData(rawSma50.map(p => ({ time: p.date || p.time, value: p.value })));
+    }
+
+    const rawSma200 = chartData.sma200 || chartData.smA200 || [];
+    let sma200Series = null;
+    if (rawSma200.length > 0) {
+      sma200Series = chart.addLineSeries({
+        color: '#c084fc', // purple
+        lineWidth: 1.5,
+        title: '200 SMA',
+        priceLineVisible: false,
+      });
+      sma200Series.setData(rawSma200.map(p => ({ time: p.date || p.time, value: p.value })));
+    }
+
+    // 3. Volume overlay (bottom 18%)
+    const volumeSeries = chart.addHistogramSeries({
+      priceFormat: {
+        type: 'volume',
+      },
+      priceScaleId: 'volume_scale',
+    });
+    chart.priceScale('volume_scale').applyOptions({
+      scaleMargins: {
+        top: 0.82,
+        bottom: 0,
+      },
+    });
+    volumeSeries.setData(chartData.candles.map(c => ({
+      time: c.date || c.time,
+      value: c.volume,
+      color: c.close >= c.open ? 'rgba(52, 211, 153, 0.35)' : 'rgba(251, 113, 133, 0.35)',
+    })));
+
+    // 4. Crosshair Tooltip
+    chart.subscribeCrosshairMove(param => {
+      const tooltip = document.getElementById("chartCrosshairTooltip");
+      if (!tooltip) return;
+      if (!param.time || !param.seriesData) {
+        tooltip.innerHTML = `<span class="text-slate-500 text-[10px]">Hover crosshairs over chart for OHLCV &amp; MA values</span>`;
+        return;
+      }
+      const c = param.seriesData.get(candleSeries);
+      const e20 = ema20Series ? param.seriesData.get(ema20Series) : null;
+      const s50 = sma50Series ? param.seriesData.get(sma50Series) : null;
+      const s200 = sma200Series ? param.seriesData.get(sma200Series) : null;
+      if (c) {
+        const isUp = c.close >= c.open;
+        tooltip.innerHTML = `
+          <span class="text-slate-300 font-mono font-semibold">${param.time}</span>
+          <span class="text-slate-600">|</span>
+          <span>O: <b class="text-white font-mono">&#8377;${c.open?.toFixed(1)}</b></span>
+          <span>H: <b class="text-emerald-400 font-mono">&#8377;${c.high?.toFixed(1)}</b></span>
+          <span>L: <b class="text-rose-400 font-mono">&#8377;${c.low?.toFixed(1)}</b></span>
+          <span>C: <b class="${isUp ? 'text-emerald-400' : 'text-rose-400'} font-mono">&#8377;${c.close?.toFixed(1)}</b></span>
+          ${e20 && e20.value ? `<span class="text-teal-400 font-mono">20E: ${e20.value.toFixed(1)}</span>` : ''}
+          ${s50 && s50.value ? `<span class="text-amber-400 font-mono">50S: ${s50.value.toFixed(1)}</span>` : ''}
+          ${s200 && s200.value ? `<span class="text-purple-400 font-mono">200S: ${s200.value.toFixed(1)}</span>` : ''}
+        `;
+      }
+    });
+
+    // 5. Responsive Resize
+    currentChartResizeObserver = new ResizeObserver(entries => {
+      if (!entries || entries.length === 0 || !chart) return;
+      const { width } = entries[0].contentRect;
+      if (width > 0) {
+        chart.applyOptions({ width });
+      }
+    });
+    currentChartResizeObserver.observe(container);
+
+    // Fit content smoothly
+    chart.timeScale().fitContent();
+
+    // 6. Populate Techno-Funda Timing Engine Action Matrix
+    renderTechnoFundaMatrix(chartData, matrixContainer, ticker, mos);
+
+  } catch (err) {
+    console.error("Error rendering stock chart:", err);
+    container.innerHTML = `<div class="p-6 text-center text-xs text-rose-400">Failed to render chart: ${err.message || err}</div>`;
+  }
+}
+
 async function handleInspectStock() {
   const ticker = document.getElementById("inspectorTicker").value.trim().toUpperCase();
   if (!ticker) return;
@@ -1597,6 +1984,65 @@ async function handleInspectStock() {
             <div class="text-sm font-bold font-mono text-emerald-400">&#8377;${data.fairValueEstimate || data.price}</div>
           </div>
         </div>
+      </div>
+
+      <!-- Interactive Candlestick Chart & Techno-Funda Timing Engine Desk -->
+      <div class="p-4 bg-slate-900/90 rounded-2xl border border-slate-800 space-y-3 shadow-xl">
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 pb-2.5 border-b border-slate-800/80">
+          <div class="flex items-center space-x-3">
+            <div class="w-9 h-9 rounded-xl bg-gradient-to-tr from-teal-500/20 to-emerald-500/20 border border-teal-500/30 flex items-center justify-center text-teal-400 shadow-sm">
+              <i class="fa-solid fa-chart-line text-sm"></i>
+            </div>
+            <div>
+              <div class="flex items-center space-x-2">
+                <span class="text-xs font-bold text-white uppercase tracking-wider">Techno-Funda Timing &amp; Price Action</span>
+                <span class="px-2 py-0.5 rounded text-[9px] font-mono font-bold bg-teal-500/15 text-teal-400 border border-teal-500/25">NSE LIVE OHLCV</span>
+                <span class="px-2 py-0.5 rounded text-[9px] font-mono font-bold bg-purple-500/15 text-purple-300 border border-purple-500/25">PATTERN RECOGNITION</span>
+              </div>
+              <p class="text-[11px] text-slate-400 mt-0.5">
+                Valuation tells you <em>what</em> to buy &bull; Price action &amp; volume tell you <em>when</em> the market rewards it
+              </p>
+            </div>
+          </div>
+          
+          <!-- Timeframe Selector -->
+          <div class="flex items-center space-x-2">
+            <div class="inline-flex rounded-lg bg-slate-950 p-1 border border-slate-800 text-[10px] font-mono">
+              <button id="btnTf3m" type="button" onclick="switchChartTimeframe('${data.ticker}', '3m', ${data.marginOfSafetyPercent})" class="chart-tf-btn px-2.5 py-1 rounded text-slate-400 hover:text-white transition">3M</button>
+              <button id="btnTf6m" type="button" onclick="switchChartTimeframe('${data.ticker}', '6m', ${data.marginOfSafetyPercent})" class="chart-tf-btn px-2.5 py-1 rounded text-slate-400 hover:text-white transition">6M</button>
+              <button id="btnTf1y" type="button" onclick="switchChartTimeframe('${data.ticker}', '1y', ${data.marginOfSafetyPercent})" class="chart-tf-btn px-2.5 py-1 rounded bg-teal-500/20 text-teal-300 font-bold border border-teal-500/30">1Y</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Legend & Crosshair Inspector Bar -->
+        <div class="flex flex-wrap items-center justify-between gap-2 text-[10px] font-mono bg-slate-950/80 px-3 py-1.5 rounded-lg border border-slate-800">
+          <div class="flex flex-wrap items-center gap-3">
+            <span class="flex items-center space-x-1.5"><span class="w-2.5 h-2.5 bg-emerald-400 rounded-xs inline-block"></span><span class="text-slate-300">Candles</span></span>
+            <span class="flex items-center space-x-1.5"><span class="w-3 h-0.5 bg-teal-400 inline-block"></span><span class="text-teal-400 font-semibold">20 EMA</span></span>
+            <span class="flex items-center space-x-1.5"><span class="w-3 h-0.5 bg-amber-400 inline-block"></span><span class="text-amber-400 font-semibold">50 SMA</span></span>
+            <span class="flex items-center space-x-1.5"><span class="w-3 h-0.5 bg-purple-400 inline-block"></span><span class="text-purple-400 font-semibold">200 SMA</span></span>
+            <span class="flex items-center space-x-1.5"><span class="w-2.5 h-2.5 bg-slate-600 rounded-xs inline-block"></span><span class="text-slate-400">Vol (20D Avg)</span></span>
+          </div>
+          <div id="chartCrosshairTooltip" class="text-slate-400 flex items-center space-x-2">
+            <span class="text-slate-500 text-[10px]">Hover crosshairs over chart for OHLCV &amp; MA values</span>
+          </div>
+        </div>
+
+        <!-- Chart Canvas Container -->
+        <div class="relative w-full">
+          <div id="stockCandleChart" class="w-full h-[360px] bg-[#090d16] rounded-xl border border-slate-800/80 relative overflow-hidden">
+            <div id="chartLoadingOverlay" class="absolute inset-0 flex items-center justify-center bg-slate-950/80 z-10">
+              <div class="text-xs text-slate-400 flex items-center space-x-2">
+                <i class="fa-solid fa-circle-notch fa-spin text-teal-400"></i>
+                <span>Loading historical daily candles &amp; detecting technical patterns...</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Techno-Funda Timing Engine Action Matrix (Injected dynamically) -->
+        <div id="technoFundaMatrixContainer" class="space-y-3 pt-1"></div>
       </div>
 
       <!-- 5 Institutional Pillars Bar Matrix -->
@@ -1913,6 +2359,12 @@ async function handleInspectStock() {
         <div>Div Yield: <strong class="text-white font-mono ml-1">${data.dividendYield ? data.dividendYield.toFixed(2) + '%' : '0.00%'}</strong></div>
       </div>
     `;
+
+    // Asynchronously load the interactive candlestick chart & technical pattern analysis
+    setTimeout(() => {
+      loadAndRenderStockChart(data.ticker, '1y', data.marginOfSafetyPercent);
+    }, 40);
+
   } catch (err) {
     resultContainer.innerHTML = `<div class="text-rose-400 p-3 bg-rose-950/20 border border-rose-500/30 rounded-lg">Error fetching stock scorecard: ${err.message || err}</div>`;
   }
@@ -2652,4 +3104,6 @@ window.inspectFromRow = inspectFromRow;
 window.handleRemoveHolding = handleRemoveHolding;
 window.handleTogglePrivacy = handleTogglePrivacy;
 window.sortHoldings = sortHoldings;
+window.switchChartTimeframe = switchChartTimeframe;
+window.loadAndRenderStockChart = loadAndRenderStockChart;
 

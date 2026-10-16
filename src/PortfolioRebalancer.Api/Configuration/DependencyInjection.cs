@@ -14,6 +14,7 @@ public static class DependencyInjection
         services.AddSingleton<IStockDataProvider, YahooFinanceLiveStockDataProvider>();
         services.AddSingleton<IStockScoringService, IndianMarketScoringService>();
         services.AddSingleton<ICatalystEventProvider, IndianCatalystEventProvider>();
+        services.AddSingleton<IChartPatternRecognitionService, ChartPatternRecognitionService>();
 
         // Application services
         services.AddScoped<PortfolioService>();
