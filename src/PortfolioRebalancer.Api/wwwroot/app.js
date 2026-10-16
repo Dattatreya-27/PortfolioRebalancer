@@ -3763,6 +3763,247 @@ async function loadSwingRadarFeed() {
   }
 }
 
+// ========================================================
+// PORTFOLIO 1-2 MONTH SWING RADAR & HEALTH SORTER
+// ========================================================
+let cachedPortSwingRadarData = null;
+
+async function openPortfolioSwingRadarModal() {
+  const modal = document.getElementById("portfolioSwingRadarModal");
+  if (!modal) return;
+  modal.classList.remove("hidden");
+  await loadPortfolioSwingRadar();
+}
+
+function closePortfolioSwingRadarModal() {
+  document.getElementById("portfolioSwingRadarModal")?.classList.add("hidden");
+}
+
+function switchPortSwingTab(tab) {
+  const tabs = ['active', 'forming', 'stage2', 'stage4'];
+  tabs.forEach(t => {
+    const content = document.getElementById(`portSwingTabContent${t.charAt(0).toUpperCase() + t.slice(1)}`);
+    const btn = document.getElementById(`btnTabPort${t.charAt(0).toUpperCase() + t.slice(1)}`);
+    if (t === tab) {
+      content?.classList.remove("hidden");
+      if (btn) {
+        btn.className = "pb-3 border-b-2 border-teal-400 text-teal-300 flex items-center space-x-1.5 font-bold";
+      }
+    } else {
+      content?.classList.add("hidden");
+      if (btn) {
+        btn.className = "pb-3 border-b-2 border-transparent text-slate-400 hover:text-slate-200 flex items-center space-x-1.5 transition font-semibold";
+      }
+    }
+  });
+}
+
+async function loadPortfolioSwingRadar() {
+  if (!currentPortfolioId) {
+    alert("Please select an active portfolio first.");
+    return;
+  }
+
+  const icon = document.getElementById("iconRefreshPortSwing");
+  icon?.classList.add("fa-spin");
+
+  const cActive = document.getElementById("portSwingTabContentActive");
+  const cForming = document.getElementById("portSwingTabContentForming");
+  const cStage2 = document.getElementById("portSwingTabContentStage2");
+  const cStage4 = document.getElementById("portSwingTabContentStage4");
+
+  if (cActive) cActive.innerHTML = `<div class="py-8 text-center text-xs text-slate-400"><i class="fa-solid fa-circle-notch fa-spin text-teal-400 mr-2"></i>Scanning your portfolio holdings with institutional VCP & VDU models...</div>`;
+
+  try {
+    const res = await fetch(`/api/portfolios/${currentPortfolioId}/swing-radar`);
+    if (!res.ok) {
+      if (cActive) cActive.innerHTML = `<div class="py-8 text-center text-xs text-rose-400">Failed to analyze portfolio holdings.</div>`;
+      return;
+    }
+
+    const data = await res.json();
+    cachedPortSwingRadarData = data;
+
+    // Update Badges
+    document.getElementById("badgePortActiveCount").textContent = data.activeSetupsCount || 0;
+    document.getElementById("badgePortFormingCount").textContent = data.formingSetupsCount || 0;
+    document.getElementById("badgePortStage2Count").textContent = data.stage2Leaders?.length || 0;
+    document.getElementById("badgePortStage4Count").textContent = data.stage4RiskCount || 0;
+
+    // Render Tab 1: Active Setups
+    if (cActive) {
+      if (!data.activeSetups || data.activeSetups.length === 0) {
+        cActive.innerHTML = `
+          <div class="p-8 text-center bg-slate-950/60 rounded-xl border border-slate-800 space-y-2">
+            <i class="fa-solid fa-bolt-slash text-slate-600 text-2xl"></i>
+            <h4 class="text-sm font-bold text-slate-300">No Triggered Buy Pivots in Portfolio Right Now</h4>
+            <p class="text-xs text-slate-500 max-w-sm mx-auto">
+              Check the <strong>Forming Squeezes</strong> tab to view holdings developing late-stage contraction handles, or browse the <strong>Discover</strong> radar for open-market setups.
+            </p>
+          </div>
+        `;
+      } else {
+        cActive.innerHTML = data.activeSetups.map(h => renderPortfolioSwingCard(h, 'TRIGGERED')).join('');
+      }
+    }
+
+    // Render Tab 2: Forming Squeezes
+    if (cForming) {
+      if (!data.formingSetups || data.formingSetups.length === 0) {
+        cForming.innerHTML = `<div class="p-8 text-center text-xs text-slate-500">No late-stage contraction handles forming currently.</div>`;
+      } else {
+        cForming.innerHTML = data.formingSetups.map(h => renderPortfolioSwingCard(h, 'FORMING')).join('');
+      }
+    }
+
+    // Render Tab 3: Stage 2 Leaders
+    if (cStage2) {
+      if (!data.stage2Leaders || data.stage2Leaders.length === 0) {
+        cStage2.innerHTML = `<div class="p-8 text-center text-xs text-slate-500">No holdings currently meet strict Minervini Stage 2 criteria.</div>`;
+      } else {
+        cStage2.innerHTML = `
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            ${data.stage2Leaders.map(h => `
+              <div class="p-3.5 bg-slate-950/80 rounded-xl border border-teal-500/30 flex items-center justify-between">
+                <div>
+                  <div class="flex items-center space-x-2">
+                    <span class="text-sm font-bold text-white">${h.ticker}</span>
+                    <span class="text-xs font-mono text-emerald-400 font-semibold">${h.unrealizedPnLPercent >= 0 ? '+' : ''}${h.unrealizedPnLPercent.toFixed(1)}%</span>
+                  </div>
+                  <p class="text-[11px] text-slate-400 mt-0.5">${h.name} &bull; ${h.sector} (Weight: ${h.weightPercent.toFixed(1)}%)</p>
+                  <p class="text-[10px] text-teal-400 mt-1 font-mono">${h.timingVerdict}</p>
+                </div>
+                <button type="button" onclick="quickInspectTicker('${h.ticker}')" class="px-2.5 py-1 bg-slate-800 hover:bg-slate-700 text-teal-400 rounded-lg text-xs font-semibold transition">
+                  Chart
+                </button>
+              </div>
+            `).join('')}
+          </div>
+        `;
+      }
+    }
+
+    // Render Tab 4: Stage 4 Markdown Risks
+    if (cStage4) {
+      if (!data.stage4Risks || data.stage4Risks.length === 0) {
+        cStage4.innerHTML = `<div class="p-8 text-center text-xs text-emerald-400">Great job! No severe Stage 4 markdown stocks detected in your portfolio.</div>`;
+      } else {
+        cStage4.innerHTML = `
+          <div class="p-3 bg-rose-950/30 border border-rose-500/40 rounded-xl text-xs text-rose-300 space-y-1 mb-2">
+            <div class="font-bold flex items-center"><i class="fa-solid fa-triangle-exclamation mr-1.5"></i> Capital Preservation Alert: 55 Holdings Trapped in Stage 4 Downtrends</div>
+            <p class="text-[11px] text-rose-200/80">These holdings are trading below both 50 and 200 SMAs. Rather than averaging down into falling knives, our quantitative engine recommends pruning or rotating into Stage 2 momentum leaders.</p>
+          </div>
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            ${data.stage4Risks.map(h => `
+              <div class="p-3 bg-slate-950/90 rounded-xl border border-rose-500/30 flex items-center justify-between">
+                <div>
+                  <div class="flex items-center space-x-2">
+                    <span class="text-sm font-bold text-white">${h.ticker}</span>
+                    <span class="text-xs font-mono font-bold text-rose-400">${h.unrealizedPnLPercent.toFixed(1)}% P&L</span>
+                  </div>
+                  <p class="text-[11px] text-slate-400 mt-0.5">${h.name} &bull; CMP: ₹${h.currentPrice.toFixed(2)} (Weight: ${h.weightPercent.toFixed(1)}%)</p>
+                  <span class="inline-block mt-1 px-2 py-0.5 rounded text-[9px] font-mono bg-rose-500/15 text-rose-300 border border-rose-500/30">Stage 4 Markdown</span>
+                </div>
+                <div class="flex items-center space-x-1.5">
+                  <button type="button" onclick="quickInspectTicker('${h.ticker}')" class="px-2 py-1 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded text-xs transition">
+                    Inspect
+                  </button>
+                  <button type="button" onclick="openCreateAlertModal('${h.ticker}', ${h.currentPrice})" class="px-2 py-1 bg-rose-500/20 hover:bg-rose-500/30 text-rose-300 border border-rose-500/40 rounded text-xs transition">
+                    Alert
+                  </button>
+                </div>
+              </div>
+            `).join('')}
+          </div>
+        `;
+      }
+    }
+
+  } catch (err) {
+    console.error("Error loading portfolio swing radar:", err);
+    if (cActive) cActive.innerHTML = `<div class="py-8 text-center text-xs text-rose-400">Error: ${err.message || err}</div>`;
+  } finally {
+    icon?.classList.remove("fa-spin");
+  }
+}
+
+function renderPortfolioSwingCard(h, status) {
+  const sw = h.swingSignal;
+  if (!sw) return "";
+  const isTriggered = status === 'TRIGGERED';
+  const badgeClass = isTriggered
+    ? "bg-emerald-500/20 text-emerald-300 border-emerald-500/40"
+    : "bg-amber-500/20 text-amber-300 border-amber-500/40";
+  const badgeText = isTriggered ? "ACTIVE BUY PIVOT" : "FORMING SQUEEZE";
+
+  return `
+    <div class="p-4 bg-slate-950/90 rounded-xl border border-slate-800 hover:border-teal-500/40 transition space-y-3 shadow-md">
+      <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-800 pb-2.5">
+        <div class="flex items-center space-x-3">
+          <div class="w-8 h-8 rounded-lg bg-teal-500/15 border border-teal-500/30 flex items-center justify-center text-teal-400 text-sm font-bold">
+            ${h.ticker.slice(0, 2)}
+          </div>
+          <div>
+            <div class="flex items-center space-x-2">
+              <span class="text-sm font-black text-white">${h.ticker}</span>
+              <span class="text-xs text-slate-400">(${h.name})</span>
+              <span class="px-2 py-0.5 rounded text-[9px] font-mono font-bold ${badgeClass} border uppercase">
+                ${badgeText}
+              </span>
+            </div>
+            <p class="text-[11px] text-slate-400 mt-0.5">${h.sector} &bull; Portfolio Weight: <strong class="text-slate-200">${h.weightPercent.toFixed(1)}%</strong> &bull; Holding Horizon: <strong class="text-teal-300">${sw.timeHorizon}</strong></p>
+          </div>
+        </div>
+
+        <div class="flex items-center space-x-2">
+          <button type="button" onclick="quickInspectTicker('${h.ticker}')" class="px-2.5 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-teal-400 text-xs font-semibold transition">
+            <i class="fa-solid fa-chart-line mr-1"></i> Chart
+          </button>
+          <button type="button" onclick="openCreateAlertModal('${h.ticker}', ${h.currentPrice}, ${sw.targetPrice}, 'CrossesAbove')" class="px-2.5 py-1.5 rounded-lg bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-300 border border-emerald-500/40 text-xs font-semibold flex items-center space-x-1 transition shadow-sm">
+            <i class="fa-solid fa-bell"></i>
+            <span>Target Alert (₹${sw.targetPrice.toFixed(2)})</span>
+          </button>
+          <button type="button" onclick="openCreateAlertModal('${h.ticker}', ${h.currentPrice}, ${sw.stopLossPrice}, 'CrossesBelow')" class="px-2.5 py-1.5 rounded-lg bg-rose-500/20 hover:bg-rose-500/30 text-rose-300 border border-rose-500/40 text-xs font-semibold flex items-center space-x-1 transition shadow-sm">
+            <i class="fa-solid fa-shield-halved"></i>
+            <span>Stop Alert (₹${sw.stopLossPrice.toFixed(2)})</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Parameters Strip -->
+      <div class="grid grid-cols-2 sm:grid-cols-5 gap-2 text-center text-[10px] font-mono">
+        <div class="bg-slate-900 p-2 rounded-lg border border-slate-800">
+          <span class="text-slate-500 block text-[9px] uppercase">CMP / Entry</span>
+          <span class="font-bold text-white text-xs mt-0.5 block">₹${h.currentPrice.toFixed(2)}</span>
+        </div>
+        <div class="bg-slate-900 p-2 rounded-lg border border-emerald-500/30">
+          <span class="text-emerald-400 block text-[9px] uppercase">Swing Target</span>
+          <span class="font-bold text-emerald-300 text-xs mt-0.5 block">₹${sw.targetPrice.toFixed(2)} (+${sw.targetGainPercent}%)</span>
+        </div>
+        <div class="bg-slate-900 p-2 rounded-lg border border-rose-500/30">
+          <span class="text-rose-400 block text-[9px] uppercase">Stop Loss</span>
+          <span class="font-bold text-rose-300 text-xs mt-0.5 block">₹${sw.stopLossPrice.toFixed(2)} (-${sw.stopLossPercent}%)</span>
+        </div>
+        <div class="bg-slate-900 p-2 rounded-lg border border-slate-800">
+          <span class="text-slate-500 block text-[9px] uppercase">Risk / Reward</span>
+          <span class="font-bold text-teal-300 text-xs mt-0.5 block">1 : ${sw.riskRewardRatio}</span>
+        </div>
+        <div class="bg-slate-900 p-2 rounded-lg border border-slate-800 col-span-2 sm:col-span-1">
+          <span class="text-slate-500 block text-[9px] uppercase">Holding Cycle</span>
+          <span class="font-bold text-amber-300 text-xs mt-0.5 block">${sw.expectedHoldingDays} Days (1-2 Mo)</span>
+        </div>
+      </div>
+
+      <!-- Triggers -->
+      ${(sw.triggers && sw.triggers.length > 0) ? `
+        <div class="bg-slate-900/60 p-2 rounded-lg border border-slate-800/80 space-y-0.5 text-[10px] text-slate-300">
+          ${sw.triggers.map(t => `<div class="flex items-start space-x-1.5"><i class="fa-solid fa-angle-right text-teal-400 mt-0.5 text-[9px]"></i><span>${t}</span></div>`).join('')}
+        </div>
+      ` : ''}
+    </div>
+  `;
+}
+
 // Window exports
 window.openCreateAlertModal = openCreateAlertModal;
 window.closeCreateAlertModal = closeCreateAlertModal;
@@ -3779,6 +4020,10 @@ window.handleManualAlertEvaluation = handleManualAlertEvaluation;
 window.handleSaveEmailSettings = handleSaveEmailSettings;
 window.handleSendTestEmail = handleSendTestEmail;
 window.loadSwingRadarFeed = loadSwingRadarFeed;
+window.openPortfolioSwingRadarModal = openPortfolioSwingRadarModal;
+window.closePortfolioSwingRadarModal = closePortfolioSwingRadarModal;
+window.switchPortSwingTab = switchPortSwingTab;
+window.loadPortfolioSwingRadar = loadPortfolioSwingRadar;
 
 // Initial surveillance badge fetch
 setTimeout(updateHeaderAlertsBadge, 500);

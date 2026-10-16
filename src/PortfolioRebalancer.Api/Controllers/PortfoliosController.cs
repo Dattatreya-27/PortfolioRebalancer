@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
 using PortfolioRebalancer.Application.DTOs;
+using PortfolioRebalancer.Application.Interfaces;
 using PortfolioRebalancer.Application.Services;
 
 namespace PortfolioRebalancer.Api.Controllers;
@@ -10,7 +11,8 @@ public class PortfoliosController(
     PortfolioService portfolioService,
     PortfolioDiagnosticService diagnosticService,
     PortfolioAdvisoryService advisoryService,
-    MarketTheoryResearchService researchService) : ControllerBase
+    MarketTheoryResearchService researchService,
+    IChartPatternRecognitionService chartPatternService) : ControllerBase
 {
     [HttpGet]
     public async Task<ActionResult<IReadOnlyList<PortfolioSummaryDto>>> GetAll()
@@ -287,5 +289,88 @@ public class PortfoliosController(
             return NotFound(new { error = $"Portfolio with ID '{id}' not found." });
 
         return Ok(report);
+    }
+
+    [HttpGet("{id:guid}/swing-radar")]
+    public async Task<ActionResult<PortfolioSwingRadarDto>> GetPortfolioSwingRadar(Guid id, CancellationToken ct = default)
+    {
+        var portfolio = await portfolioService.GetPortfolioAsync(id);
+        if (portfolio is null)
+            return NotFound(new { error = $"Portfolio with ID '{id}' not found." });
+
+        var activeSetups = new List<PortfolioHoldingSwingDto>();
+        var formingSetups = new List<PortfolioHoldingSwingDto>();
+        var stage2Leaders = new List<PortfolioHoldingSwingDto>();
+        var stage4Risks = new List<PortfolioHoldingSwingDto>();
+
+        foreach (var h in portfolio.Holdings)
+        {
+            try
+            {
+                var chartData = await chartPatternService.GetStockChartDataAsync(h.Ticker, "1y", ct: ct);
+                var tf = chartData.TechnoFunda;
+                var swing = tf.SwingSignal;
+
+                bool isStage4 = tf.TimingVerdict.Contains("FALLING KNIFE", StringComparison.OrdinalIgnoreCase) ||
+                                tf.TimingVerdict.Contains("VALUE TRAP", StringComparison.OrdinalIgnoreCase) ||
+                                h.UnrealizedPnLPercent <= -20.0m ||
+                                tf.Patterns.Any(p => p.Name.Contains("Falling Knife") || p.Category == "Warning");
+
+                var item = new PortfolioHoldingSwingDto(
+                    Ticker: h.Ticker,
+                    Name: h.Name,
+                    Sector: h.Sector,
+                    Quantity: h.Quantity,
+                    BuyPrice: h.BuyPrice,
+                    CurrentPrice: chartData.CurrentPrice > 0 ? chartData.CurrentPrice : h.Price,
+                    UnrealizedPnL: h.UnrealizedPnL,
+                    UnrealizedPnLPercent: h.UnrealizedPnLPercent,
+                    WeightPercent: h.WeightPercent,
+                    SwingSignal: swing,
+                    TimingVerdict: tf.TimingVerdict,
+                    ActionRecommendation: tf.ActionRecommendation,
+                    ActionTone: tf.ActionTone,
+                    IsStage2Uptrend: tf.IsStage2Uptrend,
+                    IsStage4Risk: isStage4
+                );
+
+                if (swing != null && swing.Status == "TRIGGERED")
+                {
+                    activeSetups.Add(item);
+                }
+                else if (swing != null && swing.Status == "FORMING")
+                {
+                    formingSetups.Add(item);
+                }
+                else if (tf.IsStage2Uptrend)
+                {
+                    stage2Leaders.Add(item);
+                }
+
+                if (isStage4)
+                {
+                    stage4Risks.Add(item);
+                }
+            }
+            catch
+            {
+                // Continue scanning remaining holdings
+            }
+        }
+
+        var result = new PortfolioSwingRadarDto(
+            PortfolioId: portfolio.Id,
+            PortfolioName: portfolio.Name,
+            TotalHoldingsCount: portfolio.Holdings.Count,
+            ActiveSetupsCount: activeSetups.Count,
+            FormingSetupsCount: formingSetups.Count,
+            Stage4RiskCount: stage4Risks.Count,
+            ActiveSetups: activeSetups.OrderByDescending(x => x.WeightPercent).ToList(),
+            FormingSetups: formingSetups.OrderByDescending(x => x.WeightPercent).ToList(),
+            Stage2Leaders: stage2Leaders.OrderByDescending(x => x.WeightPercent).ToList(),
+            Stage4Risks: stage4Risks.OrderBy(x => x.UnrealizedPnLPercent).ToList()
+        );
+
+        return Ok(result);
     }
 }

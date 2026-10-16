@@ -286,6 +286,12 @@
             <i class="fa-solid fa-arrows-rotate" id="syncIcon"></i>
             <span>Sync Live Quotes</span>
           </button>
+
+          <!-- Scan Portfolio Swings Button -->
+          <button id="btnScanPortfolioSwings" onclick="openPortfolioSwingRadarModal()" class="bg-gradient-to-r from-amber-600 to-orange-500 hover:from-amber-500 hover:to-orange-400 text-slate-950 font-bold text-xs px-3.5 py-1.5 rounded-lg flex items-center space-x-1.5 transition shadow-sm">
+            <i class="fa-solid fa-crosshairs"></i>
+            <span>Scan 1–2M Swings</span>
+          </button>
         </div>
       </div>
 
@@ -1485,6 +1491,80 @@
           <button type="button" onclick="closeAngelOneModal()" class="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-lg transition">
             Close
           </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ======================================================== -->
+    <!-- MODAL: PORTFOLIO 1-2 MONTH SWING RADAR & HEALTH SORTER   -->
+    <!-- ======================================================== -->
+    <div id="portfolioSwingRadarModal" class="fixed inset-0 bg-slate-950/85 backdrop-blur-md z-50 flex items-center justify-center p-3 sm:p-5 hidden">
+      <div class="bg-slate-900 border border-slate-800 rounded-2xl max-w-4xl w-full max-h-[90vh] flex flex-col shadow-2xl overflow-hidden">
+        <!-- Modal Header -->
+        <div class="p-5 border-b border-slate-800 flex items-center justify-between bg-slate-950/60">
+          <div class="flex items-center space-x-3">
+            <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-amber-500/20 to-teal-500/20 border border-teal-500/30 flex items-center justify-center text-teal-400 text-lg">
+              <i class="fa-solid fa-crosshairs"></i>
+            </div>
+            <div>
+              <div class="flex items-center space-x-2">
+                <h3 class="text-base font-bold text-white">Portfolio 1–2 Month Swing Radar</h3>
+                <span class="px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-amber-500/15 text-amber-300 border border-amber-500/30">
+                  TARGET: +5% TO +15%+
+                </span>
+              </div>
+              <p class="text-xs text-slate-400 mt-0.5">
+                Scanning your holdings with <strong>Tech Team Alpha</strong> (VCP Breakout) &amp; <strong>Tech Team Beta</strong> (50-SMA VDU Pullback)
+              </p>
+            </div>
+          </div>
+          <div class="flex items-center space-x-2">
+            <button onclick="loadPortfolioSwingRadar()" class="text-xs bg-teal-500/15 hover:bg-teal-500/25 text-teal-300 border border-teal-500/30 px-3 py-1.5 rounded-lg transition flex items-center space-x-1.5 font-semibold">
+              <i id="iconRefreshPortSwing" class="fa-solid fa-arrows-rotate"></i>
+              <span>Re-Scan Holdings</span>
+            </button>
+            <button onclick="closePortfolioSwingRadarModal()" class="text-slate-400 hover:text-white p-2 rounded-lg hover:bg-slate-800 transition">
+              <i class="fa-solid fa-xmark text-sm"></i>
+            </button>
+          </div>
+        </div>
+
+        <!-- 4-Category Navigation Tabs -->
+        <div class="px-5 pt-3 pb-0 border-b border-slate-800 bg-slate-950/40 flex items-center space-x-4 text-xs font-semibold overflow-x-auto">
+          <button id="btnTabPortActive" onclick="switchPortSwingTab('active')" class="pb-3 border-b-2 border-teal-400 text-teal-300 flex items-center space-x-1.5">
+            <i class="fa-solid fa-bolt text-teal-400"></i>
+            <span>Active Buy Pivots</span>
+            <span id="badgePortActiveCount" class="ml-1 px-1.5 py-0.2 rounded-full text-[10px] bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">0</span>
+          </button>
+          <button id="btnTabPortForming" onclick="switchPortSwingTab('forming')" class="pb-3 border-b-2 border-transparent text-slate-400 hover:text-slate-200 flex items-center space-x-1.5 transition">
+            <i class="fa-solid fa-hourglass-half"></i>
+            <span>Forming Squeezes</span>
+            <span id="badgePortFormingCount" class="ml-1 px-1.5 py-0.2 rounded-full text-[10px] bg-amber-500/20 text-amber-300 border border-amber-500/30">0</span>
+          </button>
+          <button id="btnTabPortStage2" onclick="switchPortSwingTab('stage2')" class="pb-3 border-b-2 border-transparent text-slate-400 hover:text-slate-200 flex items-center space-x-1.5 transition">
+            <i class="fa-solid fa-arrow-trend-up"></i>
+            <span>Stage 2 Leaders</span>
+            <span id="badgePortStage2Count" class="ml-1 px-1.5 py-0.2 rounded-full text-[10px] bg-cyan-500/20 text-cyan-300 border border-cyan-500/30">0</span>
+          </button>
+          <button id="btnTabPortStage4" onclick="switchPortSwingTab('stage4')" class="pb-3 border-b-2 border-transparent text-slate-400 hover:text-slate-200 flex items-center space-x-1.5 transition">
+            <i class="fa-solid fa-triangle-exclamation text-rose-400"></i>
+            <span>Stage 4 Markdown Risks</span>
+            <span id="badgePortStage4Count" class="ml-1 px-1.5 py-0.2 rounded-full text-[10px] bg-rose-500/20 text-rose-300 border border-rose-500/30">0</span>
+          </button>
+        </div>
+
+        <!-- Scrollable Tab Content Container -->
+        <div class="p-5 flex-1 overflow-y-auto space-y-4">
+          <div id="portSwingTabContentActive" class="space-y-3"></div>
+          <div id="portSwingTabContentForming" class="space-y-3 hidden"></div>
+          <div id="portSwingTabContentStage2" class="space-y-3 hidden"></div>
+          <div id="portSwingTabContentStage4" class="space-y-3 hidden"></div>
+        </div>
+
+        <!-- Modal Footer -->
+        <div class="p-4 border-t border-slate-800 bg-slate-950/60 flex items-center justify-between text-xs text-slate-400">
+          <span class="flex items-center"><i class="fa-solid fa-shield-halved text-teal-400 mr-1.5"></i> Setups include 2.4x R:R asymmetric risk/reward brackets and 1-click price alert syncing</span>
+          <button onclick="closePortfolioSwingRadarModal()" class="px-4 py-1.5 bg-slate-800 hover:bg-slate-700 text-white rounded-lg transition font-medium">Close</button>
         </div>
       </div>
     </div>
