@@ -622,49 +622,7 @@ async function selectPortfolio(id) {
   }
 }
 
-function renderDiagnosticsUI(diag) {
-  // 1. Top Cockpit Stat Cards
-  const scoreEl = document.getElementById("statHealthScore");
-  if (scoreEl) scoreEl.textContent = `${diag.healthScore} / 100`;
-  const ratingEl = document.getElementById("statHealthRating");
-  if (ratingEl) ratingEl.textContent = `Grade ${diag.healthGrade}`;
-
-  // 2. Grade Badge in Diagnostics Section
-  const gradeBadge = document.getElementById("statHealthGradeBadge");
-  if (gradeBadge) {
-    gradeBadge.textContent = `GRADE ${diag.healthGrade} (${diag.healthScore}/100)`;
-    if (diag.healthScore >= 75) {
-      gradeBadge.className = "inline-flex items-center px-3 py-1 rounded-lg text-sm font-bold font-mono bg-emerald-500/15 text-emerald-400 border border-emerald-500/30";
-    } else if (diag.healthScore >= 60) {
-      gradeBadge.className = "inline-flex items-center px-3 py-1 rounded-lg text-sm font-bold font-mono bg-teal-500/15 text-teal-300 border border-teal-500/30";
-    } else {
-      gradeBadge.className = "inline-flex items-center px-3 py-1 rounded-lg text-sm font-bold font-mono bg-rose-500/15 text-rose-300 border border-rose-500/30";
-    }
-  }
-
-  // 3. SEBI Status Badge
-  const statusBadge = document.getElementById("diagnosticStatusBadge");
-  if (statusBadge) {
-    if (diag.violations.length === 0) {
-      statusBadge.innerHTML = `<i class="fa-solid fa-check-circle mr-1.5 text-xs text-emerald-400"></i> SEBI Compliant`;
-      statusBadge.className = "inline-flex items-center px-2.5 py-1 rounded-lg text-xs font-medium bg-emerald-500/10 text-emerald-400 border border-emerald-500/20";
-    } else {
-      statusBadge.innerHTML = `<i class="fa-solid fa-triangle-exclamation mr-1.5 text-xs text-rose-400"></i> ${diag.violations.length} Limit Breaches`;
-      statusBadge.className = "inline-flex items-center px-2.5 py-1 rounded-lg text-xs font-medium bg-rose-500/10 text-rose-400 border border-rose-500/20";
-    }
-  }
-
-  // 4. Executive Summary
-  const summaryText = document.getElementById("diagExecutiveSummaryText");
-  if (summaryText) summaryText.textContent = diag.executiveSummary;
-
-  // 5. Lists
-  renderProfitBookingList(diag.profitBookingOpportunities);
-  renderTaxLossList(diag.taxLossHarvesting);
-  renderTailEndList(diag.tailEndAnalysis);
-  renderConcentrationList(diag.sectorConcentrations);
-  renderAdvisoryPillars(diag.advisoryPillars);
-}
+// Unified Diagnostics UI renderer defined below at renderDiagnosticsUI
 
 // Normalizes any zero or missing values so nothing is ever shown as 0
 function normalizePortfolioData(data) {
@@ -1087,12 +1045,10 @@ function updateDiagnosticFilterBanner() {
   }
 }
 
-async function loadDiagnostics(portfolioId) {
+function renderDiagnosticsUI(diag) {
+  if (!diag) return;
+  currentDiagnostics = diag;
   try {
-    const res = await fetch(`/api/portfolios/${portfolioId}/diagnostics`);
-    if (!res.ok) return;
-    const diag = await res.json();
-    currentDiagnostics = diag;
 
     // 1. Top Cockpit Stat Cards
     document.getElementById("statHealthScore").textContent = `${diag.healthScore} / 100`;
@@ -1355,6 +1311,17 @@ async function loadDiagnostics(portfolioId) {
       }
     }
 
+  } catch (err) {
+    console.error("Error rendering diagnostics:", err);
+  }
+}
+
+async function loadDiagnostics(portfolioId) {
+  try {
+    const res = await fetch(`/api/portfolios/${portfolioId}/diagnostics`);
+    if (!res.ok) return;
+    const diag = await res.json();
+    renderDiagnosticsUI(diag);
   } catch (err) {
     console.error("Error loading diagnostics:", err);
   }
