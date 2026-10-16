@@ -13,4 +13,9 @@ public interface IChartPatternRecognitionService
     /// and performs pattern recognition aligned with the stock's fundamental Margin of Safety.
     /// </summary>
     Task<StockChartData> GetStockChartDataAsync(string ticker, string range = "1y", decimal? marginOfSafetyPercent = null, CancellationToken ct = default);
+
+    /// <summary>
+    /// Scans key institutional market leaders across Indian equities for active/forming 1-2 month swing setups (5% - 15%+ gains).
+    /// </summary>
+    Task<IReadOnlyList<StockChartData>> GetSwingRadarAsync(CancellationToken ct = default);
 }

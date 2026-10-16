@@ -41,4 +41,11 @@ public class StocksController(
         var chartData = await chartPatternService.GetStockChartDataAsync(ticker, range, marginOfSafety, ct);
         return Ok(chartData);
     }
+
+    [HttpGet("swing-radar")]
+    public async Task<ActionResult<IReadOnlyList<StockChartData>>> GetSwingRadar(CancellationToken ct = default)
+    {
+        var radar = await chartPatternService.GetSwingRadarAsync(ct);
+        return Ok(radar);
+    }
 }

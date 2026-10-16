@@ -549,6 +549,12 @@ public sealed class ChartPatternRecognitionService : IChartPatternRecognitionSer
             actionTone = "neutral";
         }
 
+        // ==========================================
+        // QUANT SWING TRADING ENGINE INTEGRATION
+        // (Tech Team Alpha VCP & Tech Team Beta VDU)
+        // ==========================================
+        var swingSignal = DetectSwingSignal(ticker, candles, ema20, sma50, sma200, volumeMultiplier, isStage2, isVolumeBreakout, patterns);
+
         return new TechnoFundaResult(
             MarginOfSafetyPercent: marginOfSafety,
             TimingVerdict: timingVerdict,
@@ -560,8 +566,235 @@ public sealed class ChartPatternRecognitionService : IChartPatternRecognitionSer
             RsiCondition: rsiCondition,
             MovingAverageSummary: maSummary,
             VolumeMultiplierVs20DayAvg: volumeMultiplier,
-            Patterns: patterns
+            Patterns: patterns,
+            SwingSignal: swingSignal
         );
+    }
+
+    public async Task<IReadOnlyList<StockChartData>> GetSwingRadarAsync(CancellationToken ct = default)
+    {
+        var candidates = new[] { "TRENT", "TATAMOTORS", "BEL", "M&M", "HAL", "KPITTECH", "DIXON", "SUZLON", "RELIANCE", "TCS", "INFY", "HDFCBANK" };
+        var results = new List<StockChartData>();
+
+        foreach (var ticker in candidates)
+        {
+            try
+            {
+                var chart = await GetStockChartDataAsync(ticker, "6m", marginOfSafetyPercent: null, ct);
+                if (chart.TechnoFunda.SwingSignal != null)
+                {
+                    results.Add(chart);
+                }
+            }
+            catch
+            {
+                // Continue scanning remaining tickers
+            }
+        }
+
+        return results
+            .OrderByDescending(r => r.TechnoFunda.SwingSignal?.Status == "TRIGGERED")
+            .ThenByDescending(r => r.TechnoFunda.SwingSignal?.Status == "FORMING")
+            .ThenByDescending(r => r.TechnoFunda.SwingSignal?.ConfidenceScore ?? 0)
+            .ToList();
+    }
+
+    private static SwingTradingSignal? DetectSwingSignal(
+        string ticker,
+        IReadOnlyList<CandleData> candles,
+        IReadOnlyList<TechnicalIndicatorPoint> ema20,
+        IReadOnlyList<TechnicalIndicatorPoint> sma50,
+        IReadOnlyList<TechnicalIndicatorPoint> sma200,
+        decimal currentVolumeMultiplier,
+        bool isStage2,
+        bool isVolumeBreakout,
+        List<DetectedPattern> patterns)
+    {
+        if (candles.Count < 25) return null;
+
+        var currentCandle = candles[^1];
+        decimal currentPrice = currentCandle.Close;
+        decimal? currentEma20 = ema20.Count > 0 ? ema20[^1].Value : null;
+        decimal? currentSma50 = sma50.Count > 0 ? sma50[^1].Value : null;
+        decimal? currentSma200 = sma200.Count > 0 ? sma200[^1].Value : null;
+
+        int lookback = Math.Min(60, candles.Count);
+        var window = candles.TakeLast(lookback).ToList();
+
+        // 20-day Volume Baseline
+        var last20Volumes = window.TakeLast(20).Select(c => (decimal)c.Volume).ToList();
+        decimal adv20 = last20Volumes.Count > 0 ? last20Volumes.Average() : 1m;
+
+        // 1. TECH TEAM ALPHA: Volatility Contraction Pattern (VCP) Engine
+        int split = window.Count / 2;
+        var wave1 = window.Take(split).ToList();
+        var wave2 = window.Skip(split).ToList();
+
+        decimal peak1 = wave1.Max(c => c.High);
+        decimal trough1 = wave1.Min(c => c.Low);
+        decimal depth1 = peak1 > 0 ? (peak1 - trough1) / peak1 : 0m;
+
+        decimal peak2 = wave2.Max(c => c.High);
+        decimal trough2 = wave2.Min(c => c.Low);
+        decimal depth2 = peak2 > 0 ? (peak2 - trough2) / peak2 : 0m;
+
+        var recent4Volumes = window.TakeLast(4).Select(c => (decimal)c.Volume).ToList();
+        decimal handleAvgVol = recent4Volumes.Count > 0 ? recent4Volumes.Average() : 1m;
+        decimal handleVolRatio = adv20 > 0 ? Math.Round(handleAvgVol / adv20, 2) : 1m;
+        bool isHandleDry = handleVolRatio <= 0.85m;
+
+        bool isContraction = depth1 >= 0.08m && depth2 < depth1 && depth2 <= 0.16m;
+        bool isNearBreakout = peak2 > 0 && currentPrice >= peak2 * 0.96m;
+        bool isBreakoutTriggered = isVolumeBreakout || (peak2 > 0 && currentPrice >= peak2 * 0.995m && currentVolumeMultiplier >= 1.25m);
+
+        if ((isContraction && (isNearBreakout || isBreakoutTriggered)) || (isVolumeBreakout && isStage2))
+        {
+            string status = isBreakoutTriggered ? "TRIGGERED" : "FORMING";
+            decimal stopPrice = Math.Round(Math.Max(currentPrice * 0.945m, trough2 * 0.985m), 2);
+            decimal stopRiskPct = Math.Round((currentPrice - stopPrice) / currentPrice * 100m, 1);
+            if (stopRiskPct < 3.5m) { stopRiskPct = 4.2m; stopPrice = Math.Round(currentPrice * 0.958m, 2); }
+            if (stopRiskPct > 7.5m) { stopRiskPct = 6.5m; stopPrice = Math.Round(currentPrice * 0.935m, 2); }
+
+            decimal targetGainPct = Math.Round(Math.Clamp(stopRiskPct * 2.4m, 10.0m, 18.0m), 1);
+            decimal targetPrice = Math.Round(currentPrice * (1m + targetGainPct / 100m), 2);
+            decimal rrRatio = Math.Round(targetGainPct / stopRiskPct, 2);
+
+            var triggers = new List<string>
+            {
+                $"VCP Contraction: Wave 1 depth -{(depth1 * 100m):F1}% contracted to Wave 2 -{(depth2 * 100m):F1}%",
+                isHandleDry 
+                    ? $"Volume Dry-Up Exhaustion: Handle volume at {handleVolRatio}x 20-day ADV (Supply absorbed)" 
+                    : "Handle consolidation in progress near upper resistance pivot",
+                status == "TRIGGERED" 
+                    ? $"Volume Surge Breakout Active: {currentVolumeMultiplier}x ADV confirming institutional sponsor entry" 
+                    : $"Late-Stage Handle: Price within {((peak2 - currentPrice) / (peak2 > 0 ? peak2 : 1m) * 100m):F1}% of breakout pivot ({peak2:F2})",
+                $"Asymmetric Payoff: +{targetGainPct}% Target vs -{stopRiskPct}% Stop (Risk/Reward {rrRatio}:1)"
+            };
+
+            patterns.Add(new DetectedPattern(
+                Name: "Institutional VCP Breakout (Tech Team Alpha)",
+                Category: "Breakout",
+                Description: $"Wave contraction (-{(depth1*100m):F0}% -> -{(depth2*100m):F0}%) with {status.ToLowerInvariant()} pivot targeting +{targetGainPct}%.",
+                IsBullish: true,
+                ConfidenceScore: status == "TRIGGERED" ? 0.92m : 0.83m,
+                DateDetected: currentCandle.Date
+            ));
+
+            return new SwingTradingSignal(
+                SetupType: "Institutional VCP Momentum Breakout",
+                Status: status,
+                WinningTeam: "Tech Team Alpha (Champion)",
+                Badge: "VCP Surge",
+                EntryPrice: currentPrice,
+                TargetPrice: targetPrice,
+                StopLossPrice: stopPrice,
+                TargetGainPercent: targetGainPct,
+                StopLossPercent: stopRiskPct,
+                RiskRewardRatio: rrRatio,
+                ExpectedHoldingDays: 25,
+                ConfidenceScore: status == "TRIGGERED" ? 0.92m : 0.83m,
+                TimeHorizon: "20 - 40 Trading Days (~1 - 2 Months)",
+                Triggers: triggers
+            );
+        }
+
+        // 2. TECH TEAM BETA: Techno-Funda 50-SMA Shakeout & Volume Dry-Up Absorption (VDU) Engine
+        if (currentSma50.HasValue && currentSma200.HasValue && currentSma50.Value > currentSma200.Value && currentPrice > currentSma200.Value)
+        {
+            var last10 = candles.TakeLast(10).ToList();
+            decimal lowest10 = last10.Min(c => c.Low);
+            decimal distTo50 = Math.Abs(lowest10 - currentSma50.Value) / currentSma50.Value;
+
+            var last6 = candles.TakeLast(6).ToList();
+            int dryUpCount = last6.Count(c => adv20 > 0 && ((decimal)c.Volume / adv20) <= 0.68m);
+
+            bool isReversalCandle = currentCandle.Close >= currentCandle.Open && 
+                                    currentEma20.HasValue && 
+                                    currentPrice >= currentEma20.Value * 0.992m;
+
+            if (distTo50 <= 0.042m && (dryUpCount >= 1 || currentVolumeMultiplier <= 0.80m))
+            {
+                string status = isReversalCandle ? "TRIGGERED" : "FORMING";
+                decimal stopPrice = Math.Round(Math.Min(lowest10 * 0.985m, currentSma50.Value * 0.975m), 2);
+                decimal stopRiskPct = Math.Round((currentPrice - stopPrice) / currentPrice * 100m, 1);
+                if (stopRiskPct < 3.5m) { stopRiskPct = 4.0m; stopPrice = Math.Round(currentPrice * 0.96m, 2); }
+                if (stopRiskPct > 7.0m) { stopRiskPct = 5.5m; stopPrice = Math.Round(currentPrice * 0.945m, 2); }
+
+                decimal targetGainPct = Math.Round(Math.Clamp(stopRiskPct * 2.25m, 8.5m, 15.0m), 1);
+                decimal targetPrice = Math.Round(currentPrice * (1m + targetGainPct / 100m), 2);
+                decimal rrRatio = Math.Round(targetGainPct / stopRiskPct, 2);
+
+                var triggers = new List<string>
+                {
+                    $"Primary Bull Shield: 50-day SMA ({currentSma50.Value:F1}) > 200-day SMA ({currentSma200.Value:F1})",
+                    $"50-SMA Retest Zone: Pullback tested within {(distTo50 * 100m):F1}% of institutional 50-day SMA",
+                    $"Volume Dry-Up (VDU): {dryUpCount} session(s) of selling exhaustion (< 68% 20D volume)",
+                    isReversalCandle 
+                        ? "Bullish Reversal Pivot: Reclaimed 20 EMA with positive candle spread" 
+                        : "Forming Absorption: Institutional accumulation underway near 50 SMA support",
+                    $"Asymmetric Payoff: +{targetGainPct}% Target vs -{stopRiskPct}% Stop (Risk/Reward {rrRatio}:1)"
+                };
+
+                patterns.Add(new DetectedPattern(
+                    Name: "50-SMA VDU Pullback Absorption (Tech Team Beta)",
+                    Category: "Support",
+                    Description: $"50-SMA institutional retest with volume dry-up exhaustion targeting +{targetGainPct}%.",
+                    IsBullish: true,
+                    ConfidenceScore: status == "TRIGGERED" ? 0.88m : 0.80m,
+                    DateDetected: currentCandle.Date
+                ));
+
+                return new SwingTradingSignal(
+                    SetupType: "50-SMA Institutional Shakeout & Volume Dry-Up (VDU)",
+                    Status: status,
+                    WinningTeam: "Tech Team Beta",
+                    Badge: "50-SMA VDU",
+                    EntryPrice: currentPrice,
+                    TargetPrice: targetPrice,
+                    StopLossPrice: stopPrice,
+                    TargetGainPercent: targetGainPct,
+                    StopLossPercent: stopRiskPct,
+                    RiskRewardRatio: rrRatio,
+                    ExpectedHoldingDays: 30,
+                    ConfidenceScore: status == "TRIGGERED" ? 0.88m : 0.80m,
+                    TimeHorizon: "25 - 45 Trading Days (~1 - 2 Months)",
+                    Triggers: triggers
+                );
+            }
+        }
+
+        // 3. DEFAULT WATCHLIST SETUP FOR STAGE 2 LEADERS
+        if (isStage2)
+        {
+            decimal targetGainPct = 12.0m;
+            decimal stopRiskPct = 5.0m;
+            decimal targetPrice = Math.Round(currentPrice * 1.12m, 2);
+            decimal stopPrice = Math.Round(currentPrice * 0.95m, 2);
+
+            return new SwingTradingSignal(
+                SetupType: "Stage 2 Momentum Base (Developing)",
+                Status: "WATCHLIST",
+                WinningTeam: "Tech Team Alpha (Champion)",
+                Badge: "Stage 2",
+                EntryPrice: currentPrice,
+                TargetPrice: targetPrice,
+                StopLossPrice: stopPrice,
+                TargetGainPercent: targetGainPct,
+                StopLossPercent: stopRiskPct,
+                RiskRewardRatio: 2.4m,
+                ExpectedHoldingDays: 30,
+                ConfidenceScore: 0.75m,
+                TimeHorizon: "20 - 40 Trading Days (~1 - 2 Months)",
+                Triggers: new List<string>
+                {
+                    "Minervini Stage 2 markup structure confirmed (Price > 50 SMA > 200 SMA)",
+                    "Building swing consolidation base; monitor for VCP contraction squeeze or 50 SMA pullback",
+                    "Target potential: +12.0% within 1 to 2 month holding cycle"
+                }
+            );
+        }
+
+        return null;
     }
 
     private static List<CandleData> GenerateFallbackCandles(string ticker, string range)

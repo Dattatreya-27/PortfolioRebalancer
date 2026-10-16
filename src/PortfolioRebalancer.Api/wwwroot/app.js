@@ -381,6 +381,7 @@ function navigateTo(viewName, updateHash = true) {
     if (currentPortfolioId && (!stratContainer || stratContainer.children.length === 0)) {
       loadResearchReport(currentPortfolioId);
     }
+    loadSwingRadarFeed();
   }
 
   window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -1641,6 +1642,91 @@ function renderTechnoFundaMatrix(chartData, container, ticker, mos) {
         </div>
       </div>
     </div>
+
+    ${(() => {
+      const swing = tf.swingSignal || tf.SwingSignal;
+      if (!swing) return "";
+
+      const isTriggered = swing.status === 'TRIGGERED';
+      const isForming = swing.status === 'FORMING';
+      const statusBadge = isTriggered
+        ? `<span class="px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-500/40"><i class="fa-solid fa-bolt mr-1"></i>ACTIVE BUY PIVOT</span>`
+        : (isForming 
+            ? `<span class="px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-amber-500/20 text-amber-300 border border-amber-500/40"><i class="fa-solid fa-hourglass-half mr-1"></i>FORMING / SQUEEZE</span>`
+            : `<span class="px-2 py-0.5 rounded text-[10px] font-mono bg-slate-800 text-slate-300 border border-slate-700">STAGE 2 WATCHLIST</span>`);
+
+      const teamBadge = swing.winningTeam?.includes('Alpha')
+        ? `<span class="px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-amber-500/15 text-amber-300 border border-amber-500/30 flex items-center"><i class="fa-solid fa-trophy text-amber-400 mr-1"></i>Tech Team Alpha (VCP Champion)</span>`
+        : `<span class="px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-cyan-500/15 text-cyan-300 border border-cyan-500/30 flex items-center"><i class="fa-solid fa-shield text-cyan-400 mr-1"></i>Tech Team Beta (50-SMA VDU)</span>`;
+
+      const triggersList = (swing.triggers || []).map(t => `
+        <div class="flex items-start space-x-1.5 text-[11px] text-slate-300">
+          <i class="fa-solid fa-circle-check text-teal-400 text-[10px] mt-0.5"></i>
+          <span>${t}</span>
+        </div>
+      `).join('');
+
+      return `
+        <!-- Institutional 1-2 Month Swing Trading Engine Card -->
+        <div class="p-4 bg-gradient-to-r from-slate-950 via-slate-900 to-slate-950 border border-teal-500/40 rounded-xl space-y-3 shadow-lg">
+          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-800 pb-2.5">
+            <div class="flex items-center space-x-2.5">
+              <div class="w-8 h-8 rounded-lg bg-teal-500/15 border border-teal-500/30 flex items-center justify-center text-teal-400 text-sm">
+                <i class="fa-solid fa-crosshairs"></i>
+              </div>
+              <div>
+                <div class="flex flex-wrap items-center gap-2">
+                  <span class="text-xs font-black text-white uppercase tracking-wider">${swing.setupType}</span>
+                  ${statusBadge}
+                  ${teamBadge}
+                </div>
+                <p class="text-[11px] text-slate-400 mt-0.5">Holding Period: <strong class="text-teal-300">${swing.timeHorizon}</strong> &bull; Target Gain: <strong class="text-emerald-400">+${swing.targetGainPercent}%</strong></p>
+              </div>
+            </div>
+            <div class="flex items-center space-x-2">
+              <button type="button" onclick="openCreateAlertModal('${ticker}', ${chartData.currentPrice}, ${swing.targetPrice}, 'CrossesAbove')" class="px-2.5 py-1.5 rounded-lg bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-300 border border-emerald-500/40 text-[11px] font-semibold flex items-center space-x-1 transition shadow-sm">
+                <i class="fa-solid fa-bell"></i>
+                <span>Target Alert (₹${swing.targetPrice.toFixed(2)})</span>
+              </button>
+              <button type="button" onclick="openCreateAlertModal('${ticker}', ${chartData.currentPrice}, ${swing.stopLossPrice}, 'CrossesBelow')" class="px-2.5 py-1.5 rounded-lg bg-rose-500/20 hover:bg-rose-500/30 text-rose-300 border border-rose-500/40 text-[11px] font-semibold flex items-center space-x-1 transition shadow-sm">
+                <i class="fa-solid fa-shield-halved"></i>
+                <span>Stop Alert (₹${swing.stopLossPrice.toFixed(2)})</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- Swing Trade Parameters Grid -->
+          <div class="grid grid-cols-2 sm:grid-cols-5 gap-2 text-center text-[10px] font-mono">
+            <div class="bg-slate-900/90 p-2 rounded-lg border border-slate-800">
+              <span class="text-slate-500 block text-[9px] uppercase">Entry / CMP</span>
+              <span class="font-bold text-white text-xs mt-0.5 block">₹${(swing.entryPrice || chartData.currentPrice).toFixed(2)}</span>
+            </div>
+            <div class="bg-slate-900/90 p-2 rounded-lg border border-emerald-500/30">
+              <span class="text-emerald-400 block text-[9px] uppercase">Swing Target</span>
+              <span class="font-bold text-emerald-300 text-xs mt-0.5 block">₹${swing.targetPrice.toFixed(2)} (+${swing.targetGainPercent}%)</span>
+            </div>
+            <div class="bg-slate-900/90 p-2 rounded-lg border border-rose-500/30">
+              <span class="text-rose-400 block text-[9px] uppercase">Stop Loss</span>
+              <span class="font-bold text-rose-300 text-xs mt-0.5 block">₹${swing.stopLossPrice.toFixed(2)} (-${swing.stopLossPercent}%)</span>
+            </div>
+            <div class="bg-slate-900/90 p-2 rounded-lg border border-slate-800">
+              <span class="text-slate-500 block text-[9px] uppercase">Risk / Reward</span>
+              <span class="font-bold text-teal-300 text-xs mt-0.5 block">1 : ${swing.riskRewardRatio}</span>
+            </div>
+            <div class="bg-slate-900/90 p-2 rounded-lg border border-slate-800 col-span-2 sm:col-span-1">
+              <span class="text-slate-500 block text-[9px] uppercase">Expected Holding</span>
+              <span class="font-bold text-amber-300 text-xs mt-0.5 block">${swing.expectedHoldingDays} Days (1-2 Mo)</span>
+            </div>
+          </div>
+
+          <!-- Trigger Checklist -->
+          <div class="bg-slate-950/70 p-2.5 rounded-lg border border-slate-800/80 space-y-1">
+            <div class="text-[9px] uppercase font-bold tracking-wider text-slate-500">Algorithmic Execution Conditions & Verification:</div>
+            <div class="space-y-1">${triggersList}</div>
+          </div>
+        </div>
+      `;
+    })()}
 
     <!-- Algorithmic Patterns Grid -->
     <div class="space-y-1.5">
@@ -3119,7 +3205,7 @@ window.loadAndRenderStockChart = loadAndRenderStockChart;
 let activeAlertModalCmp = 0;
 let cachedEmailSettings = null;
 
-async function openCreateAlertModal(ticker, cmp) {
+async function openCreateAlertModal(ticker, cmp, targetPrice = null, direction = null) {
   const modal = document.getElementById("createAlertModal");
   if (!modal) return;
 
@@ -3128,12 +3214,17 @@ async function openCreateAlertModal(ticker, cmp) {
   document.getElementById("alertModalTickerBadge").textContent = ticker;
   document.getElementById("alertModalCmpText").textContent = `₹${activeAlertModalCmp.toFixed(2)}`;
   
-  // Default target price +2%
-  const defaultTarget = (activeAlertModalCmp * 1.02).toFixed(2);
   const targetInput = document.getElementById("alertInputTargetPrice");
-  targetInput.value = defaultTarget;
+  if (targetPrice != null && parseFloat(targetPrice) > 0) {
+    targetInput.value = parseFloat(targetPrice).toFixed(2);
+    setAlertDirection(direction || (parseFloat(targetPrice) >= activeAlertModalCmp ? 'CrossesAbove' : 'CrossesBelow'));
+  } else {
+    // Default target price +2%
+    const defaultTarget = (activeAlertModalCmp * 1.02).toFixed(2);
+    targetInput.value = defaultTarget;
+    setAlertDirection('CrossesAbove');
+  }
 
-  setAlertDirection('CrossesAbove');
   updateAlertDeltaHint();
 
   // Load default email if available
@@ -3576,6 +3667,102 @@ async function updateHeaderAlertsBadge(count) {
   }
 }
 
+// ========================================================
+// INSTITUTIONAL 1-2 MONTH SWING RADAR FEED
+// ========================================================
+async function loadSwingRadarFeed() {
+  const container = document.getElementById("swingRadarContainer");
+  if (!container) return;
+  const icon = document.getElementById("iconRefreshSwing");
+  icon?.classList.add("fa-spin");
+
+  try {
+    const res = await fetch('/api/stocks/swing-radar');
+    if (!res.ok) {
+      container.innerHTML = `<div class="col-span-full py-6 text-center text-xs text-rose-400">Failed to load swing radar feed.</div>`;
+      return;
+    }
+    const radarData = await res.json();
+    if (!radarData || radarData.length === 0) {
+      container.innerHTML = `<div class="col-span-full py-6 text-center text-xs text-slate-400">No active swing setups detected in current scan.</div>`;
+      return;
+    }
+
+    container.innerHTML = radarData.map(item => {
+      const tf = item.technoFunda || item.TechnoFunda;
+      const swing = tf?.swingSignal || tf?.SwingSignal;
+      if (!swing) return "";
+
+      const isTriggered = swing.status === 'TRIGGERED';
+      const isForming = swing.status === 'FORMING';
+      const statusClass = isTriggered 
+        ? "bg-emerald-500/20 text-emerald-300 border-emerald-500/40"
+        : (isForming ? "bg-amber-500/20 text-amber-300 border-amber-500/40" : "bg-slate-800 text-slate-300 border-slate-700");
+      const statusText = isTriggered ? "ACTIVE PIVOT" : (isForming ? "FORMING SQUEEZE" : "WATCHLIST");
+
+      const teamPill = swing.winningTeam?.includes('Alpha')
+        ? `<span class="px-1.5 py-0.5 rounded text-[9px] font-mono font-bold bg-amber-500/15 text-amber-300 border border-amber-500/30">Alpha VCP</span>`
+        : `<span class="px-1.5 py-0.5 rounded text-[9px] font-mono font-bold bg-cyan-500/15 text-cyan-300 border border-cyan-500/30">Beta VDU</span>`;
+
+      return `
+        <div class="p-4 bg-slate-950/80 rounded-xl border border-slate-800 hover:border-teal-500/40 transition shadow-sm space-y-2.5 flex flex-col justify-between">
+          <div class="space-y-2">
+            <div class="flex items-center justify-between">
+              <div class="flex items-center space-x-2">
+                <span class="text-sm font-black text-white">${item.ticker}</span>
+                <span class="text-xs font-mono text-slate-400">₹${item.currentPrice.toFixed(2)}</span>
+                ${teamPill}
+              </div>
+              <span class="px-2 py-0.5 rounded text-[9px] font-mono font-bold ${statusClass} border uppercase">
+                ${statusText}
+              </span>
+            </div>
+
+            <div class="text-xs text-slate-300 font-semibold truncate">
+              ${swing.setupType}
+            </div>
+
+            <div class="grid grid-cols-3 gap-1 text-center font-mono text-[10px] bg-slate-900/60 p-1.5 rounded-lg border border-slate-800/80">
+              <div>
+                <span class="text-slate-500 block text-[8px] uppercase">Target (+${swing.targetGainPercent}%)</span>
+                <span class="text-emerald-300 font-bold">₹${swing.targetPrice.toFixed(2)}</span>
+              </div>
+              <div>
+                <span class="text-slate-500 block text-[8px] uppercase">Stop (-${swing.stopLossPercent}%)</span>
+                <span class="text-rose-300 font-bold">₹${swing.stopLossPrice.toFixed(2)}</span>
+              </div>
+              <div>
+                <span class="text-slate-500 block text-[8px] uppercase">R : R</span>
+                <span class="text-teal-300 font-bold">1 : ${swing.riskRewardRatio}</span>
+              </div>
+            </div>
+
+            <div class="text-[10px] text-slate-400 line-clamp-2">
+              ${(swing.triggers && swing.triggers.length > 0) ? swing.triggers[0] : 'Institutional volume absorption underway.'}
+            </div>
+          </div>
+
+          <div class="pt-2 border-t border-slate-800/80 flex items-center justify-between gap-1 text-[11px]">
+            <button type="button" onclick="quickInspectTicker('${item.ticker}')" class="px-2.5 py-1 rounded bg-slate-800 hover:bg-slate-700 text-teal-400 transition font-semibold flex items-center space-x-1">
+              <i class="fa-solid fa-chart-line text-[10px]"></i>
+              <span>Inspect &amp; Chart</span>
+            </button>
+            <button type="button" onclick="openCreateAlertModal('${item.ticker}', ${item.currentPrice}, ${swing.targetPrice}, 'CrossesAbove')" class="px-2.5 py-1 rounded bg-emerald-500/15 hover:bg-emerald-500/25 text-emerald-300 border border-emerald-500/30 transition font-semibold flex items-center space-x-1">
+              <i class="fa-solid fa-bell text-[10px]"></i>
+              <span>Set Alert</span>
+            </button>
+          </div>
+        </div>
+      `;
+    }).join('');
+  } catch (err) {
+    console.error("Error loading swing radar:", err);
+    container.innerHTML = `<div class="col-span-full py-6 text-center text-xs text-rose-400">Error loading swing radar: ${err.message || err}</div>`;
+  } finally {
+    icon?.classList.remove("fa-spin");
+  }
+}
+
 // Window exports
 window.openCreateAlertModal = openCreateAlertModal;
 window.closeCreateAlertModal = closeCreateAlertModal;
@@ -3591,6 +3778,7 @@ window.handleToggleAlert = handleToggleAlert;
 window.handleManualAlertEvaluation = handleManualAlertEvaluation;
 window.handleSaveEmailSettings = handleSaveEmailSettings;
 window.handleSendTestEmail = handleSendTestEmail;
+window.loadSwingRadarFeed = loadSwingRadarFeed;
 
 // Initial surveillance badge fetch
 setTimeout(updateHeaderAlertsBadge, 500);

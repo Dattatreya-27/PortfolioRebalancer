@@ -33,6 +33,27 @@ public sealed record DetectedPattern(
 );
 
 /// <summary>
+/// Structured institutional 1-2 month swing trading setup (targeting 5% to 15%+ returns).
+/// Powered by the Quant tournament winners: Tech Team Alpha (VCP Momentum Breakout) and Tech Team Beta (50-SMA VDU Pullback).
+/// </summary>
+public sealed record SwingTradingSignal(
+    string SetupType, // "VCP Breakout" or "50-SMA VDU Pullback"
+    string Status, // "TRIGGERED" (active pivot), "FORMING" (late consolidation / dry-up), "WATCHLIST"
+    string WinningTeam, // "Tech Team Alpha (Champion)" or "Tech Team Beta"
+    string Badge, // "VCP Surge" or "50-SMA VDU"
+    decimal EntryPrice,
+    decimal TargetPrice,
+    decimal StopLossPrice,
+    decimal TargetGainPercent,
+    decimal StopLossPercent,
+    decimal RiskRewardRatio,
+    int ExpectedHoldingDays,
+    decimal ConfidenceScore,
+    string TimeHorizon, // "20 - 45 Trading Days (~1 - 2 Months)"
+    IReadOnlyList<string> Triggers
+);
+
+/// <summary>
 /// The unified "Techno-Funda" synthesis combining fundamental Margin of Safety with chart timing.
 /// </summary>
 public sealed record TechnoFundaResult(
@@ -46,7 +67,8 @@ public sealed record TechnoFundaResult(
     string RsiCondition,
     string MovingAverageSummary,
     decimal VolumeMultiplierVs20DayAvg,
-    IReadOnlyList<DetectedPattern> Patterns
+    IReadOnlyList<DetectedPattern> Patterns,
+    SwingTradingSignal? SwingSignal = null
 );
 
 /// <summary>

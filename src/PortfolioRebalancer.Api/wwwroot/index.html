@@ -1069,6 +1069,43 @@
         </div>
       </div>
 
+      <!-- INSTITUTIONAL 1-2 MONTH SWING RADAR DESK (5% - 15%+ TARGET) -->
+      <div class="w-full bg-slate-900/80 border border-teal-500/30 rounded-2xl p-6 backdrop-blur space-y-4 shadow-xl">
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-slate-800">
+          <div class="flex items-center space-x-3">
+            <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-amber-500/20 to-teal-500/20 border border-teal-500/40 flex items-center justify-center shadow-lg shadow-teal-500/10">
+              <i class="fa-solid fa-bolt text-teal-400 text-lg"></i>
+            </div>
+            <div>
+              <div class="flex items-center space-x-2">
+                <h3 class="text-base sm:text-lg font-bold text-white tracking-tight">
+                  Institutional 1–2 Month Swing Trading Radar
+                </h3>
+                <span class="px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-amber-500/15 text-amber-300 border border-amber-500/30">
+                  TARGET: +5% TO +15%+
+                </span>
+              </div>
+              <p class="text-xs text-slate-400 mt-0.5">
+                Engineered by tournament winners: <strong>Tech Team Alpha</strong> (VCP Contraction Breakout) &amp; <strong>Tech Team Beta</strong> (50-SMA VDU Pullback Absorption)
+              </p>
+            </div>
+          </div>
+          <div class="flex items-center space-x-2">
+            <button onclick="loadSwingRadarFeed()" class="text-xs bg-teal-500/15 hover:bg-teal-500/25 text-teal-300 border border-teal-500/30 px-3 py-1.5 rounded-lg transition flex items-center space-x-1.5 font-semibold">
+              <i id="iconRefreshSwing" class="fa-solid fa-arrows-rotate"></i>
+              <span>Refresh Radar</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Swing Radar Cards Container -->
+        <div id="swingRadarContainer" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3.5">
+          <div class="col-span-full py-8 text-center text-xs text-slate-500 italic">
+            Scanning Indian equity leaders for volatility contraction breakouts and volume dry-up absorption setups...
+          </div>
+        </div>
+      </div>
+
       <!-- Master Quant Research & News Scenario Stress Testing Section -->
     <div id="researchReportSection" class="hidden bg-slate-900/95 border border-teal-500/30 rounded-2xl p-6 backdrop-blur shadow-2xl space-y-6">
       <div class="flex items-center justify-between border-b border-slate-800 pb-4">
