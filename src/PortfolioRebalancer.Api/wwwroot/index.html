@@ -100,6 +100,12 @@
           <i id="privacyEyeIcon" class="fa-solid fa-eye text-teal-400"></i>
           <span id="privacyBtnText" class="hidden sm:inline">Privacy Mode</span>
         </button>
+        <!-- Price Alerts Surveillance Center -->
+        <button id="btnOpenAlertsModal" onclick="openAlertsModal()" class="text-xs bg-slate-900/80 hover:bg-slate-800 text-slate-300 hover:text-white border border-slate-700/60 px-3 py-1.5 rounded-lg flex items-center space-x-1.5 transition font-medium shadow-sm" title="Stock Price Alerts & Market Surveillance">
+          <i class="fa-solid fa-bell text-amber-400"></i>
+          <span class="hidden sm:inline">Price Alerts</span>
+          <span id="headerAlertsCountBadge" class="hidden px-1.5 py-0.2 rounded-full text-[10px] font-mono font-bold bg-amber-500/20 text-amber-300 border border-amber-500/30">0</span>
+        </button>
         <button id="btnOpenResearch" class="hidden">Quant Research</button>
         <button id="btnRefreshDiagnostics" class="text-xs bg-slate-900/80 hover:bg-slate-800 text-slate-300 hover:text-white border border-slate-700/60 px-3 py-1.5 rounded-lg flex items-center space-x-1.5 transition">
           <i class="fa-solid fa-stethoscope text-teal-400"></i>
@@ -1440,6 +1446,253 @@
             <span>How to get free SmartAPI keys in 2 mins</span>
           </a>
           <button type="button" onclick="closeAngelOneModal()" class="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-lg transition">
+            Close
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ======================================================== -->
+    <!-- MODAL: SET PRICE ALERT FOR A STOCK                       -->
+    <!-- ======================================================== -->
+    <div id="createAlertModal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
+      <div class="bg-slate-900 border border-slate-800 rounded-2xl max-w-md w-full p-5 space-y-4 shadow-2xl">
+        <div class="flex items-center justify-between pb-3 border-b border-slate-800">
+          <div class="flex items-center space-x-2.5">
+            <div class="w-8 h-8 rounded-lg bg-amber-500/15 border border-amber-500/30 flex items-center justify-center text-amber-400">
+              <i class="fa-solid fa-bell text-sm"></i>
+            </div>
+            <div>
+              <h3 class="text-sm font-bold text-white flex items-center space-x-1.5">
+                <span>Set Price Alert</span>
+                <span id="alertModalTickerBadge" class="font-mono text-teal-400 bg-teal-500/10 px-1.5 py-0.5 rounded text-[11px] border border-teal-500/20">--</span>
+              </h3>
+              <p class="text-[11px] text-slate-400">Automated notification when price crosses threshold</p>
+            </div>
+          </div>
+          <button type="button" onclick="closeCreateAlertModal()" class="text-slate-400 hover:text-white transition">
+            <i class="fa-solid fa-xmark"></i>
+          </button>
+        </div>
+
+        <form id="createAlertForm" onsubmit="handleCreateAlertSubmit(event)" class="space-y-3.5 text-xs">
+          <input type="hidden" id="alertInputTicker" />
+
+          <!-- CMP Reference Card -->
+          <div class="p-3 bg-slate-950 rounded-xl border border-slate-800 flex items-center justify-between">
+            <span class="text-slate-400 text-[11px]">Current Market Price (CMP):</span>
+            <span id="alertModalCmpText" class="font-bold font-mono text-white text-sm">&#8377;--</span>
+          </div>
+
+          <!-- Alert Direction Toggle -->
+          <div class="space-y-1">
+            <label class="block text-[11px] font-semibold text-slate-300">Trigger Condition</label>
+            <div class="grid grid-cols-2 gap-2">
+              <button type="button" id="btnDirAbove" onclick="setAlertDirection('CrossesAbove')" class="py-2 px-3 rounded-lg border text-xs font-semibold flex items-center justify-center space-x-1.5 transition bg-emerald-500/15 text-emerald-300 border-emerald-500/40">
+                <i class="fa-solid fa-arrow-trend-up text-emerald-400"></i>
+                <span>Crosses Above &uarr;</span>
+              </button>
+              <button type="button" id="btnDirBelow" onclick="setAlertDirection('CrossesBelow')" class="py-2 px-3 rounded-lg border text-xs font-semibold flex items-center justify-center space-x-1.5 transition text-slate-400 hover:text-slate-200 border-slate-800 bg-slate-950">
+                <i class="fa-solid fa-arrow-trend-down text-rose-400"></i>
+                <span>Crosses Below &darr;</span>
+              </button>
+            </div>
+            <input type="hidden" id="alertInputDirection" value="CrossesAbove" />
+          </div>
+
+          <!-- Target Price & Quick Delta Pills -->
+          <div class="space-y-1.5">
+            <div class="flex items-center justify-between">
+              <label class="block text-[11px] font-semibold text-slate-300">Target Trigger Price (&#8377;)</label>
+              <span id="alertDeltaHint" class="text-[10px] font-mono text-slate-400">+0.0% from CMP</span>
+            </div>
+            <input id="alertInputTargetPrice" type="number" step="0.05" required placeholder="e.g. 2500.00" class="w-full bg-slate-950 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white font-mono font-bold focus:outline-none focus:ring-1 focus:ring-amber-500" oninput="updateAlertDeltaHint()" />
+            
+            <!-- Quick % Offset Pills -->
+            <div class="flex flex-wrap items-center gap-1.5 pt-0.5">
+              <span class="text-[10px] text-slate-500 mr-0.5">Quick Set:</span>
+              <button type="button" onclick="setAlertOffsetPercent(2)" class="px-2 py-0.5 rounded bg-slate-950 hover:bg-slate-800 text-slate-300 border border-slate-800 text-[10px] font-mono transition">+2%</button>
+              <button type="button" onclick="setAlertOffsetPercent(5)" class="px-2 py-0.5 rounded bg-slate-950 hover:bg-slate-800 text-slate-300 border border-slate-800 text-[10px] font-mono transition">+5%</button>
+              <button type="button" onclick="setAlertOffsetPercent(10)" class="px-2 py-0.5 rounded bg-slate-950 hover:bg-slate-800 text-slate-300 border border-slate-800 text-[10px] font-mono transition">+10%</button>
+              <button type="button" onclick="setAlertOffsetPercent(-2)" class="px-2 py-0.5 rounded bg-slate-950 hover:bg-slate-800 text-slate-300 border border-slate-800 text-[10px] font-mono transition">-2%</button>
+              <button type="button" onclick="setAlertOffsetPercent(-5)" class="px-2 py-0.5 rounded bg-slate-950 hover:bg-slate-800 text-slate-300 border border-slate-800 text-[10px] font-mono transition">-5%</button>
+              <button type="button" onclick="setAlertOffsetPercent(-10)" class="px-2 py-0.5 rounded bg-slate-950 hover:bg-slate-800 text-slate-300 border border-slate-800 text-[10px] font-mono transition">-10%</button>
+            </div>
+          </div>
+
+          <!-- Recipient Email -->
+          <div class="space-y-1">
+            <label class="block text-[11px] font-semibold text-slate-300">Recipient Email Address</label>
+            <input id="alertInputRecipientEmail" type="email" placeholder="your.name@gmail.com" class="w-full bg-slate-950 border border-slate-700 rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:ring-1 focus:ring-amber-500" />
+            <p class="text-[10px] text-slate-500">Leave blank to use default email configured in Settings.</p>
+          </div>
+
+          <!-- Strategy Notes -->
+          <div class="space-y-1">
+            <label class="block text-[11px] font-semibold text-slate-300">Personal Notes / Strategy (Optional)</label>
+            <input id="alertInputNotes" type="text" placeholder="e.g. Stage 2 base breakout pivot. Buy 25 shares." class="w-full bg-slate-950 border border-slate-700 rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:ring-1 focus:ring-amber-500" />
+          </div>
+
+          <!-- Submit Button -->
+          <div class="pt-2">
+            <button type="submit" id="btnSubmitPriceAlert" class="w-full py-2.5 bg-gradient-to-r from-amber-600 to-orange-500 hover:from-amber-500 hover:to-orange-400 text-slate-950 font-bold rounded-lg transition shadow-md flex items-center justify-center space-x-1.5 text-xs">
+              <i class="fa-solid fa-bell"></i>
+              <span>Create Active Price Alert</span>
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- ======================================================== -->
+    <!-- MODAL: PRICE ALERTS SURVEILLANCE & NOTIFICATIONS RADAR   -->
+    <!-- ======================================================== -->
+    <div id="alertsManagementModal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
+      <div class="bg-slate-900 border border-slate-800 rounded-2xl max-w-3xl w-full p-6 space-y-4 shadow-2xl max-h-[90vh] flex flex-col">
+        <!-- Header -->
+        <div class="flex items-center justify-between pb-3 border-b border-slate-800">
+          <div class="flex items-center space-x-3">
+            <div class="w-9 h-9 rounded-xl bg-gradient-to-tr from-amber-500/20 to-orange-500/20 border border-amber-500/30 flex items-center justify-center text-amber-400 shadow-sm">
+              <i class="fa-solid fa-bell-concierge text-sm"></i>
+            </div>
+            <div>
+              <div class="flex items-center space-x-2">
+                <h3 class="text-base font-bold text-white tracking-tight">Price Alerts &amp; Market Surveillance Desk</h3>
+                <span id="marketSurveillancePill" class="px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-emerald-500/15 text-emerald-300 border border-emerald-500/30">
+                  <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 inline-block mr-1"></span>
+                  Checking...
+                </span>
+              </div>
+              <p class="text-xs text-slate-400">Continuous price surveillance during Indian equity market hours</p>
+            </div>
+          </div>
+          <button type="button" onclick="closeAlertsModal()" class="text-slate-400 hover:text-white transition">
+            <i class="fa-solid fa-xmark text-sm"></i>
+          </button>
+        </div>
+
+        <!-- Live Surveillance Status Bar -->
+        <div class="p-3 bg-slate-950/80 border border-slate-800 rounded-xl flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 text-xs">
+          <div class="space-y-0.5">
+            <div class="text-slate-300 flex items-center space-x-2">
+              <i class="fa-solid fa-clock text-teal-400 text-xs"></i>
+              <span id="lblCurrentIstTime" class="font-mono text-white">--</span>
+              <span class="text-slate-500">&bull;</span>
+              <span id="lblMarketSessionName" class="text-slate-400">--</span>
+            </div>
+            <div class="text-[11px] text-slate-500 font-mono" id="lblSurveillanceCadence">
+              Schedule: Surveillance active during regular market hours (09:15 - 15:30 IST)
+            </div>
+          </div>
+          <button type="button" onclick="handleManualAlertEvaluation()" class="self-start sm:self-center px-3 py-1.5 rounded-lg bg-teal-500/15 hover:bg-teal-500/25 text-teal-300 border border-teal-500/30 text-xs font-semibold flex items-center space-x-1.5 transition">
+            <i class="fa-solid fa-rotate text-teal-400 text-[11px]" id="iconManualEval"></i>
+            <span>Evaluate Alerts Now</span>
+          </button>
+        </div>
+
+        <!-- Tabs: Active Alerts / Triggered History / Email Settings -->
+        <div class="flex items-center space-x-2 border-b border-slate-800 text-xs">
+          <button type="button" id="btnTabActiveAlerts" onclick="switchAlertsTab('active')" class="alerts-tab-btn pb-2 font-semibold text-teal-400 border-b-2 border-teal-400 flex items-center space-x-1.5">
+            <i class="fa-solid fa-radar"></i>
+            <span>Active Alerts</span>
+            <span id="badgeActiveAlertsCount" class="ml-1 px-1.5 py-0.2 rounded-full text-[10px] font-mono bg-slate-800 text-slate-300">0</span>
+          </button>
+          <button type="button" id="btnTabTriggeredAlerts" onclick="switchAlertsTab('triggered')" class="alerts-tab-btn pb-2 font-medium text-slate-400 hover:text-slate-200 border-b-2 border-transparent flex items-center space-x-1.5 transition">
+            <i class="fa-solid fa-clock-rotate-left"></i>
+            <span>Triggered History</span>
+            <span id="badgeTriggeredAlertsCount" class="ml-1 px-1.5 py-0.2 rounded-full text-[10px] font-mono bg-slate-800 text-slate-300">0</span>
+          </button>
+          <button type="button" id="btnTabEmailSettings" onclick="switchAlertsTab('settings')" class="alerts-tab-btn pb-2 font-medium text-slate-400 hover:text-slate-200 border-b-2 border-transparent flex items-center space-x-1.5 transition">
+            <i class="fa-solid fa-envelope-circle-check"></i>
+            <span>Email Delivery Settings</span>
+          </button>
+        </div>
+
+        <!-- Tab 1: Active Alerts List -->
+        <div id="tabContentActiveAlerts" class="flex-1 overflow-y-auto space-y-2.5 min-h-[220px]">
+          <div id="activeAlertsList" class="space-y-2 text-xs">
+            <div class="p-6 text-center text-slate-500">Loading alerts...</div>
+          </div>
+        </div>
+
+        <!-- Tab 2: Triggered History -->
+        <div id="tabContentTriggeredAlerts" class="flex-1 overflow-y-auto space-y-2.5 min-h-[220px] hidden">
+          <div id="triggeredAlertsList" class="space-y-2 text-xs">
+            <div class="p-6 text-center text-slate-500">No triggered alerts yet.</div>
+          </div>
+        </div>
+
+        <!-- Tab 3: Email Delivery & Surveillance Settings -->
+        <div id="tabContentEmailSettings" class="flex-1 overflow-y-auto space-y-3.5 min-h-[220px] hidden text-xs">
+          <div class="p-3 bg-slate-950/70 rounded-xl border border-slate-800 space-y-1">
+            <span class="font-bold text-white block">Email Dispatcher Configuration</span>
+            <p class="text-slate-400 text-[11px] leading-relaxed">
+              Configure your SMTP credentials (e.g. Gmail App Password or Outlook SMTP). Price alert emails will be automatically sent to your inbox when a target threshold is breached.
+            </p>
+          </div>
+
+          <form id="emailSettingsForm" onsubmit="handleSaveEmailSettings(event)" class="space-y-3">
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div>
+                <label class="block text-[11px] font-semibold text-slate-400 mb-1">SMTP Host</label>
+                <input id="smtpHostInput" type="text" placeholder="smtp.gmail.com" class="w-full bg-slate-950 border border-slate-700 rounded-lg px-3 py-2 text-xs text-white font-mono focus:outline-none focus:ring-1 focus:ring-teal-500" />
+              </div>
+              <div>
+                <label class="block text-[11px] font-semibold text-slate-400 mb-1">SMTP Port</label>
+                <input id="smtpPortInput" type="number" placeholder="587" class="w-full bg-slate-950 border border-slate-700 rounded-lg px-3 py-2 text-xs text-white font-mono focus:outline-none focus:ring-1 focus:ring-teal-500" />
+              </div>
+            </div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div>
+                <label class="block text-[11px] font-semibold text-slate-400 mb-1">SMTP Username / Email</label>
+                <input id="smtpUserInput" type="text" placeholder="your.account@gmail.com" class="w-full bg-slate-950 border border-slate-700 rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:ring-1 focus:ring-teal-500" />
+              </div>
+              <div>
+                <label class="block text-[11px] font-semibold text-slate-400 mb-1">SMTP Password / App Password</label>
+                <input id="smtpPassInput" type="password" placeholder="16-character Google App Password" class="w-full bg-slate-950 border border-slate-700 rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:ring-1 focus:ring-teal-500" />
+              </div>
+            </div>
+
+            <div>
+              <label class="block text-[11px] font-semibold text-slate-400 mb-1">Default Alert Recipient Email</label>
+              <input id="defaultRecipientInput" type="email" placeholder="your.destination@email.com" class="w-full bg-slate-950 border border-slate-700 rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:ring-1 focus:ring-teal-500" />
+            </div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
+              <div class="p-3 bg-slate-950 border border-slate-800 rounded-xl flex items-center space-x-2.5">
+                <input id="chkMarketHoursOnly" type="checkbox" checked class="h-4 w-4 rounded bg-slate-900 border-slate-700 text-teal-500 focus:ring-teal-500" />
+                <label for="chkMarketHoursOnly" class="text-[11px] text-slate-300 cursor-pointer select-none">
+                  <span class="font-bold text-white block">Market Hours Only (09:15 - 15:30 IST)</span>
+                  Only poll live prices while Indian exchanges are open.
+                </label>
+              </div>
+
+              <div class="p-3 bg-slate-950 border border-slate-800 rounded-xl space-y-1">
+                <label class="block text-[11px] font-bold text-white">Surveillance Interval (seconds)</label>
+                <input id="checkIntervalInput" type="number" min="15" max="3600" value="60" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-2.5 py-1 text-xs text-white font-mono" />
+              </div>
+            </div>
+
+            <!-- Action Buttons: Save & Test -->
+            <div class="flex flex-wrap items-center justify-between gap-2 pt-2 border-t border-slate-800">
+              <button type="button" onclick="handleSendTestEmail()" class="px-3.5 py-2 bg-slate-800 hover:bg-slate-700 text-teal-300 font-semibold rounded-lg border border-slate-700 transition flex items-center space-x-1.5">
+                <i class="fa-solid fa-paper-plane text-xs"></i>
+                <span>Send Test Email Verification</span>
+              </button>
+
+              <button type="submit" class="px-5 py-2 bg-gradient-to-r from-teal-600 to-emerald-600 hover:from-teal-500 hover:to-emerald-500 text-slate-950 font-bold rounded-lg shadow-md transition flex items-center space-x-1.5">
+                <i class="fa-solid fa-floppy-disk"></i>
+                <span>Save Email Settings</span>
+              </button>
+            </div>
+          </form>
+        </div>
+
+        <!-- Footer -->
+        <div class="pt-3 border-t border-slate-800 flex items-center justify-between text-xs text-slate-400">
+          <span class="text-[11px] text-slate-500">Automated One-Shot Price Trigger Delivery System</span>
+          <button type="button" onclick="closeAlertsModal()" class="px-4 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-lg transition font-medium">
             Close
           </button>
         </div>

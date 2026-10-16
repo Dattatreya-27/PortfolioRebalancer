@@ -1973,15 +1973,21 @@ async function handleInspectStock() {
             ${data.valuationBandVerdict || 'Valuation assessed relative to growth rate and sector peers.'}
           </p>
         </div>
-        <div class="flex items-center space-x-4 self-end md:self-center bg-slate-950/80 px-4 py-2 rounded-xl border border-slate-800">
-          <div class="text-right">
-            <div class="text-[9px] uppercase tracking-wider text-slate-500">Live Market Price (CMP)</div>
-            <div class="text-sm font-bold font-mono text-teal-400">&#8377;${data.price}</div>
-          </div>
-          <div class="text-slate-600 font-bold">&rarr;</div>
-          <div class="text-right">
-            <div class="text-[9px] uppercase tracking-wider text-slate-500">Estimated Fair Value</div>
-            <div class="text-sm font-bold font-mono text-emerald-400">&#8377;${data.fairValueEstimate || data.price}</div>
+        <div class="flex items-center space-x-3 self-end md:self-center">
+          <button type="button" onclick="openCreateAlertModal('${data.ticker}', ${data.price})" class="px-3 py-1.5 rounded-xl bg-amber-500/15 hover:bg-amber-500/25 text-amber-300 hover:text-amber-200 border border-amber-500/30 font-semibold text-xs flex items-center space-x-1.5 transition shadow-sm" title="Set Real-Time Price Alert for ${data.ticker}">
+            <i class="fa-solid fa-bell text-xs"></i>
+            <span>Set Alert</span>
+          </button>
+          <div class="flex items-center space-x-4 bg-slate-950/80 px-4 py-2 rounded-xl border border-slate-800">
+            <div class="text-right">
+              <div class="text-[9px] uppercase tracking-wider text-slate-500">Live Market Price (CMP)</div>
+              <div class="text-sm font-bold font-mono text-teal-400">&#8377;${data.price}</div>
+            </div>
+            <div class="text-slate-600 font-bold">&rarr;</div>
+            <div class="text-right">
+              <div class="text-[9px] uppercase tracking-wider text-slate-500">Estimated Fair Value</div>
+              <div class="text-sm font-bold font-mono text-emerald-400">&#8377;${data.fairValueEstimate || data.price}</div>
+            </div>
           </div>
         </div>
       </div>
@@ -3106,4 +3112,487 @@ window.handleTogglePrivacy = handleTogglePrivacy;
 window.sortHoldings = sortHoldings;
 window.switchChartTimeframe = switchChartTimeframe;
 window.loadAndRenderStockChart = loadAndRenderStockChart;
+
+// ========================================================
+// PRICE ALERTS & MARKET SURVEILLANCE DESK
+// ========================================================
+let activeAlertModalCmp = 0;
+let cachedEmailSettings = null;
+
+async function openCreateAlertModal(ticker, cmp) {
+  const modal = document.getElementById("createAlertModal");
+  if (!modal) return;
+
+  activeAlertModalCmp = parseFloat(cmp) || 0;
+  document.getElementById("alertInputTicker").value = ticker;
+  document.getElementById("alertModalTickerBadge").textContent = ticker;
+  document.getElementById("alertModalCmpText").textContent = `₹${activeAlertModalCmp.toFixed(2)}`;
+  
+  // Default target price +2%
+  const defaultTarget = (activeAlertModalCmp * 1.02).toFixed(2);
+  const targetInput = document.getElementById("alertInputTargetPrice");
+  targetInput.value = defaultTarget;
+
+  setAlertDirection('CrossesAbove');
+  updateAlertDeltaHint();
+
+  // Load default email if available
+  if (!cachedEmailSettings) {
+    try {
+      const res = await fetch('/api/alerts/settings');
+      if (res.ok) cachedEmailSettings = await res.json();
+    } catch (e) {}
+  }
+  const emailInput = document.getElementById("alertInputRecipientEmail");
+  if (emailInput && !emailInput.value && cachedEmailSettings?.defaultRecipientEmail) {
+    emailInput.value = cachedEmailSettings.defaultRecipientEmail;
+  }
+
+  modal.classList.remove("hidden");
+  targetInput.focus();
+}
+
+function closeCreateAlertModal() {
+  document.getElementById("createAlertModal")?.classList.add("hidden");
+}
+
+function setAlertDirection(dir) {
+  document.getElementById("alertInputDirection").value = dir;
+  const btnAbove = document.getElementById("btnDirAbove");
+  const btnBelow = document.getElementById("btnDirBelow");
+  if (!btnAbove || !btnBelow) return;
+  if (dir === 'CrossesAbove') {
+    btnAbove.className = "py-2 px-3 rounded-lg border text-xs font-semibold flex items-center justify-center space-x-1.5 transition bg-emerald-500/15 text-emerald-300 border-emerald-500/40";
+    btnBelow.className = "py-2 px-3 rounded-lg border text-xs font-semibold flex items-center justify-center space-x-1.5 transition text-slate-400 hover:text-slate-200 border-slate-800 bg-slate-950";
+  } else {
+    btnBelow.className = "py-2 px-3 rounded-lg border text-xs font-semibold flex items-center justify-center space-x-1.5 transition bg-rose-500/15 text-rose-300 border-rose-500/40";
+    btnAbove.className = "py-2 px-3 rounded-lg border text-xs font-semibold flex items-center justify-center space-x-1.5 transition text-slate-400 hover:text-slate-200 border-slate-800 bg-slate-950";
+  }
+}
+
+function setAlertOffsetPercent(pct) {
+  if (!activeAlertModalCmp || activeAlertModalCmp <= 0) return;
+  const newTarget = (activeAlertModalCmp * (1 + (pct / 100))).toFixed(2);
+  document.getElementById("alertInputTargetPrice").value = newTarget;
+  if (pct >= 0) {
+    setAlertDirection('CrossesAbove');
+  } else {
+    setAlertDirection('CrossesBelow');
+  }
+  updateAlertDeltaHint();
+}
+
+function updateAlertDeltaHint() {
+  const targetVal = parseFloat(document.getElementById("alertInputTargetPrice").value);
+  const hintSpan = document.getElementById("alertDeltaHint");
+  if (!hintSpan || !activeAlertModalCmp || isNaN(targetVal)) return;
+
+  const deltaPct = ((targetVal - activeAlertModalCmp) / activeAlertModalCmp) * 100;
+  const sign = deltaPct >= 0 ? '+' : '';
+  hintSpan.textContent = `${sign}${deltaPct.toFixed(1)}% from CMP`;
+  hintSpan.className = `text-[10px] font-mono ${deltaPct >= 0 ? 'text-emerald-400' : 'text-rose-400'}`;
+}
+
+async function handleCreateAlertSubmit(event) {
+  event.preventDefault();
+  const ticker = document.getElementById("alertInputTicker").value.trim().toUpperCase();
+  const targetPrice = parseFloat(document.getElementById("alertInputTargetPrice").value);
+  const directionStr = document.getElementById("alertInputDirection").value;
+  const recipientEmail = document.getElementById("alertInputRecipientEmail").value.trim();
+  const notes = document.getElementById("alertInputNotes").value.trim();
+
+  const direction = directionStr === 'CrossesBelow' ? 2 : 1;
+
+  try {
+    const res = await fetch('/api/alerts', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        ticker,
+        targetPrice,
+        direction,
+        recipientEmail,
+        notes
+      })
+    });
+
+    if (!res.ok) {
+      const err = await res.json();
+      alert(`Error creating price alert: ${err.message || 'Validation failed'}`);
+      return;
+    }
+
+    closeCreateAlertModal();
+    updateHeaderAlertsBadge();
+    alert(`✓ Active price alert set for ${ticker} at ₹${targetPrice}! You will receive an email when CMP crosses this threshold.`);
+  } catch (err) {
+    console.error("Error creating price alert:", err);
+    alert(`Failed to set alert: ${err.message || err}`);
+  }
+}
+
+async function openAlertsModal() {
+  const modal = document.getElementById("alertsManagementModal");
+  if (!modal) return;
+  modal.classList.remove("hidden");
+  switchAlertsTab('active');
+  await loadMarketHoursStatus();
+  await loadPriceAlerts();
+}
+
+function closeAlertsModal() {
+  document.getElementById("alertsManagementModal")?.classList.add("hidden");
+}
+
+function switchAlertsTab(tab) {
+  const tabs = ['active', 'triggered', 'settings'];
+  tabs.forEach(t => {
+    const content = document.getElementById(`tabContent${t.charAt(0).toUpperCase() + t.slice(1)}Alerts`) || document.getElementById(`tabContentEmailSettings`);
+    if (t === tab) {
+      content?.classList.remove("hidden");
+    } else {
+      content?.classList.add("hidden");
+    }
+  });
+
+  const btnActive = document.getElementById("btnTabActiveAlerts");
+  const btnTriggered = document.getElementById("btnTabTriggeredAlerts");
+  const btnSettings = document.getElementById("btnTabEmailSettings");
+
+  if (!btnActive || !btnTriggered || !btnSettings) return;
+
+  if (tab === 'active') {
+    btnActive.className = "alerts-tab-btn pb-2 font-semibold text-teal-400 border-b-2 border-teal-400 flex items-center space-x-1.5";
+    btnTriggered.className = "alerts-tab-btn pb-2 font-medium text-slate-400 hover:text-slate-200 border-b-2 border-transparent flex items-center space-x-1.5 transition";
+    btnSettings.className = "alerts-tab-btn pb-2 font-medium text-slate-400 hover:text-slate-200 border-b-2 border-transparent flex items-center space-x-1.5 transition";
+    loadPriceAlerts();
+  } else if (tab === 'triggered') {
+    btnActive.className = "alerts-tab-btn pb-2 font-medium text-slate-400 hover:text-slate-200 border-b-2 border-transparent flex items-center space-x-1.5 transition";
+    btnTriggered.className = "alerts-tab-btn pb-2 font-semibold text-teal-400 border-b-2 border-teal-400 flex items-center space-x-1.5";
+    btnSettings.className = "alerts-tab-btn pb-2 font-medium text-slate-400 hover:text-slate-200 border-b-2 border-transparent flex items-center space-x-1.5 transition";
+    loadPriceAlerts();
+  } else {
+    btnActive.className = "alerts-tab-btn pb-2 font-medium text-slate-400 hover:text-slate-200 border-b-2 border-transparent flex items-center space-x-1.5 transition";
+    btnTriggered.className = "alerts-tab-btn pb-2 font-medium text-slate-400 hover:text-slate-200 border-b-2 border-transparent flex items-center space-x-1.5 transition";
+    btnSettings.className = "alerts-tab-btn pb-2 font-semibold text-teal-400 border-b-2 border-teal-400 flex items-center space-x-1.5";
+    loadEmailSettings();
+  }
+}
+
+async function loadPriceAlerts() {
+  try {
+    const res = await fetch('/api/alerts');
+    if (!res.ok) return;
+    const alerts = await res.json();
+
+    const active = alerts.filter(a => a.status === 1 || a.status === 'Active');
+    const triggered = alerts.filter(a => a.status === 2 || a.status === 'Triggered');
+
+    const badgeActive = document.getElementById("badgeActiveAlertsCount");
+    const badgeTriggered = document.getElementById("badgeTriggeredAlertsCount");
+    if (badgeActive) badgeActive.textContent = active.length;
+    if (badgeTriggered) badgeTriggered.textContent = triggered.length;
+    updateHeaderAlertsBadge(active.length);
+
+    renderActiveAlerts(active);
+    renderTriggeredAlerts(triggered);
+  } catch (err) {
+    console.error("Error loading alerts:", err);
+  }
+}
+
+function renderActiveAlerts(alerts) {
+  const container = document.getElementById("activeAlertsList");
+  if (!container) return;
+
+  if (alerts.length === 0) {
+    container.innerHTML = `
+      <div class="p-8 text-center bg-slate-950/60 rounded-xl border border-slate-800/80 space-y-2">
+        <i class="fa-solid fa-bell-slash text-slate-600 text-2xl"></i>
+        <h4 class="text-sm font-bold text-slate-300">No Active Price Alerts</h4>
+        <p class="text-xs text-slate-500 max-w-sm mx-auto">
+          Navigate to Discover Stocks or your Portfolio table and click &ldquo;Set Alert&rdquo; on any stock to monitor target breakouts and dips.
+        </p>
+      </div>
+    `;
+    return;
+  }
+
+  container.innerHTML = alerts.map(a => {
+    const isAbove = a.direction === 1 || a.direction === 'CrossesAbove';
+    const dirBadge = isAbove
+      ? `<span class="px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-emerald-500/15 text-emerald-300 border border-emerald-500/30"><i class="fa-solid fa-arrow-trend-up mr-1"></i>Crosses Above</span>`
+      : `<span class="px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-rose-500/15 text-rose-300 border border-rose-500/30"><i class="fa-solid fa-arrow-trend-down mr-1"></i>Crosses Below</span>`;
+
+    return `
+      <div class="p-3.5 bg-slate-950/80 rounded-xl border border-slate-800 flex flex-col sm:flex-row sm:items-center justify-between gap-3 hover:border-slate-700 transition shadow-sm">
+        <div class="space-y-1">
+          <div class="flex items-center space-x-2">
+            <span class="font-extrabold font-mono text-white text-sm">${a.ticker}</span>
+            <span class="text-xs text-slate-400">${a.companyName || ''}</span>
+            ${dirBadge}
+          </div>
+          <div class="text-[11px] text-slate-400 flex flex-wrap items-center gap-3 font-mono">
+            <span>Target: <strong class="text-white">₹${a.targetPrice?.toFixed(2)}</strong></span>
+            <span>Initial: <strong class="text-slate-300">₹${a.initialPrice?.toFixed(2)}</strong></span>
+            ${a.recipientEmail ? `<span>Email: <strong class="text-teal-400">${a.recipientEmail}</strong></span>` : ''}
+          </div>
+          ${a.notes ? `<div class="text-[11px] text-slate-300 italic">Note: &ldquo;${a.notes}&rdquo;</div>` : ''}
+        </div>
+        <div class="flex items-center space-x-2 self-end sm:self-center">
+          <button type="button" onclick="quickInspectTicker('${a.ticker}'); closeAlertsModal();" class="px-2.5 py-1 rounded-lg bg-slate-900 hover:bg-slate-800 text-teal-300 text-xs font-semibold border border-slate-700 transition" title="Inspect ${a.ticker}">
+            Inspect
+          </button>
+          <button type="button" onclick="handleDeleteAlert('${a.id}')" class="px-2.5 py-1 rounded-lg bg-rose-950/30 hover:bg-rose-950/60 text-rose-300 text-xs font-semibold border border-rose-500/30 transition" title="Delete Alert">
+            <i class="fa-solid fa-trash-can"></i>
+          </button>
+        </div>
+      </div>
+    `;
+  }).join('');
+}
+
+function renderTriggeredAlerts(alerts) {
+  const container = document.getElementById("triggeredAlertsList");
+  if (!container) return;
+
+  if (alerts.length === 0) {
+    container.innerHTML = `
+      <div class="p-8 text-center bg-slate-950/60 rounded-xl border border-slate-800/80 space-y-2">
+        <i class="fa-solid fa-clock-rotate-left text-slate-600 text-2xl"></i>
+        <h4 class="text-sm font-bold text-slate-300">No Triggered Alerts</h4>
+        <p class="text-xs text-slate-500 max-w-sm mx-auto">
+          When an active alert threshold is crossed, it will be executed and recorded here with the execution timestamp and triggered price.
+        </p>
+      </div>
+    `;
+    return;
+  }
+
+  container.innerHTML = alerts.map(a => {
+    const isAbove = a.direction === 1 || a.direction === 'CrossesAbove';
+    const dateStr = a.triggeredAtUtc ? new Date(a.triggeredAtUtc).toLocaleString('en-IN') : 'Triggered';
+
+    return `
+      <div class="p-3.5 bg-slate-950/80 rounded-xl border border-slate-800 flex flex-col sm:flex-row sm:items-center justify-between gap-3 opacity-90">
+        <div class="space-y-1">
+          <div class="flex items-center space-x-2">
+            <span class="font-extrabold font-mono text-white text-sm">${a.ticker}</span>
+            <span class="px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-amber-500/20 text-amber-300 border border-amber-500/30">
+              <i class="fa-solid fa-check mr-1"></i>Executed
+            </span>
+            <span class="text-[11px] text-slate-400 font-mono">${dateStr}</span>
+          </div>
+          <div class="text-[11px] text-slate-300 flex flex-wrap items-center gap-3 font-mono">
+            <span>Triggered CMP: <strong class="text-teal-400">₹${a.triggeredPrice?.toFixed(2) || 'N/A'}</strong></span>
+            <span>Target: <strong class="text-white">₹${a.targetPrice?.toFixed(2)}</strong></span>
+            <span>(${isAbove ? 'Crossed Above' : 'Crossed Below'})</span>
+          </div>
+        </div>
+        <div class="flex items-center space-x-2 self-end sm:self-center">
+          <button type="button" onclick="handleToggleAlert('${a.id}', true)" class="px-2.5 py-1 rounded-lg bg-teal-500/15 hover:bg-teal-500/25 text-teal-300 text-xs font-semibold border border-teal-500/30 transition" title="Reactivate this alert">
+            Reactivate
+          </button>
+          <button type="button" onclick="handleDeleteAlert('${a.id}')" class="px-2.5 py-1 rounded-lg bg-rose-950/30 hover:bg-rose-950/60 text-rose-300 text-xs font-semibold border border-rose-500/30 transition">
+            <i class="fa-solid fa-trash-can"></i>
+          </button>
+        </div>
+      </div>
+    `;
+  }).join('');
+}
+
+async function handleDeleteAlert(id) {
+  if (!confirm("Are you sure you want to delete this price alert?")) return;
+  try {
+    const res = await fetch(`/api/alerts/${id}`, { method: 'DELETE' });
+    if (res.ok) {
+      loadPriceAlerts();
+    }
+  } catch (err) {
+    console.error("Error deleting alert:", err);
+  }
+}
+
+async function handleToggleAlert(id, active) {
+  try {
+    const res = await fetch(`/api/alerts/${id}/toggle?active=${active}`, { method: 'POST' });
+    if (res.ok) {
+      loadPriceAlerts();
+    }
+  } catch (err) {
+    console.error("Error toggling alert:", err);
+  }
+}
+
+async function loadMarketHoursStatus() {
+  try {
+    const res = await fetch('/api/alerts/status');
+    if (!res.ok) return;
+    const status = await res.json();
+
+    const pill = document.getElementById("marketSurveillancePill");
+    if (pill) {
+      if (status.isMarketOpen) {
+        pill.className = "px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-emerald-500/15 text-emerald-300 border border-emerald-500/30";
+        pill.innerHTML = `<span class="w-1.5 h-1.5 rounded-full bg-emerald-400 inline-block mr-1"></span>Market Live (09:15 - 15:30 IST)`;
+      } else {
+        pill.className = "px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-slate-800 text-slate-400 border border-slate-700";
+        pill.innerHTML = `<span class="w-1.5 h-1.5 rounded-full bg-slate-500 inline-block mr-1"></span>${status.sessionName}`;
+      }
+    }
+
+    const istTime = document.getElementById("lblCurrentIstTime");
+    const session = document.getElementById("lblMarketSessionName");
+    const cadence = document.getElementById("lblSurveillanceCadence");
+    if (istTime) istTime.textContent = status.currentIstTime || '--';
+    if (session) session.textContent = status.sessionName || '--';
+    if (cadence) cadence.textContent = `Schedule: ${status.nextScheduledCheck}`;
+  } catch (err) {
+    console.error("Error loading market hours status:", err);
+  }
+}
+
+async function handleManualAlertEvaluation() {
+  const icon = document.getElementById("iconManualEval");
+  icon?.classList.add("fa-spin");
+  try {
+    const res = await fetch('/api/alerts/evaluate-now', { method: 'POST' });
+    if (!res.ok) {
+      alert("Error triggering surveillance check.");
+      return;
+    }
+    const data = await res.json();
+    alert(`✓ ${data.message}`);
+    loadPriceAlerts();
+    loadMarketHoursStatus();
+  } catch (err) {
+    console.error("Error evaluating alerts:", err);
+    alert(`Failed surveillance check: ${err.message || err}`);
+  } finally {
+    icon?.classList.remove("fa-spin");
+  }
+}
+
+async function loadEmailSettings() {
+  try {
+    const res = await fetch('/api/alerts/settings');
+    if (!res.ok) return;
+    const s = await res.json();
+    cachedEmailSettings = s;
+
+    document.getElementById("smtpHostInput").value = s.smtpHost || '';
+    document.getElementById("smtpPortInput").value = s.smtpPort || 587;
+    document.getElementById("smtpUserInput").value = s.userName || '';
+    document.getElementById("smtpPassInput").value = s.password || '';
+    document.getElementById("defaultRecipientInput").value = s.defaultRecipientEmail || '';
+    document.getElementById("chkMarketHoursOnly").checked = s.runOnlyDuringMarketHours !== false;
+    document.getElementById("checkIntervalInput").value = s.checkIntervalSeconds || 60;
+  } catch (err) {
+    console.error("Error loading email settings:", err);
+  }
+}
+
+async function handleSaveEmailSettings(event) {
+  event.preventDefault();
+  const settings = {
+    smtpHost: document.getElementById("smtpHostInput").value.trim(),
+    smtpPort: parseInt(document.getElementById("smtpPortInput").value) || 587,
+    enableSsl: true,
+    userName: document.getElementById("smtpUserInput").value.trim(),
+    password: document.getElementById("smtpPassInput").value,
+    senderEmail: document.getElementById("smtpUserInput").value.trim(),
+    senderName: "Portfolio Rebalancer Alert Desk",
+    defaultRecipientEmail: document.getElementById("defaultRecipientInput").value.trim(),
+    runOnlyDuringMarketHours: document.getElementById("chkMarketHoursOnly").checked,
+    checkIntervalSeconds: parseInt(document.getElementById("checkIntervalInput").value) || 60
+  };
+
+  try {
+    const res = await fetch('/api/alerts/settings', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(settings)
+    });
+
+    if (!res.ok) {
+      alert("Failed saving email settings.");
+      return;
+    }
+
+    cachedEmailSettings = settings;
+    alert("✓ Email dispatcher and surveillance settings saved successfully!");
+  } catch (err) {
+    console.error("Error saving email settings:", err);
+    alert(`Failed saving settings: ${err.message || err}`);
+  }
+}
+
+async function handleSendTestEmail() {
+  const recipient = document.getElementById("defaultRecipientInput").value.trim() || 
+                    document.getElementById("smtpUserInput").value.trim();
+
+  if (!recipient) {
+    alert("Please enter a Default Alert Recipient Email first.");
+    return;
+  }
+
+  try {
+    const res = await fetch('/api/alerts/test-email', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ recipientEmail: recipient })
+    });
+
+    const data = await res.json();
+    alert(data.message || (data.success ? "Test email dispatched!" : "Delivery test failed."));
+  } catch (err) {
+    console.error("Error sending test email:", err);
+    alert(`Test email error: ${err.message || err}`);
+  }
+}
+
+async function updateHeaderAlertsBadge(count) {
+  const badge = document.getElementById("headerAlertsCountBadge");
+  if (!badge) return;
+
+  if (count === undefined) {
+    try {
+      const res = await fetch('/api/alerts');
+      if (res.ok) {
+        const list = await res.json();
+        count = list.filter(a => a.status === 1 || a.status === 'Active').length;
+      }
+    } catch (e) {
+      count = 0;
+    }
+  }
+
+  if (count > 0) {
+    badge.textContent = count;
+    badge.classList.remove("hidden");
+  } else {
+    badge.classList.add("hidden");
+  }
+}
+
+// Window exports
+window.openCreateAlertModal = openCreateAlertModal;
+window.closeCreateAlertModal = closeCreateAlertModal;
+window.setAlertDirection = setAlertDirection;
+window.setAlertOffsetPercent = setAlertOffsetPercent;
+window.updateAlertDeltaHint = updateAlertDeltaHint;
+window.handleCreateAlertSubmit = handleCreateAlertSubmit;
+window.openAlertsModal = openAlertsModal;
+window.closeAlertsModal = closeAlertsModal;
+window.switchAlertsTab = switchAlertsTab;
+window.handleDeleteAlert = handleDeleteAlert;
+window.handleToggleAlert = handleToggleAlert;
+window.handleManualAlertEvaluation = handleManualAlertEvaluation;
+window.handleSaveEmailSettings = handleSaveEmailSettings;
+window.handleSendTestEmail = handleSendTestEmail;
+
+// Initial surveillance badge fetch
+setTimeout(updateHeaderAlertsBadge, 500);
+
 

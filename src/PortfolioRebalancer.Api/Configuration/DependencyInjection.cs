@@ -15,6 +15,9 @@ public static class DependencyInjection
         services.AddSingleton<IStockScoringService, IndianMarketScoringService>();
         services.AddSingleton<ICatalystEventProvider, IndianCatalystEventProvider>();
         services.AddSingleton<IChartPatternRecognitionService, ChartPatternRecognitionService>();
+        services.AddSingleton<IEmailNotificationService, PortfolioRebalancer.Infrastructure.Notifications.EmailNotificationService>();
+        services.AddSingleton<IPriceAlertService, PortfolioRebalancer.Infrastructure.Notifications.PriceAlertService>();
+        services.AddHostedService<PortfolioRebalancer.Api.Workers.MarketHoursPriceAlertWorker>();
 
         // Application services
         services.AddScoped<PortfolioService>();
