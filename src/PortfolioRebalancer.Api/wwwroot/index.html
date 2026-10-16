@@ -24,7 +24,7 @@
     }
   </script>
   <style>
-    /* Privacy / Stealth Mode: Blurs sensitive financial amounts and position sizes for safe screenshots */
+    /* Privacy / Stealth Mode: Blurs sensitive financial amounts and position sizes */
     body.privacy-mode .privacy-mask {
       filter: blur(8px) grayscale(100%) !important;
       user-select: none !important;
@@ -38,61 +38,72 @@
       color: rgb(148 163 184) !important;
       border-color: rgb(51 65 85 / 0.6) !important;
     }
+    /* Calm, unobtrusive scrollbars */
+    ::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+    ::-webkit-scrollbar-track {
+      background: #090d16;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: #1e293b;
+      border-radius: 9999px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: #334155;
+    }
   </style>
 </head>
-<body class="bg-slate-950 text-slate-100 min-h-screen">
+<body class="bg-[#090d16] text-slate-100 min-h-screen selection:bg-teal-500/20 selection:text-teal-200">
   <!-- Top Navigation -->
   <header class="border-b border-slate-800 bg-slate-950/90 backdrop-blur sticky top-0 z-50">
     <div class="w-full max-w-[1720px] mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
       <div class="flex items-center space-x-3">
-        <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-amber-500 to-orange-500 flex items-center justify-center shadow-lg shadow-orange-500/20">
-          <i class="fa-solid fa-indian-rupee-sign text-slate-950 text-lg"></i>
+        <div class="w-9 h-9 rounded-xl bg-gradient-to-tr from-teal-500/20 to-emerald-500/20 border border-teal-500/30 flex items-center justify-center text-teal-400 shadow-sm">
+          <i class="fa-solid fa-indian-rupee-sign text-sm"></i>
         </div>
         <div>
-          <h1 class="text-lg font-bold tracking-tight text-white flex items-center">
-            NSE / BSE Advisory & Rebalance Engine
-            <span class="ml-2 px-2 py-0.5 text-[10px] bg-orange-500/20 text-orange-400 border border-orange-500/30 rounded font-semibold">India</span>
-            <span id="liveStatusBadge" class="ml-2 inline-flex items-center px-2 py-0.5 rounded text-[10px] font-mono bg-emerald-500/10 text-emerald-400 border border-emerald-500/30">
-              <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse mr-1"></span>
-              LIVE DATA READY
+          <h1 class="text-base font-bold tracking-tight text-white flex items-center">
+            Portfolio Rebalancer
+            <span id="liveStatusBadge" class="ml-2.5 inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-medium bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+              <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 mr-1.5"></span>
+              NSE Live
             </span>
           </h1>
-          <p class="text-xs text-slate-400">Live NSE Quotes &bull; Buy Price vs CMP &bull; Constraint Diagnostics &bull; Quant Alpha Models</p>
+          <p class="text-xs text-slate-400">Systematic Asset Allocation & Wealth Diagnostics</p>
         </div>
       </div>
+
       <!-- SPA Primary Navigation Tabs (Portfolio / Manage / Discover) -->
-      <nav class="hidden md:flex items-center space-x-1.5 bg-slate-900/90 p-1.5 rounded-xl border border-slate-800 shadow-inner">
-        <button id="navTabPortfolio" onclick="navigateTo('portfolio')" class="nav-tab px-3.5 py-1.5 rounded-lg text-xs font-semibold flex items-center space-x-2 transition bg-amber-500/20 text-amber-300 border border-amber-500/40 shadow-sm">
+      <nav class="hidden md:flex items-center space-x-1 bg-slate-900/80 p-1 rounded-xl border border-slate-800/60 shadow-inner">
+        <button id="navTabPortfolio" onclick="navigateTo('portfolio')" class="nav-tab px-3.5 py-1.5 rounded-lg text-xs font-semibold flex items-center space-x-2 transition bg-teal-500/15 text-teal-300 border border-teal-500/30 shadow-sm">
           <i class="fa-solid fa-briefcase"></i>
           <span>My Portfolio</span>
           <span id="navPortfolioCountBadge" class="ml-1 px-1.5 py-0.5 text-[10px] bg-slate-800 text-slate-300 rounded-full font-mono">--</span>
         </button>
-        <button id="navTabManage" onclick="navigateTo('manage')" class="nav-tab px-3.5 py-1.5 rounded-lg text-xs font-semibold flex items-center space-x-2 transition text-slate-400 hover:text-slate-200 hover:bg-slate-800/60 border border-transparent">
+        <button id="navTabManage" onclick="navigateTo('manage')" class="nav-tab px-3.5 py-1.5 rounded-lg text-xs font-semibold flex items-center space-x-2 transition text-slate-400 hover:text-slate-200 hover:bg-slate-800/40 border border-transparent">
           <i class="fa-solid fa-sliders"></i>
           <span>Manage & Rebalance</span>
         </button>
-        <button id="navTabDiscover" onclick="navigateTo('discover')" class="nav-tab px-3.5 py-1.5 rounded-lg text-xs font-semibold flex items-center space-x-2 transition text-slate-400 hover:text-slate-200 hover:bg-slate-800/60 border border-transparent">
+        <button id="navTabDiscover" onclick="navigateTo('discover')" class="nav-tab px-3.5 py-1.5 rounded-lg text-xs font-semibold flex items-center space-x-2 transition text-slate-400 hover:text-slate-200 hover:bg-slate-800/40 border border-transparent">
           <i class="fa-solid fa-compass"></i>
           <span>Discover Stocks</span>
-          <span class="ml-1 px-1.5 py-0.5 text-[9px] bg-orange-500/20 text-orange-300 rounded-full font-bold uppercase tracking-wider">Alpha</span>
         </button>
       </nav>
 
-      <div class="flex items-center space-x-2.5">
+      <div class="flex items-center space-x-2">
         <!-- Privacy Eye Toggle Button -->
-        <button id="btnTogglePrivacy" class="text-xs bg-slate-900 hover:bg-slate-800 text-slate-300 hover:text-white border border-slate-700 px-3 py-1.5 rounded-lg flex items-center space-x-1.5 transition font-medium shadow-sm" title="Toggle Privacy Mode (Hide financial values for safe screenshots)">
-          <i id="privacyEyeIcon" class="fa-solid fa-eye text-amber-400"></i>
+        <button id="btnTogglePrivacy" class="text-xs bg-slate-900/80 hover:bg-slate-800 text-slate-300 hover:text-white border border-slate-700/60 px-3 py-1.5 rounded-lg flex items-center space-x-1.5 transition font-medium shadow-sm" title="Toggle Privacy Mode (Hide financial values for safe screenshots)">
+          <i id="privacyEyeIcon" class="fa-solid fa-eye text-teal-400"></i>
           <span id="privacyBtnText" class="hidden sm:inline">Privacy Mode</span>
         </button>
-        <button id="btnOpenResearch" class="text-xs bg-gradient-to-r from-amber-500/20 to-orange-500/20 hover:from-amber-500/30 hover:to-orange-500/30 text-amber-400 border border-amber-500/40 px-3.5 py-1.5 rounded-lg flex items-center space-x-1.5 transition font-semibold shadow-sm">
-          <i class="fa-solid fa-flask"></i>
-          <span>Quant Research & Scenarios</span>
+        <button id="btnOpenResearch" class="hidden">Quant Research</button>
+        <button id="btnRefreshDiagnostics" class="text-xs bg-slate-900/80 hover:bg-slate-800 text-slate-300 hover:text-white border border-slate-700/60 px-3 py-1.5 rounded-lg flex items-center space-x-1.5 transition">
+          <i class="fa-solid fa-stethoscope text-teal-400"></i>
+          <span class="hidden sm:inline">Health Check</span>
         </button>
-        <button id="btnRefreshDiagnostics" class="text-xs bg-slate-800 hover:bg-slate-700 text-amber-400 border border-slate-700 px-3 py-1.5 rounded-lg flex items-center space-x-1 transition">
-          <i class="fa-solid fa-stethoscope"></i>
-          <span>Run Health Check</span>
-        </button>
-        <a href="/openapi/v1.json" target="_blank" class="text-xs text-slate-400 hover:text-slate-200 transition">OpenAPI</a>
+        <a href="/openapi/v1.json" target="_blank" class="text-xs text-slate-400 hover:text-slate-200 transition px-2 py-1">OpenAPI</a>
       </div>
     </div>
   </header>
@@ -111,10 +122,10 @@
       <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-4 mb-4 pb-4 border-b border-slate-800/80">
         <div class="flex items-center space-x-4">
           <div class="flex items-center space-x-2">
-            <i class="fa-solid fa-wallet text-amber-400 text-lg"></i>
+            <i class="fa-solid fa-wallet text-teal-400 text-lg"></i>
             <span class="text-sm font-semibold text-white">Active Portfolio:</span>
           </div>
-          <select id="portfolioSelect" class="bg-slate-950 border border-slate-700 rounded-lg text-sm px-3.5 py-1.5 text-slate-200 focus:outline-none focus:ring-2 focus:ring-amber-500 min-w-[260px]">
+          <select id="portfolioSelect" class="bg-slate-950 border border-slate-700 rounded-lg text-sm px-3.5 py-1.5 text-slate-200 focus:outline-none focus:ring-2 focus:ring-teal-500/30 focus:border-teal-500/50 min-w-[260px]">
             <option value="">Loading portfolios...</option>
           </select>
         </div>
@@ -122,19 +133,19 @@
         <div class="flex flex-wrap items-center gap-3">
           <!-- Quick Add / Create Bar -->
           <div class="flex items-center space-x-2">
-            <input id="newPortfolioName" type="text" placeholder="New portfolio name..." class="bg-slate-950 border border-slate-700 rounded-lg px-3 py-1.5 text-xs text-slate-200 placeholder-slate-500 focus:outline-none focus:ring-1 focus:ring-amber-500 w-44" />
-            <button id="btnCreatePortfolio" class="bg-slate-800 hover:bg-slate-700 text-amber-400 text-xs font-semibold px-3 py-1.5 rounded-lg border border-slate-700 transition">
+            <input id="newPortfolioName" type="text" placeholder="New portfolio name..." class="bg-slate-950 border border-slate-700 rounded-lg px-3 py-1.5 text-xs text-slate-200 placeholder-slate-500 focus:outline-none focus:ring-1 focus:ring-teal-500/30 focus:border-teal-500/50 w-44" />
+            <button id="btnCreatePortfolio" class="bg-slate-800 hover:bg-slate-700 text-teal-400 text-xs font-semibold px-3 py-1.5 rounded-lg border border-slate-700 transition">
               + New Portfolio
             </button>
           </div>
 
           <button id="btnToggleAddHolding" class="bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-medium px-3 py-1.5 rounded-lg border border-slate-700 transition flex items-center space-x-1.5">
-            <i class="fa-solid fa-plus text-amber-400"></i>
+            <i class="fa-solid fa-plus text-teal-400"></i>
             <span>Add Stock Position</span>
           </button>
 
           <!-- Trade Logger Button -->
-          <button id="btnOpenTradeModal" onclick="openTradeModal()" class="bg-amber-600 hover:bg-amber-500 text-slate-950 text-xs font-bold px-3 py-1.5 rounded-lg border border-amber-500 transition flex items-center space-x-1.5 shadow-sm">
+          <button id="btnOpenTradeModal" onclick="openTradeModal()" class="bg-teal-600 hover:bg-teal-500 text-slate-950 text-xs font-bold px-3 py-1.5 rounded-lg border border-teal-500/40 transition flex items-center space-x-1.5 shadow-sm">
             <i class="fa-solid fa-bolt"></i>
             <span>Log Trade</span>
           </button>
@@ -192,7 +203,7 @@
             <span>Portfolio Health</span>
             <span id="statHealthRating" class="text-[10px] font-bold text-emerald-400 truncate">Evaluating...</span>
           </div>
-          <div id="statHealthScore" class="text-2xl font-bold text-amber-400 mt-1">0 / 100</div>
+          <div id="statHealthScore" class="text-2xl font-bold text-teal-400 mt-1">0 / 100</div>
           <div class="text-[11px] text-slate-500 mt-0.5">Risk & constraint checks</div>
         </div>
       </div>
@@ -201,25 +212,25 @@
       <div id="addPositionPanel" class="hidden mt-4 pt-4 border-t border-slate-800">
         <div class="flex items-center justify-between mb-3">
           <h4 class="text-xs font-semibold text-slate-300 uppercase tracking-wider flex items-center">
-            <i class="fa-solid fa-cart-plus text-amber-400 mr-2"></i> Add / Update Equity Position
+            <i class="fa-solid fa-cart-plus text-teal-400 mr-2"></i> Add / Update Equity Position
           </h4>
           <span class="text-xs text-slate-500">Updates existing position if ticker already exists</span>
         </div>
         <div class="grid grid-cols-1 sm:grid-cols-4 gap-3">
           <div>
             <label class="block text-xs font-medium text-slate-400 mb-1">NSE Symbol</label>
-            <input id="inputTicker" type="text" placeholder="e.g. RELIANCE, TCS" class="w-full uppercase bg-slate-950 border border-slate-700 rounded-lg px-3 py-2 text-sm text-slate-200 focus:outline-none focus:ring-2 focus:ring-amber-500" />
+            <input id="inputTicker" type="text" placeholder="e.g. RELIANCE, TCS" class="w-full uppercase bg-slate-950 border border-slate-700 rounded-lg px-3 py-2 text-sm text-slate-200 focus:outline-none focus:ring-2 focus:ring-teal-500/30 focus:border-teal-500/50" />
           </div>
           <div>
             <label class="block text-xs font-medium text-slate-400 mb-1">Shares (Quantity)</label>
-            <input id="inputQuantity" type="number" step="any" min="1" placeholder="50" class="w-full bg-slate-950 border border-slate-700 rounded-lg px-3 py-2 text-sm text-slate-200 focus:outline-none focus:ring-2 focus:ring-amber-500" />
+            <input id="inputQuantity" type="number" step="any" min="1" placeholder="50" class="w-full bg-slate-950 border border-slate-700 rounded-lg px-3 py-2 text-sm text-slate-200 focus:outline-none focus:ring-2 focus:ring-teal-500/30 focus:border-teal-500/50" />
           </div>
           <div>
             <label class="block text-xs font-medium text-slate-400 mb-1">Buy Price (&#8377;) <span class="text-slate-500 text-[10px]">(Optional)</span></label>
-            <input id="inputBuyPrice" type="number" step="any" min="0" placeholder="e.g. 1150.00" class="w-full bg-slate-950 border border-slate-700 rounded-lg px-3 py-2 text-sm text-slate-200 focus:outline-none focus:ring-2 focus:ring-amber-500" />
+            <input id="inputBuyPrice" type="number" step="any" min="0" placeholder="e.g. 1150.00" class="w-full bg-slate-950 border border-slate-700 rounded-lg px-3 py-2 text-sm text-slate-200 focus:outline-none focus:ring-2 focus:ring-teal-500/30 focus:border-teal-500/50" />
           </div>
           <div class="flex items-end">
-            <button id="btnAddHolding" class="w-full bg-amber-600 hover:bg-amber-500 text-slate-950 font-bold py-2 rounded-lg text-sm transition">
+            <button id="btnAddHolding" class="w-full bg-teal-600 hover:bg-teal-500 text-slate-950 font-bold py-2 rounded-lg text-sm transition">
               Save Position
             </button>
           </div>
@@ -234,7 +245,7 @@
         <div>
           <div class="flex items-center space-x-3">
             <h2 class="text-lg font-bold text-white flex items-center">
-              <i class="fa-solid fa-table-list text-amber-400 mr-2.5"></i> Current Portfolio Holdings
+              <i class="fa-solid fa-table-list text-teal-400 mr-2.5"></i> Current Portfolio Holdings
             </h2>
             <span id="holdingsSubtext" class="px-2.5 py-0.5 rounded-full text-xs font-medium bg-slate-800 text-slate-300 border border-slate-700">0 positions</span>
             <span id="lastSyncTime" class="text-xs text-slate-500 hidden sm:inline">Prices live</span>
@@ -246,17 +257,17 @@
         <div class="flex flex-wrap items-center gap-2.5">
           <!-- Search -->
           <div class="relative">
-            <input id="holdingsSearch" type="text" placeholder="Search stock or sector..." class="bg-slate-950 border border-slate-700 rounded-lg pl-8 pr-3 py-1.5 text-xs text-slate-200 placeholder-slate-500 focus:outline-none focus:ring-1 focus:ring-amber-500 w-44 sm:w-56" />
+            <input id="holdingsSearch" type="text" placeholder="Search stock or sector..." class="bg-slate-950 border border-slate-700 rounded-lg pl-8 pr-3 py-1.5 text-xs text-slate-200 placeholder-slate-500 focus:outline-none focus:ring-1 focus:ring-teal-500/30 focus:border-teal-500/50 w-44 sm:w-56" />
             <i class="fa-solid fa-magnifying-glass absolute left-2.5 top-2.5 text-xs text-slate-500"></i>
           </div>
 
           <!-- Sector Filter -->
-          <select id="holdingsSectorFilter" class="bg-slate-950 border border-slate-700 rounded-lg px-2.5 py-1.5 text-xs text-slate-300 focus:outline-none focus:ring-1 focus:ring-amber-500">
+          <select id="holdingsSectorFilter" class="bg-slate-950 border border-slate-700 rounded-lg px-2.5 py-1.5 text-xs text-slate-300 focus:outline-none focus:ring-1 focus:ring-teal-500/30 focus:border-teal-500/50">
             <option value="">All Sectors</option>
           </select>
 
           <!-- P&L Filter -->
-          <select id="holdingsPnLFilter" class="bg-slate-950 border border-slate-700 rounded-lg px-2.5 py-1.5 text-xs text-slate-300 focus:outline-none focus:ring-1 focus:ring-amber-500">
+          <select id="holdingsPnLFilter" class="bg-slate-950 border border-slate-700 rounded-lg px-2.5 py-1.5 text-xs text-slate-300 focus:outline-none focus:ring-1 focus:ring-teal-500/30 focus:border-teal-500/50">
             <option value="ALL">All P&L Status</option>
             <option value="PROFIT">🟢 In Profit (Gainers)</option>
             <option value="LOSS">🔴 In Loss (Losers)</option>
@@ -271,12 +282,12 @@
       </div>
 
       <!-- 8-Hour Staleness Auto-Sync Alert Notification Banner -->
-      <div id="staleSyncAlertBanner" class="hidden flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-amber-500/15 border border-amber-500/40 rounded-xl px-4 py-2.5 text-xs text-amber-200">
+      <div id="staleSyncAlertBanner" class="hidden flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-teal-500/10 border border-teal-500/30 rounded-xl px-4 py-2.5 text-xs text-teal-200">
         <div class="flex items-center space-x-2.5">
-          <i class="fa-solid fa-clock-rotate-left text-amber-400 text-base"></i>
+          <i class="fa-solid fa-clock-rotate-left text-teal-400 text-base"></i>
           <div>
             <span class="font-bold text-white">Portfolio is 8+ hours old.</span>
-            <span id="staleSyncAlertDetail" class="text-amber-200/90 ml-1">Live positions may be outdated. Sync with Angel One or refresh market CMP.</span>
+            <span id="staleSyncAlertDetail" class="text-teal-200/90 ml-1">Live positions may be outdated. Sync with Angel One or refresh market CMP.</span>
           </div>
         </div>
         <div class="flex items-center space-x-2">
@@ -292,12 +303,12 @@
       </div>
 
       <!-- Diagnostic Quick Filter Active Banner -->
-      <div id="diagnosticActiveFilterBanner" class="hidden flex items-center justify-between bg-amber-500/10 border border-amber-500/30 rounded-xl px-4 py-2 text-xs text-amber-300">
+      <div id="diagnosticActiveFilterBanner" class="hidden flex items-center justify-between bg-teal-500/10 border border-teal-500/25 rounded-xl px-4 py-2 text-xs text-teal-300">
         <div class="flex items-center space-x-2">
-          <i class="fa-solid fa-filter text-amber-400"></i>
+          <i class="fa-solid fa-filter text-teal-400"></i>
           <span id="diagnosticFilterLabel" class="font-semibold">Filtered View</span>
         </div>
-        <button onclick="clearDiagnosticFilter()" class="hover:text-white underline text-xs font-semibold px-2.5 py-1 bg-amber-500/20 rounded-lg transition">
+        <button onclick="clearDiagnosticFilter()" class="hover:text-white underline text-xs font-semibold px-2.5 py-1 bg-teal-500/15 rounded-lg transition">
           Clear Filter (Show All Stocks)
         </button>
       </div>
@@ -352,7 +363,7 @@
           <span id="pageInfoText" class="text-slate-200 font-semibold">Showing all 105 positions</span>
           <span class="text-slate-600">&bull;</span>
           <span class="text-slate-400 flex items-center">
-            <i class="fa-solid fa-arrows-up-down mr-1.5 text-amber-400 text-[10px]"></i> Scroll to explore all stocks
+            <i class="fa-solid fa-arrows-up-down mr-1.5 text-teal-400 text-[10px]"></i> Scroll to explore all stocks
           </span>
         </div>
         <div class="flex items-center space-x-3">
@@ -370,8 +381,8 @@
       <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-4 border-b border-slate-800">
         <div>
           <div class="flex items-center space-x-3">
-            <div class="w-9 h-9 rounded-xl bg-gradient-to-tr from-amber-500/20 to-orange-500/20 border border-amber-500/30 flex items-center justify-center">
-              <i class="fa-solid fa-shield-heart text-amber-400 text-base"></i>
+            <div class="w-9 h-9 rounded-xl bg-gradient-to-tr from-teal-500/15 to-emerald-500/15 border border-teal-500/25 flex items-center justify-center">
+              <i class="fa-solid fa-shield-heart text-teal-400 text-base"></i>
             </div>
             <div>
               <h3 class="text-base font-bold text-white flex items-center">
@@ -405,7 +416,7 @@
 
       <!-- Executive Diagnostic Summary Banner -->
       <div id="diagExecutiveSummary" class="p-3.5 bg-slate-950/70 rounded-xl border border-slate-800 text-xs text-slate-300 leading-relaxed flex items-start space-x-3">
-        <i class="fa-solid fa-circle-info text-amber-400 text-sm mt-0.5"></i>
+        <i class="fa-solid fa-circle-info text-teal-400 text-sm mt-0.5"></i>
         <div id="diagExecutiveSummaryText">Evaluating comprehensive multi-factor portfolio health...</div>
       </div>
 
@@ -437,14 +448,14 @@
         </div>
 
         <!-- Pillar 2: Tail-End Dilution ("Diworsification" / Clutter Risk) -->
-        <div class="p-4 bg-slate-950/70 rounded-xl border border-slate-800 hover:border-amber-500/30 transition flex flex-col justify-between">
+        <div class="p-4 bg-slate-950/70 rounded-xl border border-slate-800 hover:border-teal-500/25 transition flex flex-col justify-between">
           <div>
             <div class="flex items-center justify-between text-xs text-slate-400 font-medium">
-              <span class="flex items-center"><i class="fa-solid fa-scissors text-amber-400 mr-1.5"></i> Tail-End Dilution</span>
-              <span id="diagTailBadge" class="text-[10px] font-bold px-1.5 py-0.2 rounded bg-amber-500/20 text-amber-400">CLUTTER</span>
+              <span class="flex items-center"><i class="fa-solid fa-scissors text-teal-400 mr-1.5"></i> Tail-End Dilution</span>
+              <span id="diagTailBadge" class="text-[10px] font-bold px-1.5 py-0.2 rounded bg-teal-500/15 text-teal-400">CLUTTER</span>
             </div>
             <div class="mt-2 flex items-baseline space-x-2">
-              <span id="diagTailCount" class="text-2xl font-bold font-mono text-amber-400">0</span>
+              <span id="diagTailCount" class="text-2xl font-bold font-mono text-teal-400">0</span>
               <span class="text-xs text-slate-400">micro-holdings (&lt;0.5%)</span>
             </div>
             <div class="text-xs text-slate-300 mt-1">
@@ -453,7 +464,7 @@
             </div>
             <p class="text-[11px] text-slate-400 mt-1.5">Negligible alpha contribution; causes operational oversight clutter.</p>
           </div>
-          <button id="btnFilterTailHoldings" class="mt-3 w-full py-1.5 px-2 bg-amber-500/10 hover:bg-amber-500/20 border border-amber-500/30 text-amber-300 text-xs rounded-lg transition font-medium flex items-center justify-center space-x-1.5">
+          <button id="btnFilterTailHoldings" class="mt-3 w-full py-1.5 px-2 bg-teal-500/10 hover:bg-teal-500/15 border border-teal-500/25 text-teal-300 text-xs rounded-lg transition font-medium flex items-center justify-center space-x-1.5">
             <i class="fa-solid fa-filter text-[10px]"></i>
             <span id="btnFilterTailText">Inspect Micro-Stocks</span>
           </button>
@@ -480,7 +491,7 @@
                 <span class="text-[9px] text-slate-500">Large</span>
               </div>
               <div class="text-[10px]">
-                <span class="text-amber-400 font-bold block" id="statMidCapPct">0%</span>
+                <span class="text-teal-400 font-bold block" id="statMidCapPct">0%</span>
                 <span class="text-[9px] text-slate-500">Mid</span>
               </div>
               <div class="text-[10px]">
@@ -540,7 +551,7 @@
             <div>
               <div class="text-xs font-bold text-white uppercase tracking-wider flex items-center">
                 <span>Sleep-Well Crash Defense &amp; 10% Correction Stress Test</span>
-                <button type="button" class="ml-1.5 text-slate-400 hover:text-amber-400 transition" onclick="openFinancialExplainer('CRASH_DEFENSE')" title="What is Crash Defense?">
+                <button type="button" class="ml-1.5 text-slate-400 hover:text-teal-400 transition" onclick="openFinancialExplainer('CRASH_DEFENSE')" title="What is Crash Defense?">
                   <i class="fa-solid fa-circle-info text-[11px]"></i>
                 </button>
               </div>
@@ -564,7 +575,7 @@
             <div>
               <div class="text-[10px] text-slate-400 flex items-center">
                 <span>Zero/Low-Debt Capital</span>
-                <button type="button" class="ml-1 text-slate-500 hover:text-amber-400" onclick="openFinancialExplainer('DEBT_EQUITY')"><i class="fa-solid fa-circle-info text-[9px]"></i></button>
+                <button type="button" class="ml-1 text-slate-500 hover:text-teal-400" onclick="openFinancialExplainer('DEBT_EQUITY')"><i class="fa-solid fa-circle-info text-[9px]"></i></button>
               </div>
               <div class="text-xs font-semibold text-slate-300 mt-0.5">Insolvency Protection</div>
             </div>
@@ -579,7 +590,7 @@
             <div>
               <div class="text-[10px] text-slate-400 flex items-center">
                 <span>High ROCE Leaders</span>
-                <button type="button" class="ml-1 text-slate-500 hover:text-amber-400" onclick="openFinancialExplainer('ROCE')"><i class="fa-solid fa-circle-info text-[9px]"></i></button>
+                <button type="button" class="ml-1 text-slate-500 hover:text-teal-400" onclick="openFinancialExplainer('ROCE')"><i class="fa-solid fa-circle-info text-[9px]"></i></button>
               </div>
               <div class="text-xs font-semibold text-slate-300 mt-0.5">Capital Efficiency</div>
             </div>
@@ -594,12 +605,12 @@
             <div>
               <div class="text-[10px] text-slate-400 flex items-center">
                 <span>10% Market Correction Dip</span>
-                <button type="button" class="ml-1 text-slate-500 hover:text-amber-400" onclick="openFinancialExplainer('STRESS_TEST')"><i class="fa-solid fa-circle-info text-[9px]"></i></button>
+                <button type="button" class="ml-1 text-slate-500 hover:text-teal-400" onclick="openFinancialExplainer('STRESS_TEST')"><i class="fa-solid fa-circle-info text-[9px]"></i></button>
               </div>
               <div class="text-xs font-semibold text-slate-300 mt-0.5" id="statRecoveryHorizon">Recovery: ~3-5 Months</div>
             </div>
             <div class="text-right">
-              <div id="statDipRupees" class="text-base font-bold font-mono text-amber-300 privacy-mask">-&#8377;0</div>
+              <div id="statDipRupees" class="text-base font-bold font-mono text-teal-300 privacy-mask">-&#8377;0</div>
               <div id="statDipPct" class="text-[10px] font-mono text-slate-400">(-0.0%)</div>
             </div>
           </div>
@@ -614,7 +625,7 @@
       <div class="p-4 bg-slate-950/60 rounded-xl border border-slate-800 space-y-3">
         <div class="flex items-center justify-between pb-2 border-b border-slate-800/80 text-xs">
           <span class="font-bold text-slate-200 uppercase tracking-wider flex items-center">
-            <i class="fa-solid fa-gauge-high text-amber-400 mr-2"></i> Regulatory &amp; Institutional Guardrails
+            <i class="fa-solid fa-gauge-high text-teal-400 mr-2"></i> Regulatory &amp; Institutional Guardrails
           </span>
           <span class="text-slate-500 text-[11px]">Thresholds: Stock &le; 10% | Top 5 &le; 35% | Sector &le; 25%</span>
         </div>
@@ -648,7 +659,7 @@
           <div>
             <div class="flex items-center justify-between mb-1">
               <span class="text-slate-400 text-[11px]">Max Sector Exposure (25% limit)</span>
-              <span id="guardrailSectorText" class="font-mono font-semibold text-amber-400">0%</span>
+              <span id="guardrailSectorText" class="font-mono font-semibold text-teal-400">0%</span>
             </div>
             <div class="w-full bg-slate-900 rounded-full h-2 border border-slate-800 overflow-hidden">
               <div id="guardrailSectorBar" class="bg-amber-500 h-full rounded-full transition-all duration-500" style="width: 0%"></div>
@@ -665,7 +676,7 @@
       <div>
         <div class="flex items-center justify-between mb-3">
           <h4 class="text-xs font-bold uppercase tracking-wider text-slate-300 flex items-center">
-            <i class="fa-solid fa-lightbulb text-amber-400 mr-2"></i>
+            <i class="fa-solid fa-lightbulb text-teal-400 mr-2"></i>
             Actionable Institutional Advisory Guidance Matrix
           </h4>
           <span class="text-[11px] text-slate-500">Click any card action button to inspect relevant holdings</span>
@@ -688,13 +699,13 @@
       <div class="bg-slate-900/80 border border-slate-800 rounded-2xl p-6 backdrop-blur shadow-xl">
         <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-4 border-b border-slate-800/80">
           <div class="flex items-center space-x-3">
-            <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-amber-500/20 to-orange-500/20 border border-amber-500/40 flex items-center justify-center shadow-lg shadow-orange-500/10">
-              <i class="fa-solid fa-sliders text-amber-400 text-lg"></i>
+            <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-teal-500/15 to-emerald-500/15 border border-teal-500/30 flex items-center justify-center shadow-lg shadow-orange-500/10">
+              <i class="fa-solid fa-sliders text-teal-400 text-lg"></i>
             </div>
             <div>
               <h2 class="text-base sm:text-lg font-bold text-white tracking-tight flex items-center">
                 Portfolio Management & Rebalancing Desk
-                <span class="ml-2.5 px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-amber-500/20 text-amber-400 border border-amber-500/30">Execution Hub</span>
+                <span class="ml-2.5 px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-teal-500/15 text-teal-400 border border-teal-500/25">Execution Hub</span>
               </h2>
               <p class="text-xs text-slate-400">Broker Data Synchronization &bull; In-App Trade Execution &bull; Sector Target Rebalancing</p>
             </div>
@@ -722,12 +733,12 @@
                     <p class="text-[11px] text-slate-400">100% Free &bull; Auto-detect downloads or upload .xlsx</p>
                   </div>
                 </div>
-                <span class="px-2 py-0.5 rounded text-[10px] font-mono bg-cyan-500/10 text-cyan-400 border border-cyan-500/30">Free Tier</span>
+                
               </div>
 
               <div class="mt-4 space-y-2.5">
                 <button type="button" onclick="detectAndImportAngelExcel()" class="w-full bg-gradient-to-r from-cyan-600 to-teal-600 hover:from-cyan-500 hover:to-teal-500 text-white font-bold py-2.5 px-4 rounded-xl text-xs transition flex items-center justify-center space-x-2 shadow-lg shadow-cyan-900/20">
-                  <i class="fa-solid fa-bolt text-amber-300"></i>
+                  <i class="fa-solid fa-bolt text-teal-300"></i>
                   <span>1-Click Auto-Detect Angel One Excel from Downloads</span>
                 </button>
 
@@ -756,7 +767,7 @@
             <div>
               <div class="flex items-center justify-between pb-3 border-b border-slate-800/70">
                 <div class="flex items-center space-x-2.5">
-                  <div class="w-8 h-8 rounded-lg bg-amber-500/10 border border-amber-500/20 flex items-center justify-center text-amber-400">
+                  <div class="w-8 h-8 rounded-lg bg-teal-500/10 border border-teal-500/20 flex items-center justify-center text-teal-400">
                     <i class="fa-solid fa-bolt text-sm"></i>
                   </div>
                   <div>
@@ -764,7 +775,7 @@
                     <p class="text-[11px] text-slate-400">Instant buy, sell/trim, and weighted avg price recalculation</p>
                   </div>
                 </div>
-                <span class="px-2 py-0.5 rounded text-[10px] font-mono bg-amber-500/10 text-amber-400 border border-amber-500/30">Manual Execution</span>
+                <span class="px-2 py-0.5 rounded text-[10px] font-mono bg-teal-500/10 text-teal-400 border border-teal-500/25">Manual Execution</span>
               </div>
 
               <div class="grid grid-cols-3 gap-2 mt-4">
@@ -776,7 +787,7 @@
                   <i class="fa-solid fa-minus-circle text-base"></i>
                   <span>Log Sell / Trim</span>
                 </button>
-                <button type="button" onclick="openTradeModal(null, 'ADJUST')" class="bg-amber-500/15 hover:bg-amber-500/25 text-amber-400 border border-amber-500/30 font-bold py-2.5 px-3 rounded-xl text-xs transition flex flex-col items-center justify-center space-y-1">
+                <button type="button" onclick="openTradeModal(null, 'ADJUST')" class="bg-teal-500/10 hover:bg-amber-500/25 text-teal-400 border border-teal-500/25 font-bold py-2.5 px-3 rounded-xl text-xs transition flex flex-col items-center justify-center space-y-1">
                   <i class="fa-solid fa-pen-to-square text-base"></i>
                   <span>Set Exact Qty</span>
                 </button>
@@ -795,8 +806,8 @@
         <div>
           <div class="flex flex-wrap items-center justify-between gap-3 mb-2 pb-3 border-b border-slate-800/80">
             <div class="flex items-center space-x-3">
-              <div class="w-9 h-9 rounded-xl bg-gradient-to-tr from-amber-500/20 to-orange-500/20 border border-amber-500/30 flex items-center justify-center shadow-md">
-                <i class="fa-solid fa-sliders text-amber-400 text-sm"></i>
+              <div class="w-9 h-9 rounded-xl bg-gradient-to-tr from-teal-500/15 to-emerald-500/15 border border-teal-500/25 flex items-center justify-center shadow-md">
+                <i class="fa-solid fa-sliders text-teal-400 text-sm"></i>
               </div>
               <div>
                 <h3 class="text-base font-bold text-white flex items-center">
@@ -813,13 +824,13 @@
           <!-- Quick Presets Toolbar -->
           <div class="flex flex-wrap items-center justify-between gap-2 my-3 p-2 bg-slate-950/60 rounded-xl border border-slate-800/60 text-xs">
             <span class="text-slate-400 text-[11px] font-medium flex items-center">
-              <i class="fa-solid fa-wand-magic-sparkles text-amber-400 mr-1.5"></i> Presets:
+              <i class="fa-solid fa-wand-magic-sparkles text-teal-400 mr-1.5"></i> Presets:
             </span>
             <div class="flex flex-wrap gap-1.5">
               <button type="button" onclick="applySectorPreset('EQUAL')" class="px-2.5 py-1 rounded bg-slate-900 hover:bg-slate-800 text-slate-300 hover:text-white border border-slate-700 text-[11px] font-medium transition">
                 Equal (9.1%)
               </button>
-              <button type="button" onclick="applySectorPreset('GROWTH')" class="px-2.5 py-1 rounded bg-slate-900 hover:bg-slate-800 text-amber-300 hover:text-amber-200 border border-amber-500/30 text-[11px] font-medium transition">
+              <button type="button" onclick="applySectorPreset('GROWTH')" class="px-2.5 py-1 rounded bg-slate-900 hover:bg-slate-800 text-teal-300 hover:text-teal-200 border border-teal-500/25 text-[11px] font-medium transition">
                 Growth Focus
               </button>
               <button type="button" onclick="applySectorPreset('DEFENSIVE')" class="px-2.5 py-1 rounded bg-slate-900 hover:bg-slate-800 text-cyan-300 hover:text-cyan-200 border border-cyan-500/30 text-[11px] font-medium transition">
@@ -837,18 +848,18 @@
           </div>
         </div>
 
-        <button id="btnRunRebalance" class="w-full mt-4 bg-gradient-to-r from-amber-600 via-orange-600 to-amber-500 hover:from-amber-500 hover:to-orange-400 text-slate-950 font-bold py-3 rounded-xl text-sm transition shadow-lg shadow-orange-500/20 flex items-center justify-center space-x-2">
+        <button id="btnRunRebalance" class="w-full mt-4 bg-gradient-to-r from-teal-600 to-emerald-600 hover:from-teal-500 hover:to-emerald-500 text-slate-950 font-bold py-3 rounded-xl text-sm transition shadow-lg shadow-teal-500/10 flex items-center justify-center space-x-2">
           <i class="fa-solid fa-arrows-rotate"></i>
           <span>Calculate Sector Rebalance Orders</span>
         </button>
       </div>
 
       <!-- Rebalance Recommendations Section -->
-    <div id="rebalanceResultSection" class="hidden bg-slate-900/90 border border-amber-500/40 rounded-2xl p-6 backdrop-blur shadow-2xl">
+    <div id="rebalanceResultSection" class="hidden bg-slate-900/90 border border-teal-500/30 rounded-2xl p-6 backdrop-blur shadow-2xl">
       <div class="flex items-center justify-between mb-4 border-b border-slate-800 pb-3">
         <div>
           <h3 class="text-lg font-bold text-white flex items-center">
-            <i class="fa-solid fa-bolt text-amber-400 mr-2"></i> Rebalance Orders & Sector Drift
+            <i class="fa-solid fa-bolt text-teal-400 mr-2"></i> Rebalance Orders & Sector Drift
           </h3>
           <p class="text-xs text-slate-400">Target Scaling Algorithm (All Values in INR &#8377;)</p>
         </div>
@@ -879,13 +890,13 @@
       <div class="bg-slate-900/80 border border-slate-800 rounded-2xl p-6 backdrop-blur shadow-xl">
         <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-4 border-b border-slate-800/80">
           <div class="flex items-center space-x-3">
-            <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-amber-500/20 to-orange-500/20 border border-amber-500/40 flex items-center justify-center shadow-lg shadow-amber-500/10">
-              <i class="fa-solid fa-compass text-amber-400 text-lg"></i>
+            <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-teal-500/15 to-emerald-500/15 border border-teal-500/30 flex items-center justify-center shadow-lg shadow-teal-500/10">
+              <i class="fa-solid fa-compass text-teal-400 text-lg"></i>
             </div>
             <div>
               <h2 class="text-base sm:text-lg font-bold text-white tracking-tight flex items-center">
                 Open Market Discovery & Multi-Factor Alpha Radar
-                <span class="ml-2.5 px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-amber-500/20 text-amber-400 border border-amber-500/30">NSE & BSE</span>
+                <span class="ml-2.5 px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-teal-500/15 text-teal-400 border border-teal-500/25">NSE & BSE</span>
               </h2>
               <p class="text-xs text-slate-400">Institutional Factor Screener &bull; Quarterly Results & Policy Radar &bull; Macro Regime Stress Tests</p>
             </div>
@@ -895,7 +906,7 @@
               <i class="fa-solid fa-briefcase text-slate-400"></i>
               <span>My Portfolio</span>
             </button>
-            <button onclick="navigateTo('manage')" class="text-xs bg-slate-800 hover:bg-slate-700 text-amber-400 px-3 py-1.5 rounded-lg border border-slate-700 transition flex items-center space-x-1.5">
+            <button onclick="navigateTo('manage')" class="text-xs bg-slate-800 hover:bg-slate-700 text-teal-400 px-3 py-1.5 rounded-lg border border-slate-700 transition flex items-center space-x-1.5">
               <i class="fa-solid fa-sliders"></i>
               <span>Rebalance Desk</span>
             </button>
@@ -908,15 +919,15 @@
       <!-- Cockpit Header & Quick Conviction Bar -->
       <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-4 pb-4 border-b border-slate-800">
         <div class="flex items-center space-x-3">
-          <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-amber-500/20 to-orange-500/20 border border-amber-500/40 flex items-center justify-center shadow-lg shadow-amber-500/10">
-            <i class="fa-solid fa-chart-line text-amber-400 text-lg"></i>
+          <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-teal-500/15 to-emerald-500/15 border border-teal-500/30 flex items-center justify-center shadow-lg shadow-teal-500/10">
+            <i class="fa-solid fa-chart-line text-teal-400 text-lg"></i>
           </div>
           <div>
             <div class="flex items-center space-x-2">
               <h2 class="text-base sm:text-lg font-bold text-white tracking-tight">
                 Multi-Factor Institutional Stock Scorecard
               </h2>
-              <span class="px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-amber-500/20 text-amber-400 border border-amber-500/30">
+              <span class="px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-teal-500/15 text-teal-400 border border-teal-500/25">
                 5-PILLAR ALPHA MODEL
               </span>
             </div>
@@ -929,7 +940,7 @@
         <!-- Search Bar with Instant Enter trigger -->
         <div class="flex items-center space-x-2 w-full lg:w-auto">
           <div class="relative flex-1 lg:w-72">
-            <input id="inspectorTicker" type="text" placeholder="Search NSE ticker (e.g. KPITTECH, TRENT)..." class="uppercase w-full bg-slate-950 border border-slate-700 rounded-xl pl-9 pr-3 py-2 text-xs text-slate-200 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-amber-500" />
+            <input id="inspectorTicker" type="text" placeholder="Search NSE ticker (e.g. KPITTECH, TRENT)..." class="uppercase w-full bg-slate-950 border border-slate-700 rounded-xl pl-9 pr-3 py-2 text-xs text-slate-200 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-teal-500/30 focus:border-teal-500/50" />
             <i class="fa-solid fa-magnifying-glass absolute left-3 top-2.5 text-xs text-slate-500"></i>
           </div>
           <button id="btnInspectStock" class="bg-gradient-to-r from-amber-600 to-orange-500 hover:from-amber-500 hover:to-orange-400 text-slate-950 font-bold px-4 py-2 rounded-xl text-xs transition shadow-md flex items-center space-x-1.5 whitespace-nowrap">
@@ -942,16 +953,16 @@
       <!-- Quick-Pick Conviction Ticker Pills -->
       <div class="flex flex-wrap items-center gap-1.5 py-1 text-xs">
         <span class="text-slate-400 text-[11px] font-medium mr-1 flex items-center">
-          <i class="fa-solid fa-fire text-amber-400 mr-1"></i> Quick Inspect:
+          <i class="fa-solid fa-fire text-teal-400 mr-1"></i> Quick Inspect:
         </span>
-        <button type="button" onclick="quickInspectTicker('KPITTECH')" class="px-2.5 py-1 rounded-lg bg-slate-950 hover:bg-slate-800 text-slate-300 hover:text-amber-400 border border-slate-800 text-[11px] font-mono font-semibold transition">KPITTECH</button>
-        <button type="button" onclick="quickInspectTicker('TRENT')" class="px-2.5 py-1 rounded-lg bg-slate-950 hover:bg-slate-800 text-slate-300 hover:text-amber-400 border border-slate-800 text-[11px] font-mono font-semibold transition">TRENT</button>
-        <button type="button" onclick="quickInspectTicker('BEL')" class="px-2.5 py-1 rounded-lg bg-slate-950 hover:bg-slate-800 text-slate-300 hover:text-amber-400 border border-slate-800 text-[11px] font-mono font-semibold transition">BEL</button>
-        <button type="button" onclick="quickInspectTicker('RELIANCE')" class="px-2.5 py-1 rounded-lg bg-slate-950 hover:bg-slate-800 text-slate-300 hover:text-amber-400 border border-slate-800 text-[11px] font-mono font-semibold transition">RELIANCE</button>
-        <button type="button" onclick="quickInspectTicker('SUZLON')" class="px-2.5 py-1 rounded-lg bg-slate-950 hover:bg-slate-800 text-slate-300 hover:text-amber-400 border border-slate-800 text-[11px] font-mono font-semibold transition">SUZLON</button>
-        <button type="button" onclick="quickInspectTicker('HDFCBANK')" class="px-2.5 py-1 rounded-lg bg-slate-950 hover:bg-slate-800 text-slate-300 hover:text-amber-400 border border-slate-800 text-[11px] font-mono font-semibold transition">HDFCBANK</button>
-        <button type="button" onclick="quickInspectTicker('TATAMOTORS')" class="px-2.5 py-1 rounded-lg bg-slate-950 hover:bg-slate-800 text-slate-300 hover:text-amber-400 border border-slate-800 text-[11px] font-mono font-semibold transition">TATAMOTORS</button>
-        <button type="button" onclick="quickInspectTicker('TATAPOWER')" class="px-2.5 py-1 rounded-lg bg-slate-950 hover:bg-slate-800 text-slate-300 hover:text-amber-400 border border-slate-800 text-[11px] font-mono font-semibold transition">TATAPOWER</button>
+        <button type="button" onclick="quickInspectTicker('KPITTECH')" class="px-2.5 py-1 rounded-lg bg-slate-950 hover:bg-slate-800 text-slate-300 hover:text-teal-400 border border-slate-800 text-[11px] font-mono font-semibold transition">KPITTECH</button>
+        <button type="button" onclick="quickInspectTicker('TRENT')" class="px-2.5 py-1 rounded-lg bg-slate-950 hover:bg-slate-800 text-slate-300 hover:text-teal-400 border border-slate-800 text-[11px] font-mono font-semibold transition">TRENT</button>
+        <button type="button" onclick="quickInspectTicker('BEL')" class="px-2.5 py-1 rounded-lg bg-slate-950 hover:bg-slate-800 text-slate-300 hover:text-teal-400 border border-slate-800 text-[11px] font-mono font-semibold transition">BEL</button>
+        <button type="button" onclick="quickInspectTicker('RELIANCE')" class="px-2.5 py-1 rounded-lg bg-slate-950 hover:bg-slate-800 text-slate-300 hover:text-teal-400 border border-slate-800 text-[11px] font-mono font-semibold transition">RELIANCE</button>
+        <button type="button" onclick="quickInspectTicker('SUZLON')" class="px-2.5 py-1 rounded-lg bg-slate-950 hover:bg-slate-800 text-slate-300 hover:text-teal-400 border border-slate-800 text-[11px] font-mono font-semibold transition">SUZLON</button>
+        <button type="button" onclick="quickInspectTicker('HDFCBANK')" class="px-2.5 py-1 rounded-lg bg-slate-950 hover:bg-slate-800 text-slate-300 hover:text-teal-400 border border-slate-800 text-[11px] font-mono font-semibold transition">HDFCBANK</button>
+        <button type="button" onclick="quickInspectTicker('TATAMOTORS')" class="px-2.5 py-1 rounded-lg bg-slate-950 hover:bg-slate-800 text-slate-300 hover:text-teal-400 border border-slate-800 text-[11px] font-mono font-semibold transition">TATAMOTORS</button>
+        <button type="button" onclick="quickInspectTicker('TATAPOWER')" class="px-2.5 py-1 rounded-lg bg-slate-950 hover:bg-slate-800 text-slate-300 hover:text-teal-400 border border-slate-800 text-[11px] font-mono font-semibold transition">TATAPOWER</button>
       </div>
 
       <!-- Scorecard Result Container -->
@@ -973,7 +984,7 @@
               <div class="text-[10px] text-slate-500">Capital return &gt;15%, balance sheet strength</div>
             </div>
             <div class="p-3 bg-slate-900/60 rounded-xl border border-slate-800/80 text-center space-y-1">
-              <div class="w-8 h-8 rounded-lg bg-amber-500/10 border border-amber-500/30 text-amber-400 flex items-center justify-center mx-auto text-xs">
+              <div class="w-8 h-8 rounded-lg bg-teal-500/10 border border-teal-500/25 text-teal-400 flex items-center justify-center mx-auto text-xs">
                 <i class="fa-solid fa-scale-balanced"></i>
               </div>
               <div class="font-bold text-slate-200 text-xs">2. Valuation & PEG</div>
@@ -1036,18 +1047,18 @@
 
         <div class="mt-4 pt-3 border-t border-slate-800 text-[11px] text-slate-500 flex items-center justify-between">
           <span class="flex items-center"><i class="fa-solid fa-circle-info text-slate-400 mr-1.5"></i> Tracks all active portfolio holdings</span>
-          <span class="text-amber-400/80 font-mono text-[10px]">NSE & BSE Filings</span>
+          <span class="text-teal-400/80 font-mono text-[10px]">NSE & BSE Filings</span>
         </div>
       </div>
         </div>
       </div>
 
       <!-- Master Quant Research & News Scenario Stress Testing Section -->
-    <div id="researchReportSection" class="hidden bg-slate-900/95 border border-amber-500/50 rounded-2xl p-6 backdrop-blur shadow-2xl space-y-6">
+    <div id="researchReportSection" class="hidden bg-slate-900/95 border border-teal-500/30 rounded-2xl p-6 backdrop-blur shadow-2xl space-y-6">
       <div class="flex items-center justify-between border-b border-slate-800 pb-4">
         <div>
           <h3 class="text-lg font-bold text-white flex items-center">
-            <i class="fa-solid fa-flask text-amber-400 mr-2"></i> Quantitative Investment Research & News Stress-Testing Report
+            <i class="fa-solid fa-flask text-teal-400 mr-2"></i> Quantitative Investment Research & News Stress-Testing Report
           </h3>
           <p class="text-xs text-slate-400">Backtested Factor Theories (2018&ndash;2024 Nifty 500) &bull; Policy Scenario Resilience</p>
         </div>
@@ -1058,7 +1069,7 @@
 
       <!-- Strategy Grid -->
       <div>
-        <h4 class="text-xs font-semibold uppercase tracking-wider text-amber-400 mb-3 flex items-center">
+        <h4 class="text-xs font-semibold uppercase tracking-wider text-teal-400 mb-3 flex items-center">
           <i class="fa-solid fa-chart-line mr-1.5"></i> 3 Proven Quantitative Market Theories (Backtested Alpha Models)
         </h4>
         <div id="quantStrategiesContainer" class="grid grid-cols-1 md:grid-cols-3 gap-4"></div>
@@ -1066,7 +1077,7 @@
 
       <!-- Macro & News Flow Scenarios -->
       <div class="pt-4 border-t border-slate-800">
-        <h4 class="text-xs font-semibold uppercase tracking-wider text-amber-400 mb-3 flex items-center">
+        <h4 class="text-xs font-semibold uppercase tracking-wider text-teal-400 mb-3 flex items-center">
           <i class="fa-solid fa-newspaper mr-1.5"></i> Forward-Looking Corporate News & Macro Policy Scenarios
         </h4>
         <div id="scenariosContainer" class="grid grid-cols-1 md:grid-cols-3 gap-4"></div>
@@ -1075,10 +1086,10 @@
 
       <!-- Interactive Financial Explainer Modal for 9-5 Working Professionals -->
     <div id="financialExplainerModal" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm">
-      <div class="relative w-full max-w-lg bg-slate-900 border border-amber-500/40 rounded-2xl p-6 shadow-2xl text-slate-100 space-y-4">
+      <div class="relative w-full max-w-lg bg-slate-900 border border-teal-500/30 rounded-2xl p-6 shadow-2xl text-slate-100 space-y-4">
         <div class="flex items-center justify-between border-b border-slate-800 pb-3">
           <div class="flex items-center space-x-2.5">
-            <div id="explainerIconContainer" class="w-9 h-9 rounded-xl bg-amber-500/20 border border-amber-500/30 flex items-center justify-center text-amber-400">
+            <div id="explainerIconContainer" class="w-9 h-9 rounded-xl bg-teal-500/15 border border-teal-500/25 flex items-center justify-center text-teal-400">
               <i id="explainerIcon" class="fa-solid fa-graduation-cap"></i>
             </div>
             <div>
@@ -1093,7 +1104,7 @@
 
         <!-- Plain English Analogy -->
         <div class="p-3 bg-slate-950/70 rounded-xl border border-slate-800/80 space-y-1">
-          <div class="text-[10px] uppercase font-bold text-amber-400 flex items-center">
+          <div class="text-[10px] uppercase font-bold text-teal-400 flex items-center">
             <i class="fa-solid fa-lightbulb mr-1.5"></i> In Plain English:
           </div>
           <p id="explainerAnalogy" class="text-xs text-slate-200 leading-relaxed">
@@ -1115,11 +1126,11 @@
         </div>
 
         <!-- 9-5 Professional Takeaway -->
-        <div class="p-3 bg-amber-500/10 border border-amber-500/25 rounded-xl space-y-1">
-          <div class="text-[10px] uppercase font-bold text-amber-300 flex items-center">
+        <div class="p-3 bg-teal-500/10 border border-teal-500/40/25 rounded-xl space-y-1">
+          <div class="text-[10px] uppercase font-bold text-teal-300 flex items-center">
             <i class="fa-solid fa-briefcase mr-1.5"></i> 9-5 Working Professional Takeaway:
           </div>
-          <p id="explainerTakeaway" class="text-xs text-amber-200/90 leading-relaxed">
+          <p id="explainerTakeaway" class="text-xs text-teal-200/90 leading-relaxed">
             What should you do if you are managing your portfolio alongside your job?
           </p>
         </div>
@@ -1137,7 +1148,7 @@
       <div class="relative w-full max-w-lg bg-slate-900 border border-slate-700/80 rounded-2xl p-6 shadow-2xl text-slate-100 space-y-4">
         <div class="flex items-center justify-between border-b border-slate-800 pb-3">
           <div class="flex items-center space-x-2.5">
-            <div id="tradeModalIcon" class="w-9 h-9 rounded-xl bg-amber-500/20 border border-amber-500/30 flex items-center justify-center text-amber-400">
+            <div id="tradeModalIcon" class="w-9 h-9 rounded-xl bg-teal-500/15 border border-teal-500/25 flex items-center justify-center text-teal-400">
               <i class="fa-solid fa-bolt"></i>
             </div>
             <div>
@@ -1170,8 +1181,8 @@
         <div>
           <label class="block text-xs font-semibold text-slate-400 mb-1">Stock (NSE Symbol)</label>
           <div class="flex items-center space-x-2">
-            <input id="tradeTickerInput" type="text" placeholder="e.g. HDFCBANK, RELIANCE" class="w-full uppercase bg-slate-950 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white font-mono font-bold focus:outline-none focus:ring-2 focus:ring-amber-500" oninput="onTradeTickerChange()" />
-            <select id="tradeHoldingSelect" onchange="onTradeSelectHolding(this.value)" class="bg-slate-950 border border-slate-700 rounded-lg px-2.5 py-2 text-xs text-slate-300 focus:outline-none focus:ring-2 focus:ring-amber-500 max-w-[170px]">
+            <input id="tradeTickerInput" type="text" placeholder="e.g. HDFCBANK, RELIANCE" class="w-full uppercase bg-slate-950 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white font-mono font-bold focus:outline-none focus:ring-2 focus:ring-teal-500/30 focus:border-teal-500/50" oninput="onTradeTickerChange()" />
+            <select id="tradeHoldingSelect" onchange="onTradeSelectHolding(this.value)" class="bg-slate-950 border border-slate-700 rounded-lg px-2.5 py-2 text-xs text-slate-300 focus:outline-none focus:ring-2 focus:ring-teal-500/30 focus:border-teal-500/50 max-w-[170px]">
               <option value="">Or pick existing...</option>
             </select>
           </div>
@@ -1181,18 +1192,18 @@
         <div class="grid grid-cols-2 gap-3">
           <div>
             <label id="tradeQuantityLabel" class="block text-xs font-semibold text-slate-400 mb-1">Trade Quantity (Shares)</label>
-            <input id="tradeQuantityInput" type="number" min="1" step="1" placeholder="e.g. 15" class="w-full bg-slate-950 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white font-mono focus:outline-none focus:ring-2 focus:ring-amber-500" oninput="updateTradePreview()" />
+            <input id="tradeQuantityInput" type="number" min="1" step="1" placeholder="e.g. 15" class="w-full bg-slate-950 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white font-mono focus:outline-none focus:ring-2 focus:ring-teal-500/30 focus:border-teal-500/50" oninput="updateTradePreview()" />
           </div>
           <div>
             <label id="tradePriceLabel" class="block text-xs font-semibold text-slate-400 mb-1">Trade Price (&#8377;)</label>
-            <input id="tradePriceInput" type="number" min="0.01" step="any" placeholder="e.g. 1650.00" class="w-full bg-slate-950 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white font-mono focus:outline-none focus:ring-2 focus:ring-amber-500" oninput="updateTradePreview()" />
+            <input id="tradePriceInput" type="number" min="0.01" step="any" placeholder="e.g. 1650.00" class="w-full bg-slate-950 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white font-mono focus:outline-none focus:ring-2 focus:ring-teal-500/30 focus:border-teal-500/50" oninput="updateTradePreview()" />
           </div>
         </div>
 
         <!-- Live Impact Calculation Preview Card -->
         <div id="tradeImpactCard" class="p-3.5 bg-slate-950/80 rounded-xl border border-slate-800 space-y-2 text-xs">
           <div class="flex items-center justify-between text-slate-400 font-semibold border-b border-slate-800/80 pb-1.5">
-            <span class="flex items-center"><i class="fa-solid fa-calculator text-amber-400 mr-1.5"></i> Trade Impact Preview</span>
+            <span class="flex items-center"><i class="fa-solid fa-calculator text-teal-400 mr-1.5"></i> Trade Impact Preview</span>
             <span id="tradeImpactActionBadge" class="text-[10px] px-2 py-0.5 rounded font-mono font-bold bg-emerald-500/20 text-emerald-400">BUY</span>
           </div>
           
@@ -1203,7 +1214,7 @@
             </div>
             <div>
               <span class="text-slate-500">Weighted Avg Buy Price:</span>
-              <div id="previewPriceChange" class="font-mono font-bold text-amber-400 mt-0.5">&#8377;0.00 &rarr; &#8377;0.00</div>
+              <div id="previewPriceChange" class="font-mono font-bold text-teal-400 mt-0.5">&#8377;0.00 &rarr; &#8377;0.00</div>
             </div>
           </div>
 
@@ -1212,7 +1223,7 @@
             <span id="previewTradeTotal" class="font-mono font-bold text-white text-sm">&#8377;0.00</span>
           </div>
 
-          <div id="tradeWarningNote" class="hidden p-2 rounded-lg bg-amber-500/10 border border-amber-500/20 text-[11px] text-amber-300 leading-tight">
+          <div id="tradeWarningNote" class="hidden p-2 rounded-lg bg-teal-500/10 border border-teal-500/20 text-[11px] text-teal-300 leading-tight">
           </div>
         </div>
 
@@ -1276,7 +1287,7 @@
           <div class="p-3 bg-slate-950/80 border border-slate-800 rounded-xl flex flex-col sm:flex-row sm:items-center justify-between gap-3">
             <div>
               <div class="text-xs font-bold text-white flex items-center">
-                <i class="fa-solid fa-wand-magic-sparkles text-amber-400 mr-1.5"></i> Auto-Detect Latest Download
+                <i class="fa-solid fa-wand-magic-sparkles text-teal-400 mr-1.5"></i> Auto-Detect Latest Download
               </div>
               <div class="text-[11px] text-slate-400 mt-0.5">Found: <code>Your Holding Details - D200136 (5).xlsx</code> in Downloads folder</div>
             </div>

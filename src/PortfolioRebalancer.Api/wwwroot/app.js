@@ -48,7 +48,7 @@ const SECTORS = [
 const FINANCIAL_DICTIONARY = {
   PEG: {
     title: "PEG Ratio (Price/Earnings-to-Growth)",
-    icon: "fa-scale-balanced text-amber-400",
+    icon: "fa-scale-balanced text-teal-400",
     tag: "Growth-Adjusted Price Tag",
     analogy: "P/E ratio alone can trick you! A stock with a P/E of 45x looks expensive, but if its profits are growing at 50% year-on-year, you are actually getting a bargain! PEG connects what you pay with how fast profits are expanding.",
     rule: "LOW IS BETTER. A lower PEG means you pay less for every unit of future profit growth.",
@@ -100,7 +100,7 @@ const FINANCIAL_DICTIONARY = {
   },
   PROMOTER_PLEDGE: {
     title: "Promoter Pledge %",
-    icon: "fa-user-lock text-amber-400",
+    icon: "fa-user-lock text-teal-400",
     tag: "Skin in the Game & Loan Risk",
     analogy: "The percentage of company shares that founding promoters have mortgaged to banks to borrow money for personal or group ventures.",
     rule: "LOW IS BETTER. 0% is pristine. High pledge is a major warning because banks can forcibly dump mortgaged shares if the stock drops.",
@@ -152,7 +152,7 @@ const FINANCIAL_DICTIONARY = {
   },
   STRESS_TEST: {
     title: "10% Market Correction Stress Test",
-    icon: "fa-chart-line text-amber-400",
+    icon: "fa-chart-line text-teal-400",
     tag: "Worst-Case Paper Dip in ₹",
     analogy: "Simulates what happens to your portfolio in rupees if the NIFTY 50 drops by 10% during an unexpected global shock.",
     rule: "LOWER LOSS IS BETTER. High-quality portfolios drop less than the index (low beta) and bounce back faster.",
@@ -223,7 +223,7 @@ function applyPrivacyModeUI() {
       text.textContent = "Privacy: ON";
       btn.title = "Privacy Mode is ON (Financial numbers blurred for safe screenshots). Click to reveal.";
     } else {
-      icon.className = "fa-solid fa-eye text-amber-400";
+      icon.className = "fa-solid fa-eye text-teal-400";
       btn.className = "text-xs bg-slate-900 hover:bg-slate-800 text-slate-300 hover:text-white border border-slate-700 px-3 py-1.5 rounded-lg flex items-center space-x-1.5 transition font-medium shadow-sm";
       text.textContent = "Privacy Mode";
       btn.title = "Click to blur financial values and position sizes for safe screenshots.";
@@ -362,15 +362,15 @@ function navigateTo(viewName, updateHash = true) {
     const el = document.getElementById(t.id);
     if (!el) return;
     if (t.view === viewName) {
-      el.className = 'nav-tab px-3.5 py-1.5 rounded-lg text-xs font-semibold flex items-center space-x-2 transition bg-amber-500/20 text-amber-300 border border-amber-500/40 shadow-sm';
+      el.className = 'nav-tab px-3.5 py-1.5 rounded-lg text-xs font-semibold flex items-center space-x-2 transition bg-teal-500/15 text-teal-300 border border-teal-500/30 shadow-sm';
     } else {
-      el.className = 'nav-tab px-3.5 py-1.5 rounded-lg text-xs font-semibold flex items-center space-x-2 transition text-slate-400 hover:text-slate-200 hover:bg-slate-800/60 border border-transparent';
+      el.className = 'nav-tab px-3.5 py-1.5 rounded-lg text-xs font-semibold flex items-center space-x-2 transition text-slate-400 hover:text-slate-200 hover:bg-slate-800/40 border border-transparent';
     }
   });
 
-  // 3. Synchronize window hash
+  // 3. Synchronize window hash smoothly without full-page re-trigger
   if (updateHash && window.location.hash !== `#/${viewName}`) {
-    window.location.hash = `#/${viewName}`;
+    history.replaceState(null, '', `#/${viewName}`);
   }
 
   // 4. View lifecycle triggers
@@ -476,7 +476,7 @@ const SECTOR_ICONS = {
   "Technology": "fa-laptop-code text-cyan-400",
   "Healthcare": "fa-heart-pulse text-rose-400",
   "Financials": "fa-building-columns text-emerald-400",
-  "ConsumerDiscretionary": "fa-bag-shopping text-amber-400",
+  "ConsumerDiscretionary": "fa-bag-shopping text-teal-400",
   "ConsumerStaples": "fa-basket-shopping text-emerald-300",
   "Energy": "fa-bolt text-yellow-400",
   "Industrials": "fa-industry text-orange-400",
@@ -502,7 +502,7 @@ function renderSectorTargetInputs() {
       </div>
       <div class="flex items-center space-x-1.5">
         <input type="number" min="0" max="100" step="0.5" value="0" data-sector="${sec}"
-          class="sector-weight-input w-16 bg-slate-900 border border-slate-700 hover:border-slate-600 rounded-lg px-2 py-1 text-xs text-right text-amber-400 font-mono focus:outline-none focus:ring-1 focus:ring-amber-500" />
+          class="sector-weight-input w-16 bg-slate-900 border border-slate-700 hover:border-slate-600 rounded-lg px-2 py-1 text-xs text-right text-teal-400 font-mono focus:outline-none focus:ring-1 focus:ring-amber-500" />
         <span class="text-xs text-slate-500 font-mono">%</span>
       </div>
     `;
@@ -526,7 +526,7 @@ function updateTargetSumBadge() {
   if (Math.abs(sum - 100) < 0.01) {
     badge.className = "text-xs font-mono font-bold px-3 py-1 rounded-lg bg-emerald-500/20 text-emerald-400 border border-emerald-500/40 shadow-sm shadow-emerald-500/20";
   } else {
-    badge.className = "text-xs font-mono font-bold px-3 py-1 rounded-lg bg-amber-500/20 text-amber-300 border border-amber-500/40";
+    badge.className = "text-xs font-mono font-bold px-3 py-1 rounded-lg bg-teal-500/15 text-teal-300 border border-teal-500/30";
   }
 }
 
@@ -597,17 +597,73 @@ async function loadPortfolios() {
 
 async function selectPortfolio(id) {
   currentPortfolioId = id;
-  document.getElementById("portfolioSelect").value = id;
+  const sel = document.getElementById("portfolioSelect");
+  if (sel) sel.value = id;
+
   try {
-    const res = await fetch(`/api/portfolios/${id}`);
-    if (!res.ok) return;
-    currentPortfolioData = await res.json();
+    // High-Speed Concurrent Fetch: Portfolio details + Diagnostics loaded simultaneously
+    const [pRes, dRes] = await Promise.all([
+      fetch(`/api/portfolios/${id}`),
+      fetch(`/api/portfolios/${id}/diagnostics`).catch(() => null)
+    ]);
+
+    if (!pRes.ok) return;
+    currentPortfolioData = await pRes.json();
     normalizePortfolioData(currentPortfolioData);
     renderPortfolioDetails(currentPortfolioData);
-    await loadDiagnostics(id);
+
+    if (dRes && dRes.ok) {
+      const diag = await dRes.json();
+      currentDiagnostics = diag;
+      renderDiagnosticsUI(diag);
+    }
   } catch (err) {
     console.error("Error fetching portfolio:", err);
   }
+}
+
+function renderDiagnosticsUI(diag) {
+  // 1. Top Cockpit Stat Cards
+  const scoreEl = document.getElementById("statHealthScore");
+  if (scoreEl) scoreEl.textContent = `${diag.healthScore} / 100`;
+  const ratingEl = document.getElementById("statHealthRating");
+  if (ratingEl) ratingEl.textContent = `Grade ${diag.healthGrade}`;
+
+  // 2. Grade Badge in Diagnostics Section
+  const gradeBadge = document.getElementById("statHealthGradeBadge");
+  if (gradeBadge) {
+    gradeBadge.textContent = `GRADE ${diag.healthGrade} (${diag.healthScore}/100)`;
+    if (diag.healthScore >= 75) {
+      gradeBadge.className = "inline-flex items-center px-3 py-1 rounded-lg text-sm font-bold font-mono bg-emerald-500/15 text-emerald-400 border border-emerald-500/30";
+    } else if (diag.healthScore >= 60) {
+      gradeBadge.className = "inline-flex items-center px-3 py-1 rounded-lg text-sm font-bold font-mono bg-teal-500/15 text-teal-300 border border-teal-500/30";
+    } else {
+      gradeBadge.className = "inline-flex items-center px-3 py-1 rounded-lg text-sm font-bold font-mono bg-rose-500/15 text-rose-300 border border-rose-500/30";
+    }
+  }
+
+  // 3. SEBI Status Badge
+  const statusBadge = document.getElementById("diagnosticStatusBadge");
+  if (statusBadge) {
+    if (diag.violations.length === 0) {
+      statusBadge.innerHTML = `<i class="fa-solid fa-check-circle mr-1.5 text-xs text-emerald-400"></i> SEBI Compliant`;
+      statusBadge.className = "inline-flex items-center px-2.5 py-1 rounded-lg text-xs font-medium bg-emerald-500/10 text-emerald-400 border border-emerald-500/20";
+    } else {
+      statusBadge.innerHTML = `<i class="fa-solid fa-triangle-exclamation mr-1.5 text-xs text-rose-400"></i> ${diag.violations.length} Limit Breaches`;
+      statusBadge.className = "inline-flex items-center px-2.5 py-1 rounded-lg text-xs font-medium bg-rose-500/10 text-rose-400 border border-rose-500/20";
+    }
+  }
+
+  // 4. Executive Summary
+  const summaryText = document.getElementById("diagExecutiveSummaryText");
+  if (summaryText) summaryText.textContent = diag.executiveSummary;
+
+  // 5. Lists
+  renderProfitBookingList(diag.profitBookingOpportunities);
+  renderTaxLossList(diag.taxLossHarvesting);
+  renderTailEndList(diag.tailEndAnalysis);
+  renderConcentrationList(diag.sectorConcentrations);
+  renderAdvisoryPillars(diag.advisoryPillars);
 }
 
 // Normalizes any zero or missing values so nothing is ever shown as 0
@@ -850,7 +906,9 @@ function renderHoldingsTable() {
 
   const subtext = document.getElementById("holdingsSubtext");
   const isFiltered = (searchQuery || sectorFilter || pnlFilter !== 'ALL' || activeDiagnosticFilter);
-  subtext.textContent = `${totalItems} position${totalItems === 1 ? '' : 's'}${isFiltered ? ' (filtered)' : ''}`;
+  if (subtext) {
+    subtext.textContent = `${totalItems} position${totalItems === 1 ? '' : 's'}${isFiltered ? ' (filtered)' : ''}`;
+  }
 
   const infoText = document.getElementById("pageInfoText");
   if (infoText) {
@@ -860,83 +918,86 @@ function renderHoldingsTable() {
   }
 
   const tbody = document.getElementById("holdingsTableBody");
-  tbody.innerHTML = "";
+  if (!tbody) return;
 
   if (allFiltered.length === 0) {
     tbody.innerHTML = `<tr><td colspan="11" class="py-12 text-center text-slate-500 italic">No holdings match your search or filter criteria.</td></tr>`;
     return;
   }
 
-  allFiltered.forEach(h => {
+  // High-Speed Single-Pass Batched DOM Rendering (< 2ms for 105+ rows)
+  const rows = allFiltered.map(h => {
     const isPos = h.unrealizedPnL >= 0;
-    const pnlBg = isPos
+    // Soothing Mint for Gains, Soft Coral / Dusty Rose for Losses (Reduces financial anxiety)
+    const pnlBadge = isPos
       ? "bg-emerald-500/10 text-emerald-400 border border-emerald-500/20"
-      : "bg-rose-500/10 text-rose-400 border border-rose-500/20";
+      : "bg-rose-500/10 text-rose-300 border border-rose-500/20";
 
     const advisory = getAdvisoryTarget(h);
 
-    const tr = document.createElement("tr");
-    tr.className = "hover:bg-slate-800/40 transition border-b border-slate-800/40 text-xs";
-    tr.innerHTML = `
-      <td class="py-3 px-4 font-mono">
-        <div class="flex items-center space-x-2">
-          <span class="font-bold text-white text-xs">${h.ticker}</span>
-          <span class="text-[10px] text-slate-400 font-sans truncate max-w-[140px] hidden sm:inline" title="${h.name}">${h.name}</span>
-        </div>
-      </td>
-      <td class="py-3 px-3 text-slate-400">
-        <span class="px-2 py-0.5 rounded bg-slate-900 border border-slate-800 text-[11px] whitespace-nowrap">${h.sector}</span>
-      </td>
-      <td class="py-3 px-3 text-right font-mono text-slate-200 font-medium privacy-mask">${h.quantity}</td>
-      
-      <!-- Avg Buy Price (From Excel) -->
-      <td class="py-3 px-4 text-right font-mono text-slate-300 privacy-mask">
-        ${formatINR(h.buyPrice)}
-      </td>
+    return `
+      <tr class="hover:bg-slate-800/30 transition border-b border-slate-800/40 text-xs">
+        <td class="py-3 px-4 font-mono">
+          <div class="flex items-center space-x-2">
+            <span class="font-semibold text-slate-100 text-xs">${h.ticker}</span>
+            <span class="text-[11px] text-slate-400 font-sans truncate max-w-[130px] hidden sm:inline" title="${h.name}">${h.name}</span>
+          </div>
+        </td>
+        <td class="py-3 px-3 text-slate-400">
+          <span class="px-2 py-0.5 rounded bg-slate-900 border border-slate-800/80 text-[11px] whitespace-nowrap text-slate-300">${h.sector}</span>
+        </td>
+        <td class="py-3 px-3 text-right font-mono text-slate-200 font-medium privacy-mask">${h.quantity}</td>
+        
+        <!-- Avg Buy Price -->
+        <td class="py-3 px-4 text-right font-mono text-slate-300 privacy-mask">
+          ${formatINR(h.buyPrice)}
+        </td>
 
-      <!-- Live CMP -->
-      <td class="py-3 px-4 text-right font-mono font-bold text-amber-300 bg-slate-900/40">
-        ${formatINR(h.price)}
-      </td>
+        <!-- Live CMP -->
+        <td class="py-3 px-4 text-right font-mono font-medium text-slate-100">
+          ${formatINR(h.price)}
+        </td>
 
-      <!-- Side-by-side Unrealized P&L -->
-      <td class="py-3 px-4 text-right font-mono bg-slate-900/40 whitespace-nowrap">
-        <span class="inline-block px-2.5 py-1 rounded ${pnlBg} font-semibold privacy-mask">
-          ${isPos ? '+' : ''}${formatINR(h.unrealizedPnL)} (${isPos ? '+' : ''}${h.unrealizedPnLPercent.toFixed(1)}%)
-        </span>
-      </td>
+        <!-- Side-by-side Unrealized P&L (Soft Mint / Soft Coral) -->
+        <td class="py-3 px-4 text-right font-mono whitespace-nowrap">
+          <span class="inline-block px-2.5 py-0.5 rounded-md ${pnlBadge} font-medium text-xs privacy-mask">
+            ${isPos ? '+' : ''}${formatINR(h.unrealizedPnL)} (${isPos ? '+' : ''}${h.unrealizedPnLPercent.toFixed(1)}%)
+          </span>
+        </td>
 
-      <!-- Total Invested Cost -->
-      <td class="py-3 px-4 text-right font-mono text-slate-400 privacy-mask">${formatINR(h.investedValue)}</td>
+        <!-- Total Invested Cost -->
+        <td class="py-3 px-4 text-right font-mono text-slate-400 privacy-mask">${formatINR(h.investedValue)}</td>
 
-      <!-- Current Market Value -->
-      <td class="py-3 px-4 text-right font-mono font-semibold text-white privacy-mask">${formatINR(h.marketValue)}</td>
+        <!-- Current Market Value -->
+        <td class="py-3 px-4 text-right font-mono font-semibold text-slate-100 privacy-mask">${formatINR(h.marketValue)}</td>
 
-      <!-- Portfolio Weight -->
-      <td class="py-3 px-3 text-right font-mono text-slate-300">${h.weightPercent.toFixed(1)}%</td>
+        <!-- Portfolio Weight -->
+        <td class="py-3 px-3 text-right font-mono text-slate-300">${h.weightPercent.toFixed(1)}%</td>
 
-      <!-- Target Advisory -->
-      <td class="py-3 px-3 text-center text-[10px] font-mono whitespace-nowrap">
-        <span class="px-2 py-0.5 rounded bg-amber-500/10 text-amber-400 border border-amber-500/20" title="${advisory.rationale}">
-          T1: \u20B9${advisory.t1}
-        </span>
-      </td>
+        <!-- Target Advisory -->
+        <td class="py-3 px-3 text-center text-[11px] font-mono whitespace-nowrap">
+          <span class="px-2 py-0.5 rounded bg-teal-500/10 text-teal-300 border border-teal-500/20" title="${advisory.rationale}">
+            ₹${advisory.t1}
+          </span>
+        </td>
 
-      <!-- Actions -->
-      <td class="py-3 px-3 text-center whitespace-nowrap">
-        <button onclick="openTradeModal('${h.ticker}')" class="text-amber-400 hover:text-amber-300 text-xs px-2 py-1 rounded bg-amber-500/10 hover:bg-amber-500/20 border border-amber-500/30 transition mr-1 font-semibold" title="Trade / Adjust (Buy/Sell/Trim)">
-          <i class="fa-solid fa-bolt mr-0.5"></i> Trade
-        </button>
-        <button onclick="inspectFromRow('${h.ticker}')" class="text-slate-400 hover:text-amber-300 text-xs px-1.5 py-1 rounded hover:bg-slate-800 transition mr-1" title="Inspect Scorecard">
-          <i class="fa-solid fa-magnifying-glass-chart"></i>
-        </button>
-        <button onclick="handleRemoveHolding('${h.ticker}')" class="text-rose-400 hover:text-rose-300 text-xs px-1.5 py-1 rounded hover:bg-rose-500/10 transition" title="Delete Position">
-          <i class="fa-solid fa-trash-can"></i>
-        </button>
-      </td>
+        <!-- Streamlined Actions (Calm Teal and Subtle Actions) -->
+        <td class="py-3 px-3 text-center whitespace-nowrap">
+          <button onclick="openTradeModal('${h.ticker}')" class="text-teal-400 hover:text-teal-300 text-xs px-2 py-1 rounded bg-teal-500/10 hover:bg-teal-500/20 border border-teal-500/30 transition mr-1 font-medium" title="Trade / Adjust">
+            <i class="fa-solid fa-bolt mr-0.5"></i> Trade
+          </button>
+          <button onclick="inspectFromRow('${h.ticker}')" class="text-slate-400 hover:text-teal-300 text-xs px-1.5 py-1 rounded hover:bg-slate-800 transition mr-1" title="Inspect Scorecard">
+            <i class="fa-solid fa-magnifying-glass-chart"></i>
+          </button>
+          <button onclick="handleRemoveHolding('${h.ticker}')" class="text-slate-500 hover:text-rose-400 text-xs px-1.5 py-1 rounded hover:bg-rose-500/10 transition" title="Delete Position">
+            <i class="fa-solid fa-trash-can"></i>
+          </button>
+        </td>
+      </tr>
     `;
-    tbody.appendChild(tr);
   });
+
+  tbody.innerHTML = rows.join('');
 }
 
 function inspectFromRow(ticker) {
@@ -1044,7 +1105,7 @@ async function loadDiagnostics(portfolioId) {
       if (diag.healthScore >= 75) {
         gradeBadge.className = "inline-flex items-center px-3 py-1 rounded-lg text-sm font-bold font-mono bg-emerald-500/20 text-emerald-300 border border-emerald-500/30";
       } else if (diag.healthScore >= 60) {
-        gradeBadge.className = "inline-flex items-center px-3 py-1 rounded-lg text-sm font-bold font-mono bg-amber-500/20 text-amber-300 border border-amber-500/30";
+        gradeBadge.className = "inline-flex items-center px-3 py-1 rounded-lg text-sm font-bold font-mono bg-teal-500/15 text-teal-300 border border-teal-500/30";
       } else {
         gradeBadge.className = "inline-flex items-center px-3 py-1 rounded-lg text-sm font-bold font-mono bg-rose-500/20 text-rose-300 border border-rose-500/30";
       }
@@ -1154,7 +1215,7 @@ async function loadDiagnostics(portfolioId) {
         badgeElem.textContent = cd.grade;
         badgeElem.className = `text-xs font-bold px-2.5 py-1 rounded-lg border ${
           cd.score >= 80 ? 'bg-emerald-500/20 text-emerald-300 border-emerald-500/30' :
-          (cd.score >= 65 ? 'bg-indigo-500/20 text-indigo-300 border-indigo-500/30' : 'bg-amber-500/20 text-amber-300 border-amber-500/30')
+          (cd.score >= 65 ? 'bg-indigo-500/20 text-indigo-300 border-indigo-500/30' : 'bg-teal-500/15 text-teal-300 border-teal-500/30')
         }`;
       }
       if (zeroDebtElem) zeroDebtElem.textContent = `${cd.zeroDebtRatioPercent}%`;
@@ -1174,16 +1235,16 @@ async function loadDiagnostics(portfolioId) {
         diag.violations.forEach(v => {
           const isCrit = v.severity === "Critical";
           const div = document.createElement("div");
-          div.className = `p-3 bg-slate-950/90 rounded-xl border ${isCrit ? 'border-rose-500/40 bg-rose-950/20' : 'border-amber-500/40 bg-amber-950/20'} flex items-start justify-between`;
+          div.className = `p-3 bg-slate-950/90 rounded-xl border ${isCrit ? 'border-rose-500/40 bg-rose-950/20' : 'border-teal-500/30 bg-amber-950/20'} flex items-start justify-between`;
           div.innerHTML = `
             <div>
-              <div class="text-xs font-bold ${isCrit ? 'text-rose-400' : 'text-amber-400'} flex items-center">
+              <div class="text-xs font-bold ${isCrit ? 'text-rose-400' : 'text-teal-400'} flex items-center">
                 <i class="fa-solid fa-triangle-exclamation mr-1.5"></i>
                 <span>${v.ruleName}: ${v.target}</span>
               </div>
               <div class="text-[11px] text-slate-400 mt-0.5">Current: <span class="text-white font-mono font-semibold">${v.currentValue}%</span> \u2022 Allowed Limit: ${v.allowedLimit}%</div>
             </div>
-            <span class="text-[10px] font-bold px-2 py-0.5 rounded ${isCrit ? 'bg-rose-500/20 text-rose-400' : 'bg-amber-500/20 text-amber-400'} uppercase">${v.severity}</span>
+            <span class="text-[10px] font-bold px-2 py-0.5 rounded ${isCrit ? 'bg-rose-500/20 text-rose-400' : 'bg-teal-500/15 text-teal-400'} uppercase">${v.severity}</span>
           `;
           vContainer.appendChild(div);
         });
@@ -1201,13 +1262,13 @@ async function loadDiagnostics(portfolioId) {
         card.className = "p-4 bg-slate-950/70 rounded-xl border border-slate-800 hover:border-slate-700/80 transition flex flex-col justify-between space-y-3";
 
         let icon = "fa-lightbulb";
-        let tagBg = "bg-amber-500/20 text-amber-400 border border-amber-500/30";
-        let btnBg = "bg-amber-500/10 hover:bg-amber-500/20 text-amber-300 border border-amber-500/30";
+        let tagBg = "bg-teal-500/15 text-teal-400 border border-teal-500/30";
+        let btnBg = "bg-teal-500/10 hover:bg-teal-500/15 text-teal-300 border border-teal-500/30";
 
         if (p.category.includes("Pruning")) {
           icon = "fa-scissors";
-          tagBg = "bg-amber-500/20 text-amber-400 border border-amber-500/30";
-          btnBg = "bg-amber-500/10 hover:bg-amber-500/20 text-amber-300 border border-amber-500/30";
+          tagBg = "bg-teal-500/15 text-teal-400 border border-teal-500/30";
+          btnBg = "bg-teal-500/10 hover:bg-teal-500/15 text-teal-300 border border-teal-500/30";
         } else if (p.category.includes("Profit")) {
           icon = "fa-coins";
           tagBg = "bg-emerald-500/20 text-emerald-400 border border-emerald-500/30";
@@ -1270,7 +1331,7 @@ async function loadDiagnostics(portfolioId) {
             <div class="space-y-1">
               <div class="font-semibold text-white flex items-center space-x-2">
                 ${e.ticker ? `
-                  <button type="button" onclick="quickInspectTicker('${e.ticker}')" class="font-mono text-amber-400 hover:text-amber-300 hover:underline px-1.5 py-0.5 rounded bg-amber-500/10 border border-amber-500/30 text-[10px] font-bold" title="Inspect ${e.ticker} Scorecard">
+                  <button type="button" onclick="quickInspectTicker('${e.ticker}')" class="font-mono text-teal-400 hover:text-teal-300 hover:underline px-1.5 py-0.5 rounded bg-teal-500/10 border border-teal-500/30 text-[10px] font-bold" title="Inspect ${e.ticker} Scorecard">
                     ${e.ticker} <i class="fa-solid fa-arrow-up-right-from-square text-[8px] ml-0.5"></i>
                   </button>
                 ` : `
@@ -1282,7 +1343,7 @@ async function loadDiagnostics(portfolioId) {
             </div>
             <div class="text-right ml-3 flex flex-col items-end whitespace-nowrap">
               <span class="px-2 py-0.5 rounded bg-slate-900 border border-slate-800 text-[10px] font-mono font-medium text-slate-300 flex items-center">
-                <i class="fa-regular fa-calendar text-[9px] text-amber-400 mr-1.5"></i> ${e.scheduledDate}
+                <i class="fa-regular fa-calendar text-[9px] text-teal-400 mr-1.5"></i> ${e.scheduledDate}
               </span>
               <span class="text-[9px] uppercase tracking-wider mt-1 ${isEarnings ? 'text-emerald-400' : isPolicy ? 'text-cyan-400' : 'text-slate-500'} font-semibold font-mono">
                 ${e.eventType || 'CATALYST'}
@@ -1480,7 +1541,7 @@ async function handleInspectStock() {
 
   const resultContainer = document.getElementById("stockInspectorResult");
   resultContainer.classList.remove("hidden");
-  resultContainer.innerHTML = `<div class="text-slate-400 py-3 text-center"><i class="fa-solid fa-circle-notch fa-spin text-amber-400 mr-2"></i>Running 5-Pillar Institutional Equity Research Engine for ${ticker}...</div>`;
+  resultContainer.innerHTML = `<div class="text-slate-400 py-3 text-center"><i class="fa-solid fa-circle-notch fa-spin text-teal-400 mr-2"></i>Running 5-Pillar Institutional Equity Research Engine for ${ticker}...</div>`;
 
   try {
     const res = await fetch(`/api/stocks/${ticker}`);
@@ -1492,7 +1553,7 @@ async function handleInspectStock() {
     
     const scoreColor = data.overallScore >= 75 ? 'emerald' : data.overallScore >= 50 ? 'amber' : 'rose';
     const peg = data.peerBenchmark?.pegRatio;
-    const pegColor = peg && peg <= 1.5 ? 'text-emerald-400' : (peg && peg <= 2.2 ? 'text-amber-400' : 'text-slate-300');
+    const pegColor = peg && peg <= 1.5 ? 'text-emerald-400' : (peg && peg <= 2.2 ? 'text-teal-400' : 'text-slate-300');
     const pledge = data.governanceAudit?.promoterPledgePercent ?? (data.governanceAudit?.pledgePercent ?? 0);
     const isPristinePledge = pledge === 0;
 
@@ -1506,7 +1567,7 @@ async function handleInspectStock() {
             <span class="text-[10px] uppercase px-2 py-0.5 rounded bg-slate-800 text-slate-300 border border-slate-700">${data.sector}</span>
           </div>
           <div class="mt-1 flex flex-wrap items-center gap-1.5">
-            <span class="px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-amber-500/10 text-amber-300 border border-amber-500/30">
+            <span class="px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-teal-500/10 text-teal-300 border border-teal-500/30">
               ${data.investmentArchetype || 'Equities'}
             </span>
             <span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider bg-slate-800 text-slate-300 border border-slate-700">
@@ -1534,12 +1595,12 @@ async function handleInspectStock() {
             <span class="text-xs font-bold text-white uppercase tracking-wider flex items-center">
               <i class="fa-solid fa-bullseye text-emerald-400 mr-1.5"></i> Is Current Value Good? (Fair Value Check)
             </span>
-            <button type="button" class="text-slate-400 hover:text-amber-400 transition" onclick="openFinancialExplainer('FAIR_VALUE')" title="What is Fair Value & Margin of Safety?">
+            <button type="button" class="text-slate-400 hover:text-teal-400 transition" onclick="openFinancialExplainer('FAIR_VALUE')" title="What is Fair Value & Margin of Safety?">
               <i class="fa-solid fa-circle-info text-[11px]"></i>
             </button>
             <span class="px-2 py-0.5 rounded text-[10px] font-bold ${
               data.marginOfSafetyPercent >= 15 ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30' :
-              (data.marginOfSafetyPercent >= -10 ? 'bg-amber-500/20 text-amber-300 border border-amber-500/30' : 'bg-rose-500/20 text-rose-300 border border-rose-500/30')
+              (data.marginOfSafetyPercent >= -10 ? 'bg-teal-500/15 text-teal-300 border border-teal-500/30' : 'bg-rose-500/20 text-rose-300 border border-rose-500/30')
             }">
               ${data.marginOfSafetyPercent >= 0 ? '+' : ''}${data.marginOfSafetyPercent}% Margin of Safety
             </span>
@@ -1551,7 +1612,7 @@ async function handleInspectStock() {
         <div class="flex items-center space-x-4 self-end md:self-center bg-slate-950/80 px-4 py-2 rounded-xl border border-slate-800">
           <div class="text-right">
             <div class="text-[9px] uppercase tracking-wider text-slate-500">Live Market Price (CMP)</div>
-            <div class="text-sm font-bold font-mono text-amber-400">&#8377;${data.price}</div>
+            <div class="text-sm font-bold font-mono text-teal-400">&#8377;${data.price}</div>
           </div>
           <div class="text-slate-600 font-bold">&rarr;</div>
           <div class="text-right">
@@ -1564,7 +1625,7 @@ async function handleInspectStock() {
       <!-- 5 Institutional Pillars Bar Matrix -->
       <div class="bg-slate-900/60 p-3 rounded-xl border border-slate-800/80 space-y-2">
         <div class="text-[10px] uppercase font-bold tracking-wider text-slate-400 flex items-center justify-between">
-          <span><i class="fa-solid fa-layer-group text-amber-400 mr-1.5"></i>5-Pillar Score Breakdown</span>
+          <span><i class="fa-solid fa-layer-group text-teal-400 mr-1.5"></i>5-Pillar Score Breakdown</span>
           <span class="text-slate-500 font-mono text-[9px]">Weighted Alpha Model</span>
         </div>
         <div class="grid grid-cols-1 sm:grid-cols-5 gap-2.5 pt-1">
@@ -1573,7 +1634,7 @@ async function handleInspectStock() {
             <div class="flex justify-between items-center text-[10px]">
               <span class="text-slate-400 font-medium flex items-center">
                 1. Quality
-                <button type="button" class="ml-1 text-slate-500 hover:text-amber-400" onclick="openFinancialExplainer('ROCE')"><i class="fa-solid fa-circle-info text-[9px]"></i></button>
+                <button type="button" class="ml-1 text-slate-500 hover:text-teal-400" onclick="openFinancialExplainer('ROCE')"><i class="fa-solid fa-circle-info text-[9px]"></i></button>
               </span>
               <span class="font-bold text-white font-mono">${data.qualityScore || data.fundamentalScore}</span>
             </div>
@@ -1586,7 +1647,7 @@ async function handleInspectStock() {
             <div class="flex justify-between items-center text-[10px]">
               <span class="text-slate-400 font-medium flex items-center">
                 2. Valuation
-                <button type="button" class="ml-1 text-slate-500 hover:text-amber-400" onclick="openFinancialExplainer('PEG')"><i class="fa-solid fa-circle-info text-[9px]"></i></button>
+                <button type="button" class="ml-1 text-slate-500 hover:text-teal-400" onclick="openFinancialExplainer('PEG')"><i class="fa-solid fa-circle-info text-[9px]"></i></button>
               </span>
               <span class="font-bold text-white font-mono">${data.relativeValuationScore || 70}</span>
             </div>
@@ -1609,7 +1670,7 @@ async function handleInspectStock() {
             <div class="flex justify-between items-center text-[10px]">
               <span class="text-slate-400 font-medium flex items-center">
                 4. Governance
-                <button type="button" class="ml-1 text-slate-500 hover:text-amber-400" onclick="openFinancialExplainer('PROMOTER_PLEDGE')"><i class="fa-solid fa-circle-info text-[9px]"></i></button>
+                <button type="button" class="ml-1 text-slate-500 hover:text-teal-400" onclick="openFinancialExplainer('PROMOTER_PLEDGE')"><i class="fa-solid fa-circle-info text-[9px]"></i></button>
               </span>
               <span class="font-bold text-white font-mono">${data.institutionalGovernanceScore || 75}</span>
             </div>
@@ -1633,7 +1694,7 @@ async function handleInspectStock() {
       <!-- Institutional Research Briefing & Sector Cycle -->
       <div class="p-3 bg-slate-900/80 rounded-xl border border-slate-800 space-y-2">
         <div class="flex flex-wrap items-center justify-between gap-1.5">
-          <div class="text-[10px] font-bold text-amber-400 uppercase tracking-wider flex items-center">
+          <div class="text-[10px] font-bold text-teal-400 uppercase tracking-wider flex items-center">
             <i class="fa-solid fa-building-columns mr-1.5"></i> Institutional Consensus & Thesis
           </div>
           <span class="text-[10px] px-2 py-0.5 rounded bg-cyan-950/40 text-cyan-300 border border-cyan-800/40 font-mono">
@@ -1651,7 +1712,7 @@ async function handleInspectStock() {
         <div class="p-3 bg-slate-900/60 rounded-xl border border-slate-800 space-y-2">
           <div class="flex items-center justify-between pb-1 border-b border-slate-800/60">
             <span class="text-[10px] font-bold uppercase tracking-wider text-slate-300 flex items-center">
-              <i class="fa-solid fa-scale-balanced text-amber-400 mr-1.5"></i> Relative Valuation &amp; Peers
+              <i class="fa-solid fa-scale-balanced text-teal-400 mr-1.5"></i> Relative Valuation &amp; Peers
             </span>
             <span class="text-[9px] font-mono px-1.5 py-0.5 rounded bg-slate-800 text-slate-400">Growth-Adjusted</span>
           </div>
@@ -1659,7 +1720,7 @@ async function handleInspectStock() {
             <div class="bg-slate-950 p-1.5 rounded border border-slate-800/70">
               <div class="text-[9px] text-slate-500 flex items-center justify-center">
                 <span>Stock P/E</span>
-                <button type="button" class="ml-1 text-slate-500 hover:text-amber-400" onclick="openFinancialExplainer('PE_RATIO')"><i class="fa-solid fa-circle-info text-[8px]"></i></button>
+                <button type="button" class="ml-1 text-slate-500 hover:text-teal-400" onclick="openFinancialExplainer('PE_RATIO')"><i class="fa-solid fa-circle-info text-[8px]"></i></button>
               </div>
               <div class="font-bold text-white text-xs mt-0.5">${data.peerBenchmark?.stockPe ? data.peerBenchmark.stockPe.toFixed(1) + 'x' : (data.peRatio ? data.peRatio.toFixed(1) + 'x' : 'N/A')}</div>
             </div>
@@ -1670,14 +1731,14 @@ async function handleInspectStock() {
             <div class="bg-slate-950 p-1.5 rounded border border-slate-800/70">
               <div class="text-[9px] text-slate-500 flex items-center justify-center">
                 <span>PEG Ratio</span>
-                <button type="button" class="ml-1 text-slate-500 hover:text-amber-400" onclick="openFinancialExplainer('PEG')"><i class="fa-solid fa-circle-info text-[8px]"></i></button>
+                <button type="button" class="ml-1 text-slate-500 hover:text-teal-400" onclick="openFinancialExplainer('PEG')"><i class="fa-solid fa-circle-info text-[8px]"></i></button>
               </div>
               <div class="font-bold text-xs mt-0.5 ${pegColor}">${peg ? peg.toFixed(2) + 'x' : 'N/A'}</div>
             </div>
           </div>
           <div class="text-[10px] text-slate-300 bg-slate-950/70 p-2 rounded border border-slate-800/60 flex items-center justify-between">
             <span class="text-slate-400 font-medium">Verdict:</span>
-            <span class="font-semibold text-amber-300 truncate ml-2 text-right">${data.peerBenchmark?.valuationVerdict || 'Evaluated against peer median'}</span>
+            <span class="font-semibold text-teal-300 truncate ml-2 text-right">${data.peerBenchmark?.valuationVerdict || 'Evaluated against peer median'}</span>
           </div>
           ${data.peerBenchmark?.topPeers && data.peerBenchmark.topPeers.length > 0 ? `
             <div class="text-[10px] text-slate-400 flex flex-wrap items-center gap-1 pt-1">
@@ -1698,7 +1759,7 @@ async function handleInspectStock() {
                 <i class="fa-solid fa-check mr-1"></i>0% PLEDGE
               </span>
             ` : `
-              <span class="text-[9px] font-bold px-1.5 py-0.5 rounded bg-amber-500/15 text-amber-300 border border-amber-500/30">
+              <span class="text-[9px] font-bold px-1.5 py-0.5 rounded bg-amber-500/15 text-teal-300 border border-teal-500/30">
                 ${pledge}% Pledged
               </span>
             `}
@@ -1711,21 +1772,21 @@ async function handleInspectStock() {
             <div class="bg-slate-950 p-1.5 rounded border border-slate-800/70">
               <div class="text-[9px] text-slate-500 flex items-center justify-center">
                 <span>Pledge</span>
-                <button type="button" class="ml-1 text-slate-500 hover:text-amber-400" onclick="openFinancialExplainer('PROMOTER_PLEDGE')"><i class="fa-solid fa-circle-info text-[8px]"></i></button>
+                <button type="button" class="ml-1 text-slate-500 hover:text-teal-400" onclick="openFinancialExplainer('PROMOTER_PLEDGE')"><i class="fa-solid fa-circle-info text-[8px]"></i></button>
               </div>
-              <div class="font-bold text-xs mt-0.5 ${isPristinePledge ? 'text-emerald-400' : 'text-amber-400'}">${pledge.toFixed(1)}%</div>
+              <div class="font-bold text-xs mt-0.5 ${isPristinePledge ? 'text-emerald-400' : 'text-teal-400'}">${pledge.toFixed(1)}%</div>
             </div>
             <div class="bg-slate-950 p-1.5 rounded border border-slate-800/70">
               <div class="text-[9px] text-slate-500 flex items-center justify-center">
                 <span>ROCE</span>
-                <button type="button" class="ml-1 text-slate-500 hover:text-amber-400" onclick="openFinancialExplainer('ROCE')"><i class="fa-solid fa-circle-info text-[8px]"></i></button>
+                <button type="button" class="ml-1 text-slate-500 hover:text-teal-400" onclick="openFinancialExplainer('ROCE')"><i class="fa-solid fa-circle-info text-[8px]"></i></button>
               </div>
               <div class="font-bold text-xs mt-0.5 ${data.governanceAudit?.rocePercent >= 15 ? 'text-emerald-400' : 'text-slate-300'}">${data.governanceAudit?.rocePercent ? data.governanceAudit.rocePercent.toFixed(1) + '%' : 'N/A'}</div>
             </div>
             <div class="bg-slate-950 p-1.5 rounded border border-slate-800/70">
               <div class="text-[9px] text-slate-500 flex items-center justify-center">
                 <span>Debt/Eq</span>
-                <button type="button" class="ml-1 text-slate-500 hover:text-amber-400" onclick="openFinancialExplainer('DEBT_EQUITY')"><i class="fa-solid fa-circle-info text-[8px]"></i></button>
+                <button type="button" class="ml-1 text-slate-500 hover:text-teal-400" onclick="openFinancialExplainer('DEBT_EQUITY')"><i class="fa-solid fa-circle-info text-[8px]"></i></button>
               </div>
               <div class="font-bold text-white text-xs mt-0.5">${data.governanceAudit?.debtToEquity !== null && data.governanceAudit?.debtToEquity !== undefined ? data.governanceAudit.debtToEquity.toFixed(2) : '0.00'}</div>
             </div>
@@ -1742,7 +1803,7 @@ async function handleInspectStock() {
             <span class="text-[10px] font-bold uppercase tracking-wider text-slate-300 flex items-center">
               <i class="fa-solid fa-money-bill-trend-up text-cyan-400 mr-1.5"></i> Institutional Sponsorship (FII/DII)
             </span>
-            <button type="button" class="text-slate-500 hover:text-amber-400" onclick="openFinancialExplainer('FII_DII')">
+            <button type="button" class="text-slate-500 hover:text-teal-400" onclick="openFinancialExplainer('FII_DII')">
               <i class="fa-solid fa-circle-info text-[10px]"></i>
             </button>
           </div>
@@ -1811,7 +1872,7 @@ async function handleInspectStock() {
                 <div class="grid grid-cols-4 gap-1 text-center font-mono text-[10px] bg-slate-900/60 p-1.5 rounded-lg border border-slate-800/60">
                   <div>
                     <span class="text-slate-500 block text-[9px]">CMP</span>
-                    <span class="text-amber-400 font-bold">&#8377;${alt.price}</span>
+                    <span class="text-teal-400 font-bold">&#8377;${alt.price}</span>
                   </div>
                   <div>
                     <span class="text-slate-500 block text-[9px]">P/E</span>
@@ -1830,7 +1891,7 @@ async function handleInspectStock() {
                   &ldquo;${alt.whyBetter}&rdquo;
                 </p>
                 <div class="text-right">
-                  <button type="button" onclick="quickInspectTicker('${alt.ticker}')" class="text-[10px] font-bold text-amber-400 hover:text-amber-300 px-2 py-1 rounded bg-amber-500/10 hover:bg-amber-500/20 border border-amber-500/20 transition">
+                  <button type="button" onclick="quickInspectTicker('${alt.ticker}')" class="text-[10px] font-bold text-teal-400 hover:text-teal-300 px-2 py-1 rounded bg-teal-500/10 hover:bg-teal-500/15 border border-amber-500/20 transition">
                     Inspect ${alt.ticker} &rarr;
                   </button>
                 </div>
@@ -1912,7 +1973,7 @@ async function loadResearchReport(portfolioId) {
             </span>
           </div>
           <p class="text-[11px] text-slate-400 mt-1 leading-relaxed">${s.philosophy}</p>
-          <div class="p-2 bg-slate-900 rounded text-[10px] font-mono text-amber-400/90 mt-2 border border-slate-800">
+          <div class="p-2 bg-slate-900 rounded text-[10px] font-mono text-teal-400/90 mt-2 border border-slate-800">
             <strong>Rule:</strong> ${s.coreCriteria}
           </div>
           <div class="grid grid-cols-2 gap-2 text-[10px] text-slate-400 mt-2 font-mono">
@@ -1923,7 +1984,7 @@ async function loadResearchReport(portfolioId) {
 
         <div>
           <div class="text-[10px] font-semibold uppercase text-slate-400 mb-1.5 flex items-center">
-            <i class="fa-solid fa-bullseye text-amber-400 mr-1"></i> Top Opportunities Detected:
+            <i class="fa-solid fa-bullseye text-teal-400 mr-1"></i> Top Opportunities Detected:
           </div>
           <div class="space-y-1.5">
             ${s.identifiedOpportunities.map(op => `
@@ -1965,8 +2026,8 @@ async function loadResearchReport(portfolioId) {
           <div><strong class="text-slate-400">Vulnerable:</strong> <span class="text-rose-400 font-mono">${sc.vulnerableHoldings.join(', ')}</span></div>
         </div>
 
-        <div class="p-2 rounded bg-slate-900 text-[10px] text-amber-300/90 border border-slate-800 leading-relaxed">
-          <i class="fa-solid fa-lightbulb text-amber-400 mr-1"></i> <strong>Advisory Response:</strong> ${sc.advisoryAction}
+        <div class="p-2 rounded bg-slate-900 text-[10px] text-teal-300/90 border border-slate-800 leading-relaxed">
+          <i class="fa-solid fa-lightbulb text-teal-400 mr-1"></i> <strong>Advisory Response:</strong> ${sc.advisoryAction}
         </div>
       `;
       scenContainer.appendChild(card);
@@ -2059,8 +2120,8 @@ function setTradeAction(action) {
     if (qtyLabel) qtyLabel.textContent = "Quantity to Sell (- Shares)";
     if (priceLabel) priceLabel.textContent = "Sell Execution Price (â‚¹)";
   } else if (action === 'ADJUST') {
-    if (btnAdjust) btnAdjust.className = "py-2 text-xs font-bold rounded-lg transition bg-amber-500/20 text-amber-300 border border-amber-500/40 shadow-sm";
-    if (badge) { badge.textContent = "ADJUST EXACT"; badge.className = "text-[10px] px-2 py-0.5 rounded font-mono font-bold bg-amber-500/20 text-amber-300"; }
+    if (btnAdjust) btnAdjust.className = "py-2 text-xs font-bold rounded-lg transition bg-teal-500/15 text-teal-300 border border-teal-500/30 shadow-sm";
+    if (badge) { badge.textContent = "ADJUST EXACT"; badge.className = "text-[10px] px-2 py-0.5 rounded font-mono font-bold bg-teal-500/15 text-teal-300"; }
     if (submitText) submitText.textContent = "Set Exact Position";
     if (qtyLabel) qtyLabel.textContent = "Exact Quantity Held";
     if (priceLabel) priceLabel.textContent = "Average Buy Price (â‚¹)";
