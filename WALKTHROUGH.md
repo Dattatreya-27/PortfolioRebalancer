@@ -36,5 +36,17 @@ Based on research into modern high-end fintech dashboards (**Wealthfront**, **Li
 
 ## 4. Verification & Testing
 - **C# Unit Tests**: `dotnet test` &rarr; **50 passed (100%) in 80ms**.
-- **Git Commit**: `c46eba3` pushed to `origin/main`.
 - **Live Local Web App**: Running on `http://localhost:5200`.
+
+---
+
+## 🔒 5. Password-Protected Excel (.xlsx / .xls) Support
+
+To eliminate the manual hassle of unlocking password-protected Angel One Excel holding exports every time:
+- **Zero-Friction Auto-Unlock**: Integrated `ExcelDataReader` directly into our .NET 10 backend (`AngelOneExcelParser.cs`) with native support for OpenXML Agile Encryption and Standard Encryption.
+- **Dedicated Password Field**: Added an **Excel Password / PAN (Optional)** field with a toggleable eye icon in both:
+  1. The **Angel One Modal** (under the "Upload Angel One Excel" tab).
+  2. The **Manage View** (inside the Angel One Execution Hub card).
+- **Auto-Remembered in Browser**: When you enter your password (e.g., your PAN card number in ALL CAPS), it is saved in your local browser `localStorage`. You only have to enter it once—every future **1-Click Auto-Detect** or manual drag-and-drop will decrypt and import your holdings automatically without prompting!
+- **Informative Error Handling**: If an Excel file is locked and no password or an incorrect password is provided, the app highlights the password input box with a friendly prompt.
+
