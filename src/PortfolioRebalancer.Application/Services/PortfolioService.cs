@@ -180,9 +180,9 @@ public sealed class PortfolioService(
         return MapToSummary(portfolio);
     }
 
-    public async Task<PortfolioSummaryDto?> ImportAngelOneExcelAsync(Guid portfolioId, Stream excelStream)
+    public async Task<PortfolioSummaryDto?> ImportAngelOneExcelAsync(Guid portfolioId, Stream excelStream, string? password = null)
     {
-        var items = AngelOneExcelParser.ParseHoldings(excelStream);
+        var items = AngelOneExcelParser.ParseHoldings(excelStream, password);
         return await SyncAngelOneHoldingsAsync(portfolioId, items);
     }
 

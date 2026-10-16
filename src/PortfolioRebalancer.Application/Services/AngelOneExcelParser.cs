@@ -1,6 +1,8 @@
 using System.IO.Compression;
 using System.Text.RegularExpressions;
 using System.Xml.Linq;
+using ExcelDataReader;
+using ExcelDataReader.Exceptions;
 using PortfolioRebalancer.Application.DTOs;
 
 namespace PortfolioRebalancer.Application.Services;
@@ -122,7 +124,122 @@ public static class AngelOneExcelParser
         ["INE752P01024"] = "FRETAIL",
     };
 
-    public static List<AngelOneHoldingItemRequest> ParseHoldings(Stream excelStream)
+    public static List<AngelOneHoldingItemRequest> ParseHoldings(Stream excelStream, string? password = null)
+    {
+        System.Text.Encoding.RegisterProvider(System.Text.CodePagesEncodingProvider.Instance);
+
+        var ms = new MemoryStream();
+        excelStream.CopyTo(ms);
+
+        // 1. Primary parser: ExcelDataReader (handles password-protected xlsx/xls as well as standard unencrypted)
+        try
+        {
+            ms.Position = 0;
+            var readerConfig = new ExcelReaderConfiguration
+            {
+                Password = string.IsNullOrWhiteSpace(password) ? null : password.Trim()
+            };
+
+            using var reader = ExcelReaderFactory.CreateReader(ms, readerConfig);
+            var holdings = new List<AngelOneHoldingItemRequest>();
+
+            do
+            {
+                List<string>? headers = null;
+                while (reader.Read())
+                {
+                    var rowList = new List<string>();
+                    for (int i = 0; i < reader.FieldCount; i++)
+                    {
+                        var cellVal = reader.GetValue(i);
+                        rowList.Add(cellVal?.ToString()?.Trim() ?? string.Empty);
+                    }
+
+                    // Identify header row
+                    if (rowList.Contains("ISIN") && (rowList.Contains("Total Quantity") || rowList.Contains("Quantity")))
+                    {
+                        headers = rowList;
+                        continue;
+                    }
+
+                    if (headers != null)
+                    {
+                        int isinIdx = headers.IndexOf("ISIN");
+                        int nameIdx = headers.IndexOf("Company Name");
+                        int qtyIdx = headers.FindIndex(h => h.Contains("Total Quantity") || h.Equals("Quantity", StringComparison.OrdinalIgnoreCase));
+                        int avgIdx = headers.FindIndex(h => h.Contains("Avg Trading Price") || h.Contains("Average Price"));
+                        int ltpIdx = headers.IndexOf("LTP");
+
+                        if (isinIdx >= 0 && qtyIdx >= 0 && isinIdx < rowList.Count && qtyIdx < rowList.Count)
+                        {
+                            string isin = rowList[isinIdx].Trim();
+                            string company = (nameIdx >= 0 && nameIdx < rowList.Count) ? rowList[nameIdx].Trim() : "";
+
+                            if (string.IsNullOrWhiteSpace(isin) || isin.Equals("Total", StringComparison.OrdinalIgnoreCase))
+                                continue;
+
+                            if (!decimal.TryParse(rowList[qtyIdx], out var qty) || qty <= 0)
+                                continue;
+
+                            decimal avgPrice = 0;
+                            if (avgIdx >= 0 && avgIdx < rowList.Count)
+                                decimal.TryParse(rowList[avgIdx], out avgPrice);
+
+                            decimal ltp = 0;
+                            if (ltpIdx >= 0 && ltpIdx < rowList.Count)
+                                decimal.TryParse(rowList[ltpIdx], out ltp);
+
+                            string? ticker = null;
+                            if (IsinToTicker.TryGetValue(isin, out var mappedTicker))
+                            {
+                                ticker = mappedTicker;
+                            }
+                            else if (!string.IsNullOrWhiteSpace(company))
+                            {
+                                ticker = company.ToUpperInvariant();
+                            }
+
+                            if (!string.IsNullOrWhiteSpace(ticker))
+                            {
+                                holdings.Add(new AngelOneHoldingItemRequest(
+                                    TradingSymbol: ticker,
+                                    Quantity: qty,
+                                    AveragePrice: avgPrice,
+                                    Ltp: ltp > 0 ? ltp : null
+                                ));
+                            }
+                        }
+                    }
+                }
+
+                if (holdings.Count > 0)
+                {
+                    return holdings;
+                }
+            } while (reader.NextResult());
+
+            if (holdings.Count > 0)
+                return holdings;
+        }
+        catch (InvalidPasswordException)
+        {
+            throw new InvalidOperationException("This Excel file is password-protected. Please enter your password (e.g. your PAN card number in CAPITAL LETTERS) to unlock it.");
+        }
+        catch (Exception ex) when (!string.IsNullOrWhiteSpace(password))
+        {
+            throw new InvalidOperationException($"Unable to decrypt password-protected Excel: {ex.Message}. Check that your password is correct.");
+        }
+        catch (Exception)
+        {
+            // Fall through to ZipArchive fallback parser
+        }
+
+        // 2. Fallback parser: Direct OpenXML ZipArchive reader
+        ms.Position = 0;
+        return ParseUnencryptedZipArchive(ms);
+    }
+
+    private static List<AngelOneHoldingItemRequest> ParseUnencryptedZipArchive(Stream excelStream)
     {
         using var zip = new ZipArchive(excelStream, ZipArchiveMode.Read, leaveOpen: true);
         

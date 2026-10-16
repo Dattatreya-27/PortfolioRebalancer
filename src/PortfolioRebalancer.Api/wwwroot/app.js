@@ -410,19 +410,29 @@ document.addEventListener("DOMContentLoaded", async () => {
   initRouter();
   renderSectorTargetInputs();
   setupEventListeners();
+
+  // Restore saved Excel password if present
+  const savedPwd = localStorage.getItem("angel_excel_password") || "";
+  if (savedPwd) {
+    const p1 = document.getElementById("angelExcelPassword");
+    const p2 = document.getElementById("manageExcelPassword");
+    if (p1) p1.value = savedPwd;
+    if (p2) p2.value = savedPwd;
+  }
+
   await loadPortfolios();
 });
 
 
 function setupEventListeners() {
   document.getElementById("btnTogglePrivacy")?.addEventListener("click", handleTogglePrivacy);
-  document.getElementById("btnCreatePortfolio").addEventListener("click", handleCreatePortfolio);
-  document.getElementById("portfolioSelect").addEventListener("change", (e) => {
+  document.getElementById("btnCreatePortfolio")?.addEventListener("click", handleCreatePortfolio);
+  document.getElementById("portfolioSelect")?.addEventListener("change", (e) => {
     if (e.target.value) selectPortfolio(e.target.value);
   });
-  document.getElementById("btnAddHolding").addEventListener("click", handleAddHolding);
-  document.getElementById("btnRunRebalance").addEventListener("click", handleRunRebalance);
-  document.getElementById("btnInspectStock").addEventListener("click", handleInspectStock);
+  document.getElementById("btnAddHolding")?.addEventListener("click", handleAddHolding);
+  document.getElementById("btnRunRebalance")?.addEventListener("click", handleRunRebalance);
+  document.getElementById("btnInspectStock")?.addEventListener("click", handleInspectStock);
   document.getElementById("inspectorTicker")?.addEventListener("keydown", (e) => {
     if (e.key === "Enter") {
       e.preventDefault();
@@ -2306,6 +2316,33 @@ function handleExcelFileSelected(event) {
   if (summary) summary.classList.remove("hidden");
 }
 
+function saveExcelPassword(pwd) {
+  pwd = (pwd || "").trim();
+  localStorage.setItem("angel_excel_password", pwd);
+  const p1 = document.getElementById("angelExcelPassword");
+  const p2 = document.getElementById("manageExcelPassword");
+  if (p1 && p1.value !== pwd) p1.value = pwd;
+  if (p2 && p2.value !== pwd) p2.value = pwd;
+}
+
+function getExcelPassword() {
+  const p1 = document.getElementById("angelExcelPassword")?.value?.trim();
+  const p2 = document.getElementById("manageExcelPassword")?.value?.trim();
+  return p1 || p2 || localStorage.getItem("angel_excel_password") || "";
+}
+
+function togglePasswordVisibility(inputId, btn) {
+  const inp = document.getElementById(inputId);
+  if (!inp) return;
+  if (inp.type === "password") {
+    inp.type = "text";
+    btn.innerHTML = '<i class="fa-solid fa-eye-slash text-teal-400"></i>';
+  } else {
+    inp.type = "password";
+    btn.innerHTML = '<i class="fa-solid fa-eye"></i>';
+  }
+}
+
 async function handleConfirmUploadExcel() {
   if (!selectedExcelFile) return alert("Please select an Angel One Excel (.xlsx) file first.");
   if (!currentPortfolioId) return alert("Please select a portfolio first.");
@@ -2316,8 +2353,10 @@ async function handleConfirmUploadExcel() {
     btn.innerHTML = `<i class="fa-solid fa-spinner fa-spin mr-1"></i> Parsing Excel...`;
   }
 
+  const pwd = getExcelPassword();
   const formData = new FormData();
   formData.append("file", selectedExcelFile);
+  if (pwd) formData.append("password", pwd);
 
   try {
     const res = await fetch(`/api/portfolios/${currentPortfolioId}/upload-excel`, {
@@ -2334,6 +2373,10 @@ async function handleConfirmUploadExcel() {
     } else {
       const err = await res.json();
       alert(`Excel import failed: ${err.error || "Please verify the Excel format."}`);
+      if (err.error && err.error.toLowerCase().includes("password")) {
+        const inp = document.getElementById("angelExcelPassword") || document.getElementById("manageExcelPassword");
+        inp?.focus();
+      }
     }
   } catch (err) {
     console.error("Excel upload error:", err);
@@ -2355,11 +2398,13 @@ async function handleAutoImportDownloadsExcel() {
     btn.innerHTML = `<i class="fa-solid fa-spinner fa-spin mr-1"></i> Auto-detecting...`;
   }
 
+  const pwd = getExcelPassword();
+
   try {
     const res = await fetch(`/api/portfolios/${currentPortfolioId}/import-angel-excel`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ filePath: null })
+      body: JSON.stringify({ filePath: null, password: pwd || null })
     });
 
     if (res.ok) {
@@ -2372,6 +2417,10 @@ async function handleAutoImportDownloadsExcel() {
     } else {
       const err = await res.json();
       alert(`Auto-import failed: ${err.error || "Could not find recent download in Downloads folder."}`);
+      if (err.error && err.error.toLowerCase().includes("password")) {
+        const inp = document.getElementById("angelExcelPassword") || document.getElementById("manageExcelPassword");
+        inp?.focus();
+      }
     }
   } catch (err) {
     console.error("Auto import error:", err);
@@ -2573,3 +2622,34 @@ async function handleExcelUpload(event) {
   await handleExcelFileSelected(event);
   await handleConfirmUploadExcel();
 }
+
+// Explicit window bindings for HTML onclick event handlers
+window.saveExcelPassword = saveExcelPassword;
+window.getExcelPassword = getExcelPassword;
+window.togglePasswordVisibility = togglePasswordVisibility;
+window.handleExcelFileSelected = handleExcelFileSelected;
+window.handleConfirmUploadExcel = handleConfirmUploadExcel;
+window.handleAutoImportDownloadsExcel = handleAutoImportDownloadsExcel;
+window.detectAndImportAngelExcel = detectAndImportAngelExcel;
+window.handleExcelUpload = handleExcelUpload;
+window.openFinancialExplainer = openFinancialExplainer;
+window.closeFinancialExplainer = closeFinancialExplainer;
+window.openAngelOneModal = openAngelOneModal;
+window.closeAngelOneModal = closeAngelOneModal;
+window.openTradeModal = openTradeModal;
+window.closeTradeModal = closeTradeModal;
+window.submitTradeModal = submitTradeModal;
+window.setTradeAction = setTradeAction;
+window.switchAngelTab = switchAngelTab;
+window.handleFetchAngelSmartApi = handleFetchAngelSmartApi;
+window.handleParseAngelJson = handleParseAngelJson;
+window.handleSyncLiveQuotes = handleSyncLiveQuotes;
+window.navigateTo = navigateTo;
+window.applySectorPreset = applySectorPreset;
+window.clearDiagnosticFilter = clearDiagnosticFilter;
+window.quickInspectTicker = quickInspectTicker;
+window.inspectFromRow = inspectFromRow;
+window.handleRemoveHolding = handleRemoveHolding;
+window.handleTogglePrivacy = handleTogglePrivacy;
+window.sortHoldings = sortHoldings;
+

@@ -170,7 +170,7 @@ public class PortfoliosController(
     }
 
     [HttpPost("{id:guid}/upload-excel")]
-    public async Task<ActionResult<PortfolioSummaryDto>> UploadExcel(Guid id, IFormFile file)
+    public async Task<ActionResult<PortfolioSummaryDto>> UploadExcel(Guid id, IFormFile file, [FromForm] string? password = null)
     {
         if (file is null || file.Length == 0)
             return BadRequest(new { error = "Please select a valid Angel One Excel (.xlsx) file to upload." });
@@ -178,7 +178,7 @@ public class PortfoliosController(
         try
         {
             using var stream = file.OpenReadStream();
-            var updated = await portfolioService.ImportAngelOneExcelAsync(id, stream);
+            var updated = await portfolioService.ImportAngelOneExcelAsync(id, stream, password);
             if (updated is null)
                 return NotFound(new { error = $"Portfolio with ID '{id}' not found." });
 
@@ -186,7 +186,7 @@ public class PortfoliosController(
         }
         catch (Exception ex)
         {
-            return BadRequest(new { error = $"Failed to parse Angel One Excel: {ex.Message}" });
+            return BadRequest(new { error = ex.Message });
         }
     }
 
@@ -222,7 +222,7 @@ public class PortfoliosController(
         try
         {
             using var stream = System.IO.File.OpenRead(targetPath);
-            var updated = await portfolioService.ImportAngelOneExcelAsync(id, stream);
+            var updated = await portfolioService.ImportAngelOneExcelAsync(id, stream, request?.Password);
             if (updated is null)
                 return NotFound(new { error = $"Portfolio with ID '{id}' not found." });
 
@@ -235,7 +235,7 @@ public class PortfoliosController(
         }
         catch (Exception ex)
         {
-            return BadRequest(new { error = $"Failed to import Angel One Excel: {ex.Message}" });
+            return BadRequest(new { error = ex.Message });
         }
     }
 

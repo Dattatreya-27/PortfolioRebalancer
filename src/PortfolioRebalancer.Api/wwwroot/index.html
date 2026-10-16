@@ -4,9 +4,6 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Indian Markets Portfolio Rebalancer & Advisory Engine</title>
-  <script src="/tailwind.js"></script>
-  <link rel="preconnect" href="https://cdnjs.cloudflare.com">
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
   <script>
     tailwind.config = {
       darkMode: 'class',
@@ -22,8 +19,11 @@
           }
         }
       }
-    }
+    };
   </script>
+  <script src="/tailwind.js"></script>
+  <link rel="preconnect" href="https://cdnjs.cloudflare.com">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
   <style>
     /* Privacy / Stealth Mode: Blurs sensitive financial amounts and position sizes */
     body.privacy-mode .privacy-mask {
@@ -738,6 +738,14 @@
               </div>
 
               <div class="mt-4 space-y-2.5">
+                <!-- Optional Password for Protected Excel -->
+                <div class="relative">
+                  <input type="password" id="manageExcelPassword" placeholder="Excel Password / PAN in CAPS (Optional)" class="w-full bg-slate-900 border border-slate-700/80 rounded-xl px-3 py-2 pr-9 text-xs text-teal-300 font-mono focus:outline-none focus:ring-1 focus:ring-teal-500 uppercase tracking-wider" oninput="saveExcelPassword(this.value)" />
+                  <button type="button" onclick="togglePasswordVisibility('manageExcelPassword', this)" class="absolute right-3 top-1/2 -translate-y-1/2 text-slate-500 hover:text-slate-300 text-xs px-1">
+                    <i class="fa-solid fa-eye"></i>
+                  </button>
+                </div>
+
                 <button type="button" onclick="detectAndImportAngelExcel()" class="w-full bg-gradient-to-r from-cyan-600 to-teal-600 hover:from-cyan-500 hover:to-teal-500 text-white font-bold py-2.5 px-4 rounded-xl text-xs transition flex items-center justify-center space-x-2 shadow-lg shadow-cyan-900/20">
                   <i class="fa-solid fa-bolt text-teal-300"></i>
                   <span>1-Click Auto-Detect Angel One Excel from Downloads</span>
@@ -1289,6 +1297,27 @@
             <strong>Angel One Excel Export Supported:</strong> Drag & drop your downloaded <code>Your Holding Details - D200136.xlsx</code> or pick the file below. All positions, quantities, average buy prices, and CMP will be parsed and synchronized instantly!
           </div>
 
+          <!-- Password Input for Protected Excels -->
+          <div class="p-3 bg-slate-950/80 border border-slate-800 rounded-xl space-y-2">
+            <div class="flex items-center justify-between">
+              <label for="angelExcelPassword" class="text-xs font-semibold text-slate-300 flex items-center space-x-1.5">
+                <i class="fa-solid fa-key text-teal-400"></i>
+                <span>Excel Password / PAN (Optional)</span>
+              </label>
+              <span class="text-[10px] text-slate-400 font-mono">Usually PAN in CAPS</span>
+            </div>
+            <div class="relative">
+              <input type="password" id="angelExcelPassword" placeholder="Enter password (e.g. your PAN card ABCDE1234F)" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 pr-10 text-xs text-teal-300 font-mono focus:outline-none focus:ring-1 focus:ring-teal-500 uppercase tracking-wider" oninput="saveExcelPassword(this.value)" />
+              <button type="button" onclick="togglePasswordVisibility('angelExcelPassword', this)" class="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-500 hover:text-slate-300 text-xs px-1">
+                <i class="fa-solid fa-eye"></i>
+              </button>
+            </div>
+            <p class="text-[10px] text-slate-400 flex items-center">
+              <i class="fa-solid fa-shield-halved text-teal-400 mr-1.5"></i>
+              <span>Saved locally in browser so you only have to enter it once.</span>
+            </p>
+          </div>
+
           <!-- Quick Auto-Detect Button for Downloads Folder -->
           <div class="p-3 bg-slate-950/80 border border-slate-800 rounded-xl flex flex-col sm:flex-row sm:items-center justify-between gap-3">
             <div>
@@ -1415,6 +1444,7 @@
         </div>
       </div>
     </div>
-    </main>
-  </body>
+  </main>
+  <script src="/app.js"></script>
+</body>
 </html>

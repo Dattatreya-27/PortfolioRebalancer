@@ -35,4 +35,4 @@ public sealed record AngelOneHoldingItemRequest(
     decimal? Ltp = null
 );
 
-public sealed record ImportAngelOneFileRequest(string? FilePath = null);
+public sealed record ImportAngelOneFileRequest(string? FilePath = null, string? Password = null);
