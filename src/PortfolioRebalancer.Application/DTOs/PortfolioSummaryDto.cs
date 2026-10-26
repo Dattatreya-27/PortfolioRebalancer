@@ -14,7 +14,9 @@ public sealed record PortfolioSummaryDto(
     string Currency,
     IReadOnlyList<HoldingDto> Holdings,
     IReadOnlyList<SectorWeightDto> SectorWeights,
-    DateTime? LastSyncedAt = null);
+    DateTime? LastSyncedAt = null,
+    decimal TotalDayPnL = 0m,
+    decimal TotalDayPnLPercent = 0m);
 
 public sealed record HoldingDto(
     string Ticker,
@@ -28,7 +30,12 @@ public sealed record HoldingDto(
     decimal UnrealizedPnL,
     decimal UnrealizedPnLPercent,
     decimal WeightPercent,
-    string PriceSource = "NSE_LIVE");
+    string PriceSource = "NSE_LIVE",
+    decimal DayChange = 0m,
+    decimal DayChangePercent = 0m,
+    decimal DayPnL = 0m,
+    decimal? MarketCap = null,
+    string MarketCapCategory = "Large Cap");
 
 public sealed record SectorWeightDto(
     string Sector,

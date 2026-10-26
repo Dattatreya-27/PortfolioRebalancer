@@ -125,6 +125,8 @@ public sealed class MockStockDataProvider : IStockDataProvider
         ["GODREJCP"] = new("Godrej Consumer", Sector.ConsumerStaples, 926.47m, 45.2m, 2.1m, 280000m),
         ["BBTC"] = new("Bombay Burmah", Sector.ConsumerStaples, 1564.03m, 45.2m, 2.1m, 280000m),
         ["HGINFRA"] = new("H.G. Infra Engg.", Sector.Industrials, 512.65m, 32.0m, 0.8m, 210000m),
+        ["NTPC"] = new("NTPC Limited", Sector.Utilities, 412.35m, 14.8m, 2.8m, 399000m),
+        ["DIXON"] = new("Dixon Technologies", Sector.Industrials, 14250.00m, 68.5m, 0.4m, 85000m),
 
     };
 
@@ -167,11 +169,18 @@ public sealed class MockStockDataProvider : IStockDataProvider
             Name = seed.Name,
             Sector = seed.Sector
         };
+
+        // Deterministic daily move between -2.8% and +3.2% based on ticker hash
+        int hash = Math.Abs(ticker.GetHashCode());
+        decimal pctChange = ((hash % 600) - 280) / 100m; // -2.80% to +3.19%
+        decimal prevClose = Math.Round(seed.PriceInr / (1m + (pctChange / 100m)), 2);
+
         stock.UpdateMarketData(
             Money.INR(seed.PriceInr),
             peRatio: seed.PE,
             dividendYield: seed.DivYield,
-            marketCap: seed.MarketCapCrores * 10_000_000m);
+            marketCap: seed.MarketCapCrores * 10_000_000m,
+            previousClose: Money.INR(prevClose));
         return stock;
     }
 }

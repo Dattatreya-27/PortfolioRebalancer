@@ -71,10 +71,10 @@ public sealed class SectorTargetStrategy : IRebalancingStrategy
 
                 var targetQuantity = holding.Stock.CurrentPrice.Amount > 0
                     ? Math.Round(
-                        holdingTargetValue.Amount / holding.Stock.CurrentPrice.Amount, 4)
+                        holdingTargetValue.Amount / holding.Stock.CurrentPrice.Amount, 0, MidpointRounding.AwayFromZero)
                     : 0m;
 
-                var deltaQuantity = Math.Round(targetQuantity - holding.Quantity, 4);
+                var deltaQuantity = Math.Round(targetQuantity - holding.Quantity, 0, MidpointRounding.AwayFromZero);
 
                 trades.Add(new TradeRecommendation(
                     Ticker: holding.Stock.Ticker,

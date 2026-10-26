@@ -161,6 +161,12 @@ public sealed class YahooFinanceLiveStockDataProvider : IStockDataProvider, IDis
                                             decimal? divYield = item.TryGetProperty("dividendYield", out var dyElem) ? dyElem.GetDecimal() : null;
                                             decimal? marketCap = item.TryGetProperty("marketCap", out var mcElem) ? mcElem.GetDecimal() : null;
 
+                                            decimal? prevClose = item.TryGetProperty("regularMarketPreviousClose", out var prevElem) ? prevElem.GetDecimal() : null;
+                                            if (!prevClose.HasValue && item.TryGetProperty("regularMarketChange", out var chElem))
+                                            {
+                                                prevClose = livePrice - chElem.GetDecimal();
+                                            }
+
                                             var fallback = await _fallbackProvider.GetStockAsync(originalTicker);
                                             var sector = fallback?.Sector ?? Sector.Industrials;
 
@@ -174,7 +180,8 @@ public sealed class YahooFinanceLiveStockDataProvider : IStockDataProvider, IDis
                                                 Money.INR(livePrice),
                                                 pe ?? fallback?.PERatio,
                                                 divYield ?? fallback?.DividendYield,
-                                                marketCap ?? fallback?.MarketCap);
+                                                marketCap ?? fallback?.MarketCap,
+                                                prevClose.HasValue && prevClose.Value > 0 ? Money.INR(prevClose.Value) : null);
 
                                             _cache[originalTicker] = (stock, DateTime.UtcNow);
                                             results.Add(stock);

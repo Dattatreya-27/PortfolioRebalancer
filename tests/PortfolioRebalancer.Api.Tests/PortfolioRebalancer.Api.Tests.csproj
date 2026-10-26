@@ -1,4 +1,4 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <TargetFramework>net10.0</TargetFramework>
@@ -21,6 +21,9 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\src\PortfolioRebalancer.Api\PortfolioRebalancer.Api.csproj" />
+    <ProjectReference Include="..\..\src\PortfolioRebalancer.Application\PortfolioRebalancer.Application.csproj" />
+    <ProjectReference Include="..\..\src\PortfolioRebalancer.Domain\PortfolioRebalancer.Domain.csproj" />
+    <ProjectReference Include="..\..\src\PortfolioRebalancer.Infrastructure\PortfolioRebalancer.Infrastructure.csproj" />
   </ItemGroup>
 
 </Project>

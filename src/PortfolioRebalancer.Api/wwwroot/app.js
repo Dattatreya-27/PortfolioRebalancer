@@ -251,11 +251,135 @@ function handleTogglePrivacy() {
   applyPrivacyModeUI();
 }
 
+// ========================================================
+// 9-5 WORK HOURS FOCUS SHIELD & CAREER-WEALTH HARMONY
+// Behavioral Psychology System for Corporate Professionals
+// ========================================================
+let isWorkShieldActive = false;
+
+function isIndianMarketHours() {
+  const now = new Date();
+  // Convert UTC to IST (+5:30)
+  const utc = now.getTime() + (now.getTimezoneOffset() * 60000);
+  const istDate = new Date(utc + (3600000 * 5.5));
+  const day = istDate.getDay(); // 0 is Sunday, 6 is Saturday
+  if (day === 0 || day === 6) return false;
+
+  const hour = istDate.getHours();
+  const minute = istDate.getMinutes();
+  const timeInMins = hour * 60 + minute;
+  // 9:15 AM = 555 mins, 3:30 PM = 930 mins
+  return timeInMins >= 555 && timeInMins <= 930;
+}
+
+function updateWorkShieldUI() {
+  const banner = document.getElementById("workHoursShieldBanner");
+  const icon = document.getElementById("workShieldIcon");
+  const btn = document.getElementById("btnToggleWorkShield");
+  const text = document.getElementById("workShieldBtnText");
+  const dot = document.getElementById("workShieldStatusDot");
+
+  const inMarketHours = isIndianMarketHours();
+
+  if (icon && btn && text && dot) {
+    if (isWorkShieldActive) {
+      icon.className = "fa-solid fa-briefcase text-cyan-300";
+      btn.className = "text-xs bg-cyan-500/15 hover:bg-cyan-500/25 text-cyan-200 border border-cyan-500/40 px-3 py-1.5 rounded-lg flex items-center space-x-1.5 transition font-semibold shadow-sm";
+      text.textContent = "Work Shield: ON";
+      dot.className = "w-2 h-2 rounded-full bg-emerald-400 animate-pulse ml-1";
+      btn.title = "9-5 Work Focus Shield is ACTIVE (Intraday volatility filtered). Click to toggle.";
+    } else {
+      icon.className = "fa-solid fa-briefcase text-slate-400";
+      btn.className = "text-xs bg-[#0a1222] hover:bg-[#0f1b32] themed-card text-slate-300 hover:text-white border border-[#16233d] px-3 py-1.5 rounded-lg flex items-center space-x-1.5 transition font-medium shadow-sm";
+      text.textContent = "Work Shield";
+      dot.className = "w-2 h-2 rounded-full bg-slate-500 ml-1";
+      btn.title = "Click to activate 9-5 Work Focus Shield (Filters market anxiety during corporate hours).";
+    }
+  }
+
+  if (banner) {
+    if (isWorkShieldActive) {
+      banner.classList.remove("hidden");
+      const statusBadge = document.getElementById("shieldStatusBadge");
+      const heading = document.getElementById("shieldHeading");
+      const subheading = document.getElementById("shieldSubheading");
+      const actionPill = document.getElementById("shieldActionPill");
+      const actionDetail = document.getElementById("shieldActionDetail");
+      const nextCheckin = document.getElementById("shieldNextCheckin");
+
+      if (inMarketHours) {
+        if (heading) heading.textContent = "9-5 Work Hours Focus Shield Active";
+        if (statusBadge) {
+          statusBadge.textContent = "Market Hours (09:15 - 15:30 IST)";
+          statusBadge.className = "px-2.5 py-0.5 rounded-full text-xs font-mono font-bold bg-cyan-500/20 text-cyan-300 border border-cyan-500/30";
+        }
+        if (subheading) subheading.textContent = "Emotional anxiety filter active. Intraday price flashing suppressed to safeguard your deep work and corporate career focus.";
+        if (actionPill) actionPill.textContent = "0 ACTIONS NEEDED";
+        if (actionDetail) actionDetail.textContent = "No trades or rebalancing required today. Your portfolio is built with high-ROCE compounding businesses that generate cashflow regardless of intraday screen blips.";
+        if (nextCheckin) nextCheckin.textContent = "Post 3:30 PM IST (Evening Calm)";
+      } else {
+        if (heading) heading.textContent = "🌙 Evening Calm Asynchronous Review";
+        if (statusBadge) {
+          statusBadge.textContent = "Market Closed (Trading Settled)";
+          statusBadge.className = "px-2.5 py-0.5 rounded-full text-xs font-mono font-bold bg-teal-500/20 text-teal-300 border border-teal-500/30";
+        }
+        if (subheading) subheading.textContent = "Market is closed for the day. All positions settled. No volatility can reach your capital until tomorrow 09:15 AM.";
+        if (actionPill) actionPill.textContent = "REST & RELAX";
+        if (actionDetail) actionDetail.textContent = "Your equities are resting quietly. Do not over-analyze post-market noise. Spend quality evening time with family or career pursuits.";
+        if (nextCheckin) nextCheckin.textContent = "Tomorrow 09:15 AM IST";
+      }
+
+      updateSalaryCushion();
+    } else {
+      banner.classList.add("hidden");
+    }
+  }
+}
+
+function updateSalaryCushion() {
+  if (!currentPortfolioData) return;
+  const totalVal = currentPortfolioData.totalValue || 0;
+  const dayPnl = currentPortfolioData.totalDayPnL || 0;
+
+  // Monthly savings baseline: ~4% of portfolio or ₹40,000 min
+  const monthlySavings = Math.max(40000, Math.round(totalVal * 0.04));
+  const multEl = document.getElementById("salaryCushionMultiplier");
+  const textEl = document.getElementById("salaryCushionText");
+
+  if (dayPnl < 0) {
+    const absLoss = Math.abs(dayPnl);
+    const multiplier = (monthlySavings / Math.max(1, absLoss)).toFixed(1);
+    if (multEl) multEl.textContent = `${multiplier}x Coverage`;
+    if (textEl) {
+      textEl.textContent = `Your ongoing corporate salary savings (${formatINR(monthlySavings)}/mo) cushion today's market dip by ${multiplier}x. Intraday pullbacks simply allow your salary to acquire shares at a structural discount.`;
+    }
+  } else {
+    if (multEl) multEl.textContent = "High Runway";
+    if (textEl) {
+      textEl.textContent = `Your corporate career generates continuous fresh cash flow. Combined with today's positive compounding (+${formatINR(dayPnl)}), your wealth runway is expanding seamlessly.`;
+    }
+  }
+}
+
+function toggleWorkShield(forceState = null) {
+  isWorkShieldActive = forceState !== null ? forceState : !isWorkShieldActive;
+  localStorage.setItem("work_shield_active", isWorkShieldActive ? "true" : "false");
+  updateWorkShieldUI();
+  renderHoldingsTable();
+  if (isWorkShieldActive) {
+    showToast("💼 9-5 Work Hours Focus Shield ACTIVATED. Intraday anxiety filtered.");
+  } else {
+    showToast("Work Shield deactivated. Normal screen active.");
+  }
+}
+
 function renderPortfolioSelectOptions() {
   const select = document.getElementById("portfolioSelect");
   if (!select) return;
   select.innerHTML = "";
-  loadedPortfoliosList.forEach(p => {
+  const filtered = loadedPortfoliosList.filter(p => !p.name || !p.name.includes("Test Portfolio"));
+  const toRender = filtered.length > 0 ? filtered : loadedPortfoliosList;
+  toRender.forEach(p => {
     const opt = document.createElement("option");
     opt.value = p.id;
     const valText = isPrivacyMode ? "\u20B9••••••" : formatINR(p.totalValue);
@@ -304,9 +428,23 @@ function getAdvisoryTarget(h) {
 
 // Search, Filter & Sorting State (NO PAGINATION: Continuous Scrollable View)
 let currentDiagnostics = null;
+let currentAuditMap = new Map();
+
+function updateAuditMap(diag) {
+  currentAuditMap.clear();
+  if (diag && diag.thesisAudit) {
+    diag.thesisAudit.forEach(a => {
+      if (a && a.ticker) currentAuditMap.set(a.ticker, a);
+    });
+  }
+}
+
 let activeDiagnosticFilter = null; // { type: string, label: string, tickers: string[] }
 let searchQuery = "";
 let sectorFilter = "";
+let marketCapFilter = "";
+let cachedSectorSlices = [];
+let cachedMcapSlices = [];
 let pnlFilter = "ALL";
 let sortColumn = "marketValue";
 let sortAscending = false;
@@ -328,10 +466,16 @@ function formatMarketCapCrores(marketCap) {
   return `\u20B9${crores.toLocaleString('en-IN', { maximumFractionDigits: 0 })} Cr`;
 }
 
+// Global HTML Escaper
+function escapeHtml(str) {
+  if (!str) return "";
+  return String(str).replace(/[&<>"']/g, m => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[m]);
+}
+
 // ==========================================
 // SPA Client-Side View Router (Hash-Based)
 // ==========================================
-const APP_VIEWS = ['portfolio', 'manage', 'discover'];
+const APP_VIEWS = ['portfolio', 'manage', 'discover', 'theories'];
 let activeView = 'portfolio';
 
 function navigateTo(viewName, updateHash = true) {
@@ -355,16 +499,17 @@ function navigateTo(viewName, updateHash = true) {
   const tabs = [
     { id: 'navTabPortfolio', view: 'portfolio' },
     { id: 'navTabManage', view: 'manage' },
-    { id: 'navTabDiscover', view: 'discover' }
+    { id: 'navTabDiscover', view: 'discover' },
+    { id: 'navTabTheories', view: 'theories' }
   ];
 
   tabs.forEach(t => {
     const el = document.getElementById(t.id);
     if (!el) return;
     if (t.view === viewName) {
-      el.className = 'nav-tab px-3.5 py-1.5 rounded-lg text-xs font-semibold flex items-center space-x-2 transition bg-teal-500/15 text-teal-300 border border-teal-500/30 shadow-sm';
+      el.className = 'nav-tab px-3.5 py-1.5 rounded-lg text-xs font-semibold flex items-center space-x-2 transition bg-purple-500/15 text-purple-300 border border-purple-500/30 shadow-sm';
     } else {
-      el.className = 'nav-tab px-3.5 py-1.5 rounded-lg text-xs font-semibold flex items-center space-x-2 transition text-slate-400 hover:text-slate-200 hover:bg-slate-800/40 border border-transparent';
+      el.className = 'nav-tab px-3.5 py-1.5 rounded-lg text-xs font-semibold flex items-center space-x-2 transition text-slate-400 hover:text-slate-200 hover:bg-[#0f1b32]/60 border border-transparent';
     }
   });
 
@@ -382,6 +527,9 @@ function navigateTo(viewName, updateHash = true) {
       loadResearchReport(currentPortfolioId);
     }
     loadSwingRadarFeed();
+  } else if (viewName === 'theories') {
+    loadTheoryPortfolios();
+    loadPortfolioTheoryAudit();
   }
 
   window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -407,7 +555,11 @@ function initRouter() {
 
 // Initialize on DOM ready
 document.addEventListener("DOMContentLoaded", async () => {
+  setupStockSearchAutocomplete();
+
+  initThemeFromStorage();
   applyPrivacyModeUI();
+  updateWorkShieldUI();
   initRouter();
   renderSectorTargetInputs();
   setupEventListeners();
@@ -427,6 +579,7 @@ document.addEventListener("DOMContentLoaded", async () => {
 
 function setupEventListeners() {
   document.getElementById("btnTogglePrivacy")?.addEventListener("click", handleTogglePrivacy);
+  document.getElementById("btnToggleWorkShield")?.addEventListener("click", () => toggleWorkShield());
   document.getElementById("btnCreatePortfolio")?.addEventListener("click", handleCreatePortfolio);
   document.getElementById("portfolioSelect")?.addEventListener("change", (e) => {
     if (e.target.value) selectPortfolio(e.target.value);
@@ -466,10 +619,14 @@ function setupEventListeners() {
     document.getElementById("rebalanceResultSection").classList.add("hidden");
   });
 
-  // Search & Filter Controls
+  // Search & Filter Controls (Debounced 120ms to prevent DOM layout thrashing)
+  let searchDebounceTimer = null;
   document.getElementById("holdingsSearch")?.addEventListener("input", (e) => {
-    searchQuery = e.target.value.trim().toLowerCase();
-    renderHoldingsTable();
+    clearTimeout(searchDebounceTimer);
+    searchDebounceTimer = setTimeout(() => {
+      searchQuery = e.target.value.trim().toLowerCase();
+      renderHoldingsTable();
+    }, 120);
   });
 
   document.getElementById("holdingsSectorFilter")?.addEventListener("change", (e) => {
@@ -597,9 +754,21 @@ async function loadPortfolios() {
       return loadPortfolios();
     }
 
-    const targetId = currentPortfolioId && portfolios.some(p => p.id === currentPortfolioId)
-      ? currentPortfolioId
-      : portfolios[0].id;
+    const savedId = localStorage.getItem("active_portfolio_id");
+    let target = null;
+
+    if (savedId && portfolios.some(p => p.id === savedId)) {
+      target = portfolios.find(p => p.id === savedId);
+    } else if (currentPortfolioId && portfolios.some(p => p.id === currentPortfolioId)) {
+      target = portfolios.find(p => p.id === currentPortfolioId);
+    } else {
+      // Prioritize "Dattatreya Portfolio" or any non-empty portfolio over an empty one
+      target = portfolios.find(p => p.name === "Dattatreya Portfolio")
+        || portfolios.find(p => (p.holdings && p.holdings.length > 0) || (p.totalValue && p.totalValue > 0))
+        || portfolios[0];
+    }
+
+    const targetId = target ? target.id : portfolios[0].id;
     await selectPortfolio(targetId);
   } catch (err) {
     console.error("Failed to load portfolios:", err);
@@ -607,9 +776,16 @@ async function loadPortfolios() {
 }
 
 async function selectPortfolio(id) {
+  if (!id) return;
   currentPortfolioId = id;
+  localStorage.setItem("active_portfolio_id", id);
   const sel = document.getElementById("portfolioSelect");
   if (sel) sel.value = id;
+
+  const tbody = document.getElementById("holdingsTableBody");
+  if (tbody && (!currentPortfolioData || currentPortfolioData.id !== id)) {
+    tbody.innerHTML = `<tr><td colspan="12" class="py-12 text-center text-slate-400 font-medium"><i class="fa-solid fa-circle-notch fa-spin text-teal-400 mr-2"></i>Loading portfolio holdings and real-time market data...</td></tr>`;
+  }
 
   try {
     // High-Speed Concurrent Fetch: Portfolio details + Diagnostics loaded simultaneously
@@ -618,18 +794,30 @@ async function selectPortfolio(id) {
       fetch(`/api/portfolios/${id}/diagnostics`).catch(() => null)
     ]);
 
-    if (!pRes.ok) return;
+    if (!pRes.ok) {
+      console.error(`Failed to fetch portfolio ${id}: ${pRes.status}`);
+      if (tbody) tbody.innerHTML = `<tr><td colspan="12" class="py-12 text-center text-rose-400 font-medium">Failed to load portfolio. Please try selecting another portfolio or refreshing the page.</td></tr>`;
+      return;
+    }
+
     currentPortfolioData = await pRes.json();
     normalizePortfolioData(currentPortfolioData);
-    renderPortfolioDetails(currentPortfolioData);
 
     if (dRes && dRes.ok) {
       const diag = await dRes.json();
       currentDiagnostics = diag;
+      updateAuditMap(diag);
       renderDiagnosticsUI(diag);
+    } else {
+      currentDiagnostics = null;
+      updateAuditMap(null);
     }
+
+    // Unified single-pass render: allocations and holdings render once with thesis audit ready
+    renderPortfolioDetails(currentPortfolioData);
   } catch (err) {
     console.error("Error fetching portfolio:", err);
+    if (tbody) tbody.innerHTML = `<tr><td colspan="12" class="py-12 text-center text-rose-400 font-medium">An error occurred while loading portfolio data.</td></tr>`;
   }
 }
 
@@ -690,6 +878,41 @@ function renderPortfolioDetails(data) {
   if (navCount && data.holdings) {
     navCount.textContent = data.holdings.length;
   }
+
+  // Day's P&L Display
+  const dayPnlElem = document.getElementById("statDayPnL");
+  const dayPnlBadge = document.getElementById("statDayPnLBadge");
+  const dayVal = data.totalDayPnL || 0;
+  const dayPct = data.totalDayPnLPercent || 0;
+  const isDayProfit = dayVal >= 0;
+
+  // Indian Theory Alignment summary banner
+  const theoryAlignEl = document.getElementById("theoryAlignmentSummaryText");
+  if (theoryAlignEl && data.holdings) {
+    const totalCount = data.holdings.length;
+    const highQuality = data.holdings.filter(h => (h.qualityScore || 0) >= 70 || (h.unrealizedPnLPercent || 0) >= 8).length;
+    const highPct = totalCount > 0 ? Math.round((highQuality / totalCount) * 100) : 0;
+    theoryAlignEl.innerHTML = `Your portfolio holds <strong>${highQuality} of ${totalCount} stocks (${highPct}%)</strong> aligned with <span class="text-emerald-300 font-semibold">Coffee Can</span> &amp; <span class="text-cyan-300 font-semibold">Motilal QGLP</span> Indian compounding criteria. Click to simulate swaps or explore the 3 theories.`;
+  }
+
+  if (dayPnlElem) {
+    dayPnlElem.textContent = `${isDayProfit ? '+' : ''}${formatINR(dayVal)} (${isDayProfit ? '+' : ''}${dayPct.toFixed(2)}%)`;
+    dayPnlElem.className = `text-2xl font-bold mt-1 privacy-mask ${isDayProfit ? 'text-emerald-400' : 'text-rose-400'}`;
+  }
+  if (dayPnlBadge) {
+    if (isPrivacyMode) {
+      dayPnlBadge.textContent = "••••••";
+      dayPnlBadge.className = "text-[10px] font-bold px-1.5 py-0.5 rounded privacy-mask bg-slate-800 text-slate-400 border border-slate-700/60";
+    } else if (isWorkShieldActive) {
+      dayPnlBadge.textContent = isDayProfit ? "+COMPOUNDING" : "-NOISE";
+      dayPnlBadge.className = `text-[10px] font-bold px-1.5 py-0.5 rounded privacy-mask ${isDayProfit ? 'bg-emerald-500/15 text-emerald-300 border border-emerald-500/30' : 'bg-cyan-500/15 text-cyan-300 border border-cyan-500/30'}`;
+    } else {
+      dayPnlBadge.textContent = isDayProfit ? "+TODAY" : "-TODAY";
+      dayPnlBadge.className = `text-[10px] font-bold px-1.5 py-0.5 rounded privacy-mask ${isDayProfit ? 'bg-emerald-500/20 text-emerald-400' : 'bg-rose-500/20 text-rose-400'}`;
+    }
+  }
+
+  updateSalaryCushion();
 
   // Unrealized P&L Display
   const pnlElem = document.getElementById("statTotalPnL");
@@ -768,7 +991,308 @@ function renderPortfolioDetails(data) {
     if (staleBanner) staleBanner.classList.remove("hidden");
   }
 
+  renderPortfolioAllocationCharts(data, currentDiagnostics);
   renderHoldingsTable();
+}
+
+// ========================================================
+// PORTFOLIO ALLOCATION RADAR: DUAL INTERACTIVE PIE CHARTS
+// 1. Sector Allocation (% & ₹)
+// 2. Market Cap Allocation (Large / Mid / Small / Micro)
+// ========================================================
+
+const SECTOR_PALETTE = {
+  "Financials": "#38bdf8",     // Sky Blue
+  "Technology": "#818cf8",     // Indigo
+  "Energy": "#f59e0b",         // Amber
+  "Materials": "#10b981",      // Emerald
+  "Healthcare": "#ec4899",     // Pink
+  "Consumer": "#a855f7",       // Purple
+  "Industrials": "#f97316",    // Orange
+  "Automobile": "#06b6d4",     // Cyan
+  "Utilities": "#14b8a6",      // Teal
+  "Real Estate": "#eab308",    // Yellow
+  "Telecom": "#f43f5e",        // Rose
+  "Default": "#64748b"         // Slate
+};
+
+const MCAP_PALETTE = {
+  "Large Cap": "#10b981",      // Emerald - Stability Anchor
+  "Mid Cap": "#38bdf8",        // Sky - Growth Engine
+  "Small Cap": "#f59e0b",      // Amber - Alpha Surge
+  "Micro Cap": "#f43f5e"       // Rose - High Beta / Micro Tail
+};
+
+function getHoldingMarketCapCategory(h) {
+  if (h.marketCapCategory) return h.marketCapCategory;
+  const mc = h.marketCap || 0;
+  if (mc >= 200000000000) return "Large Cap";
+  if (mc >= 50000000000) return "Mid Cap";
+  if (mc >= 10000000000) return "Small Cap";
+  return "Micro Cap";
+}
+
+function renderPortfolioAllocationCharts(data, diagnostics) {
+  const deck = document.getElementById("allocationDeckSection");
+  if (!deck) return;
+
+  if (!data || !data.holdings || data.holdings.length === 0) {
+    deck.classList.add("hidden");
+    return;
+  }
+  deck.classList.remove("hidden");
+
+  const totalValuation = data.totalValue || data.holdings.reduce((sum, h) => sum + (h.marketValue || 0), 0);
+  const totalValElem = document.getElementById("allocTotalValuation");
+  if (totalValElem) totalValElem.textContent = formatINR(totalValuation);
+
+  // 1. Sector Allocation Breakdown
+  const sectorMap = {};
+  data.holdings.forEach(h => {
+    const sec = h.sector || "Other";
+    if (!sectorMap[sec]) {
+      sectorMap[sec] = { name: sec, value: 0, count: 0 };
+    }
+    sectorMap[sec].value += (h.marketValue || 0);
+    sectorMap[sec].count += 1;
+  });
+
+  cachedSectorSlices = Object.values(sectorMap)
+    .map(s => ({
+      ...s,
+      percent: totalValuation > 0 ? (s.value / totalValuation) * 100 : 0,
+      color: SECTOR_PALETTE[s.name] || SECTOR_PALETTE["Default"]
+    }))
+    .sort((a, b) => b.value - a.value);
+
+  const sectorCountElem = document.getElementById("allocSectorCount");
+  if (sectorCountElem) sectorCountElem.textContent = `${cachedSectorSlices.length} Sectors`;
+
+  renderDonutChart({
+    svgId: "svgSectorPie",
+    slices: cachedSectorSlices,
+    centerLabelId: "allocSectorCenterLabel",
+    centerNameId: "allocSectorCenterName",
+    centerPctId: "allocSectorCenterPct",
+    centerValId: "allocSectorCenterVal",
+    defaultLabel: "Top Sector",
+    defaultSlice: cachedSectorSlices[0],
+    onSliceClick: (slice) => toggleSectorFilter(slice.name)
+  });
+
+  renderSectorLegend(cachedSectorSlices);
+
+  // 2. Market Cap Allocation Breakdown (AMFI)
+  const mcapOrder = ["Large Cap", "Mid Cap", "Small Cap", "Micro Cap"];
+  const mcapMap = {
+    "Large Cap": { name: "Large Cap", value: 0, count: 0, desc: "₹20,000 Cr+ Stability Core" },
+    "Mid Cap": { name: "Mid Cap", value: 0, count: 0, desc: "₹5,000–20,000 Cr High Growth" },
+    "Small Cap": { name: "Small Cap", value: 0, count: 0, desc: "₹1,000–5,000 Cr Alpha Surge" },
+    "Micro Cap": { name: "Micro Cap", value: 0, count: 0, desc: "< ₹1,000 Cr Micro Tail" }
+  };
+
+  data.holdings.forEach(h => {
+    const cat = getHoldingMarketCapCategory(h);
+    if (!mcapMap[cat]) mcapMap[cat] = { name: cat, value: 0, count: 0, desc: "" };
+    mcapMap[cat].value += (h.marketValue || 0);
+    mcapMap[cat].count += 1;
+  });
+
+  cachedMcapSlices = mcapOrder
+    .map(name => {
+      const item = mcapMap[name];
+      const pct = totalValuation > 0 ? (item.value / totalValuation) * 100 : 0;
+      return {
+        name,
+        value: item.value,
+        count: item.count,
+        percent: pct,
+        desc: item.desc,
+        color: MCAP_PALETTE[name] || "#64748b"
+      };
+    })
+    .filter(s => s.count > 0 || s.value > 0);
+
+  const dominantMcap = [...cachedMcapSlices].sort((a, b) => b.value - a.value)[0];
+
+  renderDonutChart({
+    svgId: "svgMarketCapPie",
+    slices: cachedMcapSlices,
+    centerLabelId: "allocMcapCenterLabel",
+    centerNameId: "allocMcapCenterName",
+    centerPctId: "allocMcapCenterPct",
+    centerValId: "allocMcapCenterVal",
+    defaultLabel: "Dominant",
+    defaultSlice: dominantMcap,
+    onSliceClick: (slice) => toggleMarketCapFilter(slice.name)
+  });
+
+  renderMarketCapLegend(cachedMcapSlices);
+}
+
+function renderDonutChart(cfg) {
+  const svg = document.getElementById(cfg.svgId);
+  if (!svg) return;
+  svg.innerHTML = "";
+
+  const R = 54;
+  const C = 2 * Math.PI * R; // ~339.292
+  const slices = cfg.slices || [];
+
+  if (slices.length === 0) {
+    svg.innerHTML = `<circle cx="80" cy="80" r="${R}" fill="transparent" stroke="var(--border-highlight, #1e293b)" stroke-width="16" />`;
+    return;
+  }
+
+  const updateCenter = (slice, labelText) => {
+    const lbl = document.getElementById(cfg.centerLabelId);
+    const nm = document.getElementById(cfg.centerNameId);
+    const pct = document.getElementById(cfg.centerPctId);
+    const val = document.getElementById(cfg.centerValId);
+
+    if (lbl) lbl.textContent = labelText || cfg.defaultLabel;
+    if (nm && slice) nm.textContent = slice.name;
+    if (pct && slice) pct.textContent = `${slice.percent.toFixed(1)}%`;
+    if (val && slice) val.textContent = formatINR(slice.value);
+  };
+
+  updateCenter(cfg.defaultSlice, cfg.defaultLabel);
+
+  let offset = 0;
+  slices.forEach((slice) => {
+    const sliceLen = (slice.percent / 100) * C;
+    if (sliceLen <= 0) return;
+
+    const gap = slices.length > 1 ? 1.5 : 0;
+    const drawLen = Math.max(0.1, sliceLen - gap);
+    const dashArray = `${drawLen.toFixed(2)} ${C.toFixed(2)}`;
+    const dashOffset = (-offset).toFixed(2);
+    offset += sliceLen;
+
+    const circle = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+    circle.setAttribute("cx", "80");
+    circle.setAttribute("cy", "80");
+    circle.setAttribute("r", R.toString());
+    circle.setAttribute("fill", "transparent");
+    circle.setAttribute("stroke", slice.color);
+    circle.setAttribute("stroke-width", "20");
+    circle.setAttribute("stroke-dasharray", dashArray);
+    circle.setAttribute("stroke-dashoffset", dashOffset);
+    circle.setAttribute("stroke-linecap", "round");
+    circle.setAttribute("class", "cursor-pointer transition-all duration-300 opacity-90 hover:opacity-100");
+    circle.style.transformOrigin = "80px 80px";
+
+    circle.addEventListener("mouseenter", () => {
+      circle.setAttribute("stroke-width", "24");
+      circle.style.filter = `drop-shadow(0 0 6px ${slice.color}aa)`;
+      updateCenter(slice, "Inspecting");
+    });
+
+    circle.addEventListener("mouseleave", () => {
+      circle.setAttribute("stroke-width", "20");
+      circle.style.filter = "none";
+      updateCenter(cfg.defaultSlice, cfg.defaultLabel);
+    });
+
+    if (cfg.onSliceClick) {
+      circle.addEventListener("click", () => cfg.onSliceClick(slice));
+    }
+
+    svg.appendChild(circle);
+  });
+}
+
+function renderSectorLegend(slices) {
+  const container = document.getElementById("legendSectorPie");
+  if (!container) return;
+  container.innerHTML = "";
+
+  slices.forEach(s => {
+    const isActive = sectorFilter.toLowerCase() === s.name.toLowerCase();
+    const div = document.createElement("div");
+    div.className = `flex items-center justify-between p-2 rounded-xl border ${isActive ? 'border-cyan-400 bg-cyan-950/40 ring-1 ring-cyan-400/50' : 'border-[#16233d] bg-[#060c18] hover:border-slate-700/80'} transition cursor-pointer text-xs group`;
+    div.title = `Click to filter holdings by ${s.name}`;
+
+    div.innerHTML = `
+      <div class="flex items-center space-x-2.5 min-w-0">
+        <span class="w-2.5 h-2.5 rounded-full flex-shrink-0" style="background-color: ${s.color}"></span>
+        <div class="truncate">
+          <span class="font-bold text-white block truncate group-hover:text-cyan-300 transition">${s.name}</span>
+          <span class="text-[10px] text-slate-400 font-sans">${s.count} ${s.count === 1 ? 'stock' : 'stocks'}</span>
+        </div>
+      </div>
+      <div class="text-right flex-shrink-0 ml-2">
+        <span class="font-bold font-mono text-white block">${s.percent.toFixed(1)}%</span>
+        <span class="text-[10px] text-slate-400 font-mono privacy-mask">${formatINR(s.value)}</span>
+      </div>
+    `;
+
+    div.addEventListener("click", () => toggleSectorFilter(s.name));
+    container.appendChild(div);
+  });
+}
+
+function renderMarketCapLegend(slices) {
+  const container = document.getElementById("legendMarketCapPie");
+  if (!container) return;
+  container.innerHTML = "";
+
+  slices.forEach(s => {
+    const isActive = marketCapFilter.toLowerCase() === s.name.toLowerCase();
+    const div = document.createElement("div");
+    div.className = `flex items-center justify-between p-2 rounded-xl border ${isActive ? 'border-indigo-400 bg-indigo-950/40 ring-1 ring-indigo-400/50' : 'border-[#16233d] bg-[#060c18] hover:border-slate-700/80'} transition cursor-pointer text-xs group`;
+    div.title = `Click to filter holdings by ${s.name}`;
+
+    div.innerHTML = `
+      <div class="flex items-center space-x-2.5 min-w-0">
+        <span class="w-2.5 h-2.5 rounded-full flex-shrink-0" style="background-color: ${s.color}"></span>
+        <div class="truncate">
+          <span class="font-bold text-white block truncate group-hover:text-indigo-300 transition">${s.name}</span>
+          <span class="text-[10px] text-slate-400 font-sans">${s.desc || `${s.count} stocks`}</span>
+        </div>
+      </div>
+      <div class="text-right flex-shrink-0 ml-2">
+        <span class="font-bold font-mono text-white block">${s.percent.toFixed(1)}%</span>
+        <span class="text-[10px] text-slate-400 font-mono privacy-mask">${formatINR(s.value)}</span>
+      </div>
+    `;
+
+    div.addEventListener("click", () => toggleMarketCapFilter(s.name));
+    container.appendChild(div);
+  });
+}
+
+function toggleSectorFilter(name) {
+  if (sectorFilter.toLowerCase() === name.toLowerCase()) {
+    sectorFilter = "";
+  } else {
+    sectorFilter = name;
+    marketCapFilter = "";
+  }
+
+  const secFilter = document.getElementById("holdingsSectorFilter");
+  if (secFilter) secFilter.value = sectorFilter;
+
+  renderHoldingsTable();
+  renderSectorLegend(cachedSectorSlices);
+  renderMarketCapLegend(cachedMcapSlices);
+  document.getElementById("holdingsScrollContainer")?.scrollIntoView({ behavior: 'smooth' });
+}
+
+function toggleMarketCapFilter(name) {
+  if (marketCapFilter.toLowerCase() === name.toLowerCase()) {
+    marketCapFilter = "";
+  } else {
+    marketCapFilter = name;
+    sectorFilter = "";
+    const secFilter = document.getElementById("holdingsSectorFilter");
+    if (secFilter) secFilter.value = "";
+  }
+
+  renderHoldingsTable();
+  renderSectorLegend(cachedSectorSlices);
+  renderMarketCapLegend(cachedMcapSlices);
+  document.getElementById("holdingsScrollContainer")?.scrollIntoView({ behavior: 'smooth' });
 }
 
 async function handleSyncLiveQuotes() {
@@ -832,11 +1356,29 @@ function getFilteredAndSortedHoldings() {
     list = list.filter(h => h.sector.toLowerCase() === sectorFilter.toLowerCase());
   }
 
-  // 3. P&L Filter
+  // 2b. Market Cap Filter
+  if (marketCapFilter) {
+    list = list.filter(h => {
+      const cat = getHoldingMarketCapCategory(h);
+      return cat.toLowerCase() === marketCapFilter.toLowerCase();
+    });
+  }
+
+  // 3. P&L & Behavioral Noise vs Decay Filter (O(1) Map lookups)
   if (pnlFilter === "PROFIT") {
     list = list.filter(h => (h.unrealizedPnL || 0) >= 0);
   } else if (pnlFilter === "LOSS") {
     list = list.filter(h => (h.unrealizedPnL || 0) < 0);
+  } else if (pnlFilter === "NOISE") {
+    list = list.filter(h => {
+      const audit = currentAuditMap.get(h.ticker);
+      return audit?.classification === 'DORMANT_COMPOUNDER' || ((h.unrealizedPnL || 0) < 0 && (h.dayPnL || 0) <= 0);
+    });
+  } else if (pnlFilter === "DECAY") {
+    list = list.filter(h => {
+      const audit = currentAuditMap.get(h.ticker);
+      return audit?.classification === 'DEAD_CAPITAL_TRAP';
+    });
   }
 
   // 4. Sorting
@@ -874,7 +1416,7 @@ function renderHoldingsTable() {
   const totalItems = allFiltered.length;
 
   const subtext = document.getElementById("holdingsSubtext");
-  const isFiltered = (searchQuery || sectorFilter || pnlFilter !== 'ALL' || activeDiagnosticFilter);
+  const isFiltered = (searchQuery || sectorFilter || marketCapFilter || pnlFilter !== 'ALL' || activeDiagnosticFilter);
   if (subtext) {
     subtext.textContent = `${totalItems} position${totalItems === 1 ? '' : 's'}${isFiltered ? ' (filtered)' : ''}`;
   }
@@ -898,24 +1440,54 @@ function renderHoldingsTable() {
   const rows = allFiltered.map(h => {
     const isPos = h.unrealizedPnL >= 0;
     // Soothing Mint for Gains, Soft Coral / Dusty Rose for Losses (Reduces financial anxiety)
-    const pnlBadge = isPos
-      ? "bg-emerald-500/10 text-emerald-400 border border-emerald-500/20"
-      : "bg-rose-500/10 text-rose-300 border border-rose-500/20";
+    const pnlBadge = isWorkShieldActive
+      ? (isPos ? "bg-emerald-500/10 text-emerald-300 border border-emerald-500/20" : "bg-slate-800 text-slate-300 border border-slate-700/60")
+      : (isPos ? "bg-emerald-500/10 text-emerald-400 border border-emerald-500/20" : "bg-rose-500/10 text-rose-300 border border-rose-500/20");
+
+    const isDayGainer = (h.dayPnL ?? 0) >= 0;
+    const dayPnlBadge = isWorkShieldActive
+      ? (isDayGainer ? "bg-emerald-500/10 text-emerald-300 border border-emerald-500/20" : "bg-slate-800 text-slate-300 border border-slate-700/60")
+      : (isDayGainer ? "bg-emerald-500/10 text-emerald-400 border border-emerald-500/20" : "bg-rose-500/10 text-rose-300 border border-rose-500/20");
 
     const advisory = getAdvisoryTarget(h);
 
+    // Thesis Audit Classification from current diagnostics (O(1) Map lookup)
+    const auditItem = currentAuditMap.get(h.ticker);
+    let thesisPill = '';
+    let noiseDecayBadge = '';
+
+    if (auditItem) {
+      if (auditItem.classification === 'DEAD_CAPITAL_TRAP') {
+        thesisPill = `<span class="ml-1.5 px-1.5 py-0.2 rounded text-[9px] font-mono font-bold bg-rose-500/20 text-rose-300 border border-rose-500/40" title="${auditItem.coreDiagnosis}">TRAP</span>`;
+        noiseDecayBadge = `<span class="px-1.5 py-0.5 rounded text-[9px] font-mono font-bold bg-rose-500/20 text-rose-300 border border-rose-500/40 inline-flex items-center gap-1" title="${auditItem.coreDiagnosis}"><i class="fa-solid fa-triangle-exclamation text-[8px]"></i> DECAY (TRIM)</span>`;
+      } else if (auditItem.classification === 'DORMANT_COMPOUNDER') {
+        thesisPill = `<span class="ml-1.5 px-1.5 py-0.2 rounded text-[9px] font-mono font-bold bg-amber-500/20 text-amber-300 border border-amber-500/40" title="${auditItem.actionRule}">HOLD</span>`;
+        noiseDecayBadge = `<span class="px-1.5 py-0.5 rounded text-[9px] font-mono font-bold bg-amber-500/20 text-amber-300 border border-amber-500/40 inline-flex items-center gap-1" title="${auditItem.coreDiagnosis} | Moat: ${auditItem.fundamentalMoat}"><i class="fa-solid fa-water text-[8px]"></i> NOISE (HOLD)</span>`;
+      }
+    }
+
+    if (!noiseDecayBadge) {
+      if (isPos) {
+        noiseDecayBadge = `<span class="px-1.5 py-0.5 rounded text-[9px] font-mono font-bold bg-emerald-500/15 text-emerald-400 border border-emerald-500/30 inline-flex items-center gap-1" title="Healthy compounder compounding gains"><i class="fa-solid fa-gem text-[8px]"></i> COMPOUNDER</span>`;
+      } else {
+        noiseDecayBadge = `<span class="px-1.5 py-0.5 rounded text-[9px] font-mono font-bold bg-cyan-500/10 text-cyan-300 border border-cyan-500/30 inline-flex items-center gap-1" title="Cyclical pullback within normal market volatility"><i class="fa-solid fa-shield text-[8px]"></i> NOISE (HOLD)</span>`;
+      }
+    }
+
     return `
-      <tr class="hover:bg-slate-800/30 transition border-b border-slate-800/40 text-xs">
+      <tr class="hover:bg-[#0f1b32]/50 transition border-b border-[#16233d]/50 text-xs">
         <td class="py-3 px-4 font-mono">
-          <div class="flex items-center space-x-2">
-            <span class="font-semibold text-slate-100 text-xs">${h.ticker}</span>
+          <div class="flex items-center space-x-1.5 cursor-pointer group" onclick="inspectFromRow('${h.ticker}')" title="Click to inspect full scorecard, supply chain, shareholding & concall sentiment for ${h.ticker}">
+            <span class="font-bold text-white text-xs group-hover:text-cyan-300 group-hover:underline transition">${h.ticker}</span>
+            <i class="fa-solid fa-arrow-up-right-from-square text-[9px] text-slate-500 group-hover:text-cyan-400 transition"></i>
+            ${thesisPill}
             <span class="text-[11px] text-slate-400 font-sans truncate max-w-[130px] hidden sm:inline" title="${h.name}">${h.name}</span>
           </div>
         </td>
         <td class="py-3 px-3 text-slate-400">
-          <span class="px-2 py-0.5 rounded bg-slate-900 border border-slate-800/80 text-[11px] whitespace-nowrap text-slate-300">${h.sector}</span>
+          <span class="px-2 py-0.5 rounded bg-[#060c18] border border-[#16233d] text-[11px] whitespace-nowrap text-slate-300">${h.sector}</span>
         </td>
-        <td class="py-3 px-3 text-right font-mono text-slate-200 font-medium privacy-mask">${h.quantity}</td>
+        <td class="py-3 px-3 text-right font-mono text-slate-200 font-medium privacy-mask">${Math.round(h.quantity).toLocaleString('en-IN')}</td>
         
         <!-- Avg Buy Price -->
         <td class="py-3 px-4 text-right font-mono text-slate-300 privacy-mask">
@@ -923,13 +1495,20 @@ function renderHoldingsTable() {
         </td>
 
         <!-- Live CMP -->
-        <td class="py-3 px-4 text-right font-mono font-medium text-slate-100">
+        <td class="py-3 px-4 text-right font-mono font-medium text-white">
           ${formatINR(h.price)}
         </td>
 
-        <!-- Side-by-side Unrealized P&L (Soft Mint / Soft Coral) -->
+        <!-- Day's P&L (₹ / %) -->
         <td class="py-3 px-4 text-right font-mono whitespace-nowrap">
-          <span class="inline-block px-2.5 py-0.5 rounded-md ${pnlBadge} font-medium text-xs privacy-mask">
+          <span class="inline-block px-2.5 py-0.5 rounded-md ${dayPnlBadge} font-medium text-xs privacy-mask" title="Day's Move: ${isDayGainer ? '+' : ''}${formatINR(h.dayChange ?? 0)} per share">
+            ${isDayGainer ? '+' : ''}${formatINR(h.dayPnL ?? 0)} (${isDayGainer ? '+' : ''}${(h.dayChangePercent ?? 0).toFixed(2)}%)
+          </span>
+        </td>
+
+        <!-- Side-by-side Unrealized P&L (Strictly Emerald/Rose for financial performance) -->
+        <td class="py-3 px-4 text-right font-mono whitespace-nowrap">
+          <span class="inline-block px-2.5 py-0.5 rounded-md ${pnlBadge} font-medium text-xs privacy-mask" title="${auditItem?.actionRule || ''}">
             ${isPos ? '+' : ''}${formatINR(h.unrealizedPnL)} (${isPos ? '+' : ''}${h.unrealizedPnLPercent.toFixed(1)}%)
           </span>
         </td>
@@ -938,24 +1517,27 @@ function renderHoldingsTable() {
         <td class="py-3 px-4 text-right font-mono text-slate-400 privacy-mask">${formatINR(h.investedValue)}</td>
 
         <!-- Current Market Value -->
-        <td class="py-3 px-4 text-right font-mono font-semibold text-slate-100 privacy-mask">${formatINR(h.marketValue)}</td>
+        <td class="py-3 px-4 text-right font-mono font-semibold text-white privacy-mask">${formatINR(h.marketValue)}</td>
 
         <!-- Portfolio Weight -->
         <td class="py-3 px-3 text-right font-mono text-slate-300">${h.weightPercent.toFixed(1)}%</td>
 
-        <!-- Target Advisory -->
+        <!-- Target Advisory & Noise vs Decay Radar -->
         <td class="py-3 px-3 text-center text-[11px] font-mono whitespace-nowrap">
-          <span class="px-2 py-0.5 rounded bg-teal-500/10 text-teal-300 border border-teal-500/20" title="${advisory.rationale}">
-            ₹${advisory.t1}
-          </span>
+          <div class="flex flex-col items-center justify-center space-y-1">
+            <span class="px-2 py-0.5 rounded bg-cyan-500/10 text-cyan-300 border border-cyan-500/25" title="${advisory.rationale}">
+              ₹${advisory.t1}
+            </span>
+            ${noiseDecayBadge}
+          </div>
         </td>
 
-        <!-- Streamlined Actions (Calm Teal and Subtle Actions) -->
+        <!-- Streamlined Actions (Nordic Cyan and Subtle Secondary Actions) -->
         <td class="py-3 px-3 text-center whitespace-nowrap">
-          <button onclick="openTradeModal('${h.ticker}')" class="text-teal-400 hover:text-teal-300 text-xs px-2 py-1 rounded bg-teal-500/10 hover:bg-teal-500/20 border border-teal-500/30 transition mr-1 font-medium" title="Trade / Adjust">
+          <button onclick="openTradeModal('${h.ticker}')" class="text-cyan-400 hover:text-cyan-300 text-xs px-2 py-1 rounded bg-cyan-500/10 hover:bg-cyan-500/20 border border-cyan-500/30 transition mr-1 font-medium" title="Trade / Adjust">
             <i class="fa-solid fa-bolt mr-0.5"></i> Trade
           </button>
-          <button onclick="inspectFromRow('${h.ticker}')" class="text-slate-400 hover:text-teal-300 text-xs px-1.5 py-1 rounded hover:bg-slate-800 transition mr-1" title="Inspect Scorecard">
+          <button onclick="inspectFromRow('${h.ticker}')" class="text-slate-400 hover:text-cyan-300 text-xs px-1.5 py-1 rounded hover:bg-[#0f1b32] transition mr-1" title="Inspect Scorecard">
             <i class="fa-solid fa-magnifying-glass-chart"></i>
           </button>
           <button onclick="handleRemoveHolding('${h.ticker}')" class="text-slate-500 hover:text-rose-400 text-xs px-1.5 py-1 rounded hover:bg-rose-500/10 transition" title="Delete Position">
@@ -1322,6 +1904,118 @@ function renderDiagnosticsUI(diag) {
       }
     }
 
+    // 12. Render Morning Briefing & Market Regime Weather Cockpit (Option C, B & A)
+    if (diag.morningBriefing) {
+      const mb = diag.morningBriefing;
+      const mr = diag.marketRegime;
+
+      // Greeting & Action Pill
+      const greetingEl = document.getElementById("briefingGreeting");
+      const actionPillEl = document.getElementById("briefingActionPill");
+      const marketPulseEl = document.getElementById("briefingMarketPulse");
+
+      if (greetingEl) greetingEl.textContent = mb.greeting;
+      if (actionPillEl) {
+        actionPillEl.textContent = mb.todayActionSummary;
+        actionPillEl.className = `px-2.5 py-0.5 rounded-full text-xs font-mono font-bold ${mb.actionTone === 'emerald' ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30' : 'bg-amber-500/20 text-amber-300 border border-amber-500/30'}`;
+      }
+      if (marketPulseEl) marketPulseEl.textContent = mb.marketPulseSummary;
+
+      // Market Regime Tiles (Pillar A)
+      if (mr) {
+        const pPrice = document.getElementById("regimeNiftyPrice");
+        const pChange = document.getElementById("regimeNiftyChange");
+        const pBreadth = document.getElementById("regimeBreadth");
+        const pVix = document.getElementById("regimeVix");
+        const pBanner = document.getElementById("briefingPolicyText");
+
+        if (pPrice) pPrice.textContent = Number(mr.niftyCurrent).toLocaleString('en-IN');
+        if (pChange) {
+          pChange.textContent = (mr.niftyChangePercent >= 0 ? '+' : '') + mr.niftyChangePercent.toFixed(2) + '%';
+          pChange.className = `text-[10px] font-bold font-mono ${mr.niftyChangePercent >= 0 ? 'text-emerald-400' : 'text-rose-400'}`;
+        }
+        if (pBreadth) pBreadth.textContent = mr.marketBreadthPercent.toFixed(1) + '%';
+        if (pVix) {
+          pVix.textContent = mr.indiaVix.toFixed(1);
+          pVix.className = `font-bold font-mono ${mr.indiaVix > 20 ? 'text-rose-400' : 'text-emerald-400'}`;
+        }
+        if (pBanner) pBanner.textContent = mr.rebalancePolicyVerdict;
+      }
+
+      // Column 1: Action Bullets & Noise vs Decay Ratio
+      const bulletListEl = document.getElementById("briefingBulletList");
+      const ratioEl = document.getElementById("briefingSoundRatio");
+      if (ratioEl) {
+        ratioEl.textContent = `${mb.soundHoldingsCount} Noise (Hold) / ${mb.attentionPositionsCount} Decay (Trim)`;
+        ratioEl.title = `Noise vs Decay Audit: ${mb.soundHoldingsCount} stocks are experiencing healthy consolidation (do not sell) vs ${mb.attentionPositionsCount} with true structural drag.`;
+      }
+
+      if (bulletListEl) {
+        bulletListEl.innerHTML = mb.actionBullets.map(b => `
+          <li class="flex items-start space-x-2">
+            <i class="fa-solid fa-circle-check text-emerald-400 text-[10px] mt-1 flex-shrink-0"></i>
+            <span>${b}</span>
+          </li>
+        `).join('');
+      }
+
+      // Column 2: Positions in Red to Hold with Conviction (Dormant Giants)
+      const holdListEl = document.getElementById("briefingHoldList");
+      if (holdListEl) {
+        if (!mb.keyPositionsToHold || mb.keyPositionsToHold.length === 0) {
+          holdListEl.innerHTML = `<div class="text-slate-400 text-xs py-2 italic">Zero positions at a deep drawdown. Capital is intact!</div>`;
+        } else {
+          holdListEl.innerHTML = mb.keyPositionsToHold.map(h => `
+            <div class="p-2 rounded-lg bg-[#0a1222] border border-amber-500/25 space-y-1">
+              <div class="flex items-center justify-between">
+                <span class="font-bold text-white flex items-center">
+                  <span class="text-amber-400 font-mono mr-1.5">${h.ticker}</span>
+                  <span class="text-[10px] text-slate-400 truncate max-w-[120px]">${h.name}</span>
+                </span>
+                <span class="font-mono font-bold text-rose-400 text-[10px]">${h.unrealizedPnLPercent.toFixed(1)}%</span>
+              </div>
+              <div class="text-[10px] text-slate-300 leading-tight">
+                <strong class="text-amber-300">Moat:</strong> ${h.fundamentalMoat}
+              </div>
+              <div class="text-[9px] text-slate-400">
+                ${h.actionRule}
+              </div>
+            </div>
+          `).join('');
+        }
+      }
+
+      // Column 3: The Broken Theses / High-Conviction Swaps
+      const swapListEl = document.getElementById("briefingSwapList");
+      if (swapListEl) {
+        if (!mb.trapsToTrim || mb.trapsToTrim.length === 0) {
+          swapListEl.innerHTML = `<div class="text-slate-400 text-xs py-2 italic flex items-center text-emerald-400"><i class="fa-solid fa-shield-check mr-1.5"></i> Zero structural traps! 100% of holdings are viable businesses.</div>`;
+        } else {
+          swapListEl.innerHTML = mb.trapsToTrim.map(t => `
+            <div class="p-2 rounded-lg bg-[#0a1222] border border-rose-500/30 space-y-1.5">
+              <div class="flex items-center justify-between">
+                <span class="font-bold text-rose-300 font-mono">${t.ticker}</span>
+                <span class="text-[9px] font-mono px-1.5 py-0.2 rounded bg-rose-500/15 text-rose-400 border border-rose-500/30">BROKEN THESIS</span>
+              </div>
+              <p class="text-[10px] text-slate-400 leading-tight">${t.coreDiagnosis}</p>
+              ${t.recommendedSwapTicker ? `
+                <div class="p-1.5 rounded bg-[#060c18] border border-cyan-500/20 text-[9px] space-y-0.5">
+                  <div class="text-cyan-300 font-bold flex items-center justify-between">
+                    <span>Conviction Swap: &rarr; ${t.recommendedSwapTicker} (${t.recommendedSwapName})</span>
+                    <button type="button" onclick="quickInspectTicker('${t.recommendedSwapTicker}')" class="text-[8px] px-1 bg-cyan-500/20 text-cyan-200 rounded hover:bg-cyan-500/30">Inspect</button>
+                  </div>
+                  <div class="text-slate-400">${t.swapAdvantage}</div>
+                </div>
+              ` : ''}
+            </div>
+          `).join('');
+        }
+      }
+    }
+
+    if (currentPortfolioData) {
+      renderPortfolioAllocationCharts(currentPortfolioData, diag);
+    }
   } catch (err) {
     console.error("Error rendering diagnostics:", err);
   }
@@ -1332,7 +2026,10 @@ async function loadDiagnostics(portfolioId) {
     const res = await fetch(`/api/portfolios/${portfolioId}/diagnostics`);
     if (!res.ok) return;
     const diag = await res.json();
+    currentDiagnostics = diag;
+    updateAuditMap(diag);
     renderDiagnosticsUI(diag);
+    renderHoldingsTable();
   } catch (err) {
     console.error("Error loading diagnostics:", err);
   }
@@ -1365,12 +2062,12 @@ async function handleCreatePortfolio() {
 async function handleAddHolding() {
   if (!currentPortfolioId) return alert("Select or create a portfolio first.");
   const ticker = document.getElementById("inputTicker").value.trim().toUpperCase();
-  const quantity = parseFloat(document.getElementById("inputQuantity").value);
+  const quantity = Math.round(parseFloat(document.getElementById("inputQuantity").value));
   const buyPriceRaw = parseFloat(document.getElementById("inputBuyPrice").value);
   const buyPrice = !isNaN(buyPriceRaw) && buyPriceRaw > 0 ? buyPriceRaw : null;
 
   if (!ticker) return alert("Please enter an NSE symbol.");
-  if (isNaN(quantity) || quantity <= 0) return alert("Please enter a valid positive quantity.");
+  if (isNaN(quantity) || quantity <= 0) return alert("Please enter a valid positive whole number of shares.");
 
   try {
     const res = await fetch(`/api/portfolios/${currentPortfolioId}/holdings`, {
@@ -1831,31 +2528,50 @@ async function loadAndRenderStockChart(ticker, range = '1y', mos = 0) {
     const chartWidth = container.clientWidth || 800;
     const chartHeight = 360;
 
+    // Read active theme palette dynamically (Dark, Eye Comfort, Light)
+    const activeTheme = localStorage.getItem("portfolioRebalancerTheme") || "dark";
+    let chartBgColor = '#070d18';
+    let chartGridColor = 'rgba(23, 37, 61, 0.45)';
+    let chartTextColor = '#94a3b8';
+    let chartBorderColor = 'rgba(23, 37, 61, 0.6)';
+
+    if (activeTheme === 'eye-comfort') {
+      chartBgColor = '#15171e';
+      chartGridColor = 'rgba(43, 48, 61, 0.45)';
+      chartTextColor = '#9ca3af';
+      chartBorderColor = 'rgba(43, 48, 61, 0.6)';
+    } else if (activeTheme === 'light') {
+      chartBgColor = '#ffffff';
+      chartGridColor = 'rgba(226, 232, 240, 0.8)';
+      chartTextColor = '#475569';
+      chartBorderColor = 'rgba(203, 213, 225, 0.8)';
+    }
+
     const chart = LightweightCharts.createChart(container, {
       width: chartWidth,
       height: chartHeight,
       layout: {
-        background: { color: '#090d16' },
-        textColor: '#94a3b8',
+        background: { color: chartBgColor },
+        textColor: chartTextColor,
         fontSize: 11,
         fontFamily: 'Inter, system-ui, sans-serif'
       },
       grid: {
-        vertLines: { color: 'rgba(30, 41, 59, 0.45)' },
-        horzLines: { color: 'rgba(30, 41, 59, 0.45)' }
+        vertLines: { color: chartGridColor },
+        horzLines: { color: chartGridColor }
       },
       crosshair: {
         mode: LightweightCharts.CrosshairMode.Normal,
       },
       rightPriceScale: {
-        borderColor: 'rgba(51, 65, 85, 0.6)',
+        borderColor: chartBorderColor,
         scaleMargins: {
           top: 0.08,
           bottom: 0.22,
         },
       },
       timeScale: {
-        borderColor: 'rgba(51, 65, 85, 0.6)',
+        borderColor: chartBorderColor,
         timeVisible: true,
         secondsVisible: false,
       },
@@ -2038,7 +2754,71 @@ async function handleInspectStock() {
         </div>
       </div>
 
-      <!-- Is Current Value Good? (Fair Value & Margin of Safety Check) -->
+      <!-- Executive 2-Second Thesis & Quick Stats Ribbon -->
+      <div class="p-3 bg-gradient-to-r from-slate-950 via-[#0d1627] to-slate-950 rounded-xl border border-[#16233d] shadow-md flex flex-wrap items-center justify-between gap-3 text-xs">
+        <div class="flex flex-wrap items-center gap-3 font-mono">
+          <div class="flex items-center space-x-1.5">
+            <span class="text-slate-500 text-[10px]">CMP:</span>
+            <span class="font-bold text-white text-sm">&#8377;${data.price}</span>
+            <span class="text-[10px] ${data.marginOfSafetyPercent >= 0 ? 'text-emerald-400' : 'text-rose-400'} font-bold">(${data.marginOfSafetyPercent >= 0 ? '+' : ''}${data.marginOfSafetyPercent}% MoS)</span>
+          </div>
+          <span class="text-slate-700">|</span>
+          <div class="flex items-center space-x-1.5">
+            <span class="text-slate-500 text-[10px]">P/E:</span>
+            <span class="font-bold text-slate-200">${data.peerBenchmark?.stockPE ? data.peerBenchmark.stockPE + 'x' : 'N/A'}</span>
+            <span class="text-[10px] text-slate-400">(Sector: ${data.peerBenchmark?.sectorMedianPE || 22}x)</span>
+          </div>
+          <span class="text-slate-700">|</span>
+          <div class="flex items-center space-x-1.5">
+            <span class="text-slate-500 text-[10px]">ROCE:</span>
+            <span class="font-bold text-cyan-400">${data.governanceAudit?.rocePercent || 20}%</span>
+          </div>
+          <span class="text-slate-700">|</span>
+          <div class="flex items-center space-x-1.5">
+            <span class="text-slate-500 text-[10px]">Promoter Pledge:</span>
+            <span class="font-bold ${isPristinePledge ? 'text-emerald-400' : 'text-rose-400'}">${pledge}% ${isPristinePledge ? '(Pristine)' : ''}</span>
+          </div>
+          <span class="text-slate-700">|</span>
+          <div class="flex items-center space-x-1.5">
+            <span class="text-slate-500 text-[10px]">Big Public Float:</span>
+            <span class="font-bold text-teal-300">${(data.shareholdingPattern?.bigPublicInvestorsPercent || 0).toFixed(1)}%</span>
+          </div>
+        </div>
+
+        <div class="flex items-center space-x-2">
+          <span class="px-2.5 py-1 rounded-lg text-[11px] font-bold bg-indigo-500/10 text-indigo-300 border border-indigo-500/25">
+            <i class="fa-solid fa-microphone-lines text-xs mr-1"></i> ${data.managementAudit?.managementSentiment ? data.managementAudit.managementSentiment.replace('_', ' ') : 'BULLISH'}
+          </span>
+        </div>
+      </div>
+
+      <!-- Sticky Sub-Navigation Bar for High-Speed Inspection -->
+      <div class="sticky top-2 z-20 flex items-center gap-1.5 p-1.5 rounded-xl bg-[#080e1b]/95 backdrop-blur-md border border-[#16233d] shadow-xl overflow-x-auto">
+        <button type="button" onclick="jumpToInspectorSection('inspectorSecOverview', this)" class="inspector-subnav-btn px-3 py-1.5 rounded-lg text-xs font-bold text-cyan-300 bg-cyan-500/15 border border-cyan-500/30 transition whitespace-nowrap">
+          <i class="fa-solid fa-chart-line mr-1.5 text-cyan-400"></i>Overview &amp; Chart
+        </button>
+        <button type="button" onclick="jumpToInspectorSection('inspectorSecValuation', this)" class="inspector-subnav-btn px-3 py-1.5 rounded-lg text-xs font-medium text-slate-400 hover:text-white hover:bg-slate-800/60 transition whitespace-nowrap">
+          <i class="fa-solid fa-scale-balanced mr-1.5 text-amber-400"></i>Fair Value &amp; Swaps
+        </button>
+        ${data.supplyChain ? `
+          <button type="button" onclick="jumpToInspectorSection('inspectorSecSupplyChain', this)" class="inspector-subnav-btn px-3 py-1.5 rounded-lg text-xs font-medium text-slate-400 hover:text-white hover:bg-slate-800/60 transition whitespace-nowrap">
+            <i class="fa-solid fa-network-wired mr-1.5 text-indigo-400"></i>Supply Chain &amp; Moat
+          </button>
+        ` : ''}
+        <button type="button" onclick="jumpToInspectorSection('inspectorSecShareholding', this)" class="inspector-subnav-btn px-3 py-1.5 rounded-lg text-xs font-medium text-slate-400 hover:text-white hover:bg-slate-800/60 transition whitespace-nowrap">
+          <i class="fa-solid fa-chart-pie mr-1.5 text-teal-400"></i>Shareholding &amp; Whales
+        </button>
+        <button type="button" onclick="jumpToInspectorSection('inspectorSecManagement', this)" class="inspector-subnav-btn px-3 py-1.5 rounded-lg text-xs font-medium text-slate-400 hover:text-white hover:bg-slate-800/60 transition whitespace-nowrap">
+          <i class="fa-solid fa-user-tie mr-1.5 text-purple-400"></i>Management &amp; Concall
+        </button>
+        <button type="button" onclick="jumpToInspectorSection('inspectorSecRisks', this)" class="inspector-subnav-btn px-3 py-1.5 rounded-lg text-xs font-medium text-slate-400 hover:text-white hover:bg-slate-800/60 transition whitespace-nowrap">
+          <i class="fa-solid fa-shield-halved mr-1.5 text-rose-400"></i>Strengths &amp; Risks
+        </button>
+      </div>
+
+      <!-- SECTION: Fair Value & Valuation Check -->
+      <div id="inspectorSecValuation" class="space-y-3">
+        <!-- Is Current Value Good? (Fair Value & Margin of Safety Check) -->
       <div class="p-3 bg-gradient-to-r from-slate-900/90 via-slate-900/60 to-slate-900/90 rounded-xl border border-slate-800 flex flex-col md:flex-row md:items-center justify-between gap-3 shadow-inner">
         <div class="space-y-1">
           <div class="flex flex-wrap items-center gap-2">
@@ -2077,8 +2857,11 @@ async function handleInspectStock() {
           </div>
         </div>
       </div>
+      </div> <!-- End inspectorSecValuation -->
 
-      <!-- Interactive Candlestick Chart & Techno-Funda Timing Engine Desk -->
+      <!-- SECTION: Technicals & 5-Pillar Score Overview -->
+      <div id="inspectorSecOverview" class="space-y-4">
+        <!-- Interactive Candlestick Chart & Techno-Funda Timing Engine Desk -->
       <div class="p-4 bg-slate-900/90 rounded-2xl border border-slate-800 space-y-3 shadow-xl">
         <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 pb-2.5 border-b border-slate-800/80">
           <div class="flex items-center space-x-3">
@@ -2415,9 +3198,25 @@ async function handleInspectStock() {
           </div>
         </div>
       ` : ''}
+      </div> <!-- End inspectorSecOverview -->
 
-      <!-- Strengths & Risk Warnings -->
-      <div class="space-y-2 pt-1">
+      <!-- SECTION: Institutional Supply Chain & Value Ecosystem -->
+      <div id="inspectorSecSupplyChain" class="space-y-4">
+        ${data.supplyChain ? renderInstitutionalSupplyChainEcosystem(data.supplyChain, data.ticker, data.name) : ''}
+      </div>
+
+      <!-- SECTION: Institutional Shareholding Pattern & Whale Deals -->
+      <div id="inspectorSecShareholding" class="space-y-4">
+        ${renderShareholdingPatternAndWhaleAlerts(data.shareholdingPattern, data.ticker, data.name, data.price)}
+      </div>
+
+      <!-- SECTION: Management Rating & Concall Sentiment -->
+      <div id="inspectorSecManagement" class="space-y-4">
+        ${renderManagementAuditSection(data.managementAudit, data.ticker, data.name)}
+      </div>
+
+      <!-- SECTION: Strengths & Risk Warnings -->
+      <div id="inspectorSecRisks" class="space-y-2 pt-1">
         ${data.strengths && data.strengths.length > 0 ? `
           <div class="p-2.5 bg-emerald-950/20 border border-emerald-500/25 rounded-xl text-emerald-200 text-xs space-y-1">
             <div class="font-bold text-emerald-400 text-[10px] uppercase flex items-center tracking-wider">
@@ -2575,7 +3374,7 @@ function openTradeModal(ticker = null, defaultAction = 'BUY') {
     sorted.forEach(h => {
       const opt = document.createElement("option");
       opt.value = h.ticker;
-      opt.textContent = `${h.ticker} (${h.quantity} shs @ â‚¹${h.buyPrice})`;
+      opt.textContent = `${h.ticker} (${Math.round(h.quantity).toLocaleString('en-IN')} shs @ ₹${h.buyPrice})`;
       select.appendChild(opt);
     });
   }
@@ -2591,7 +3390,7 @@ function openTradeModal(ticker = null, defaultAction = 'BUY') {
     if (select) select.value = ticker.toUpperCase();
     const holding = currentPortfolioData?.holdings?.find(h => h.ticker.toUpperCase() === ticker.toUpperCase());
     if (holding) {
-      qtyInput.value = defaultAction === 'SELL' ? Math.min(10, holding.quantity) : 10;
+      qtyInput.value = defaultAction === 'SELL' ? Math.min(10, Math.round(holding.quantity)) : 10;
       priceInput.value = holding.price || holding.buyPrice || "";
     } else {
       qtyInput.value = 10;
@@ -2681,11 +3480,11 @@ function onTradeSelectHolding(ticker) {
 
 function updateTradePreview() {
   const ticker = (document.getElementById("tradeTickerInput")?.value || "").trim().toUpperCase();
-  const tradeQty = parseFloat(document.getElementById("tradeQuantityInput")?.value) || 0;
+  const tradeQty = Math.round(parseFloat(document.getElementById("tradeQuantityInput")?.value) || 0);
   const tradePrice = parseFloat(document.getElementById("tradePriceInput")?.value) || 0;
 
   const holding = currentPortfolioData?.holdings?.find(h => h.ticker.toUpperCase() === ticker);
-  const oldQty = holding ? holding.quantity : 0;
+  const oldQty = holding ? Math.round(holding.quantity) : 0;
   const oldPrice = holding ? holding.buyPrice : tradePrice;
 
   const previewQty = document.getElementById("previewQtyChange");
@@ -2726,8 +3525,8 @@ function updateTradePreview() {
     }
   }
 
-  if (previewQty) previewQty.textContent = `${oldQty} â†’ ${newQty} shares`;
-  if (previewPrice) previewPrice.textContent = `â‚¹${oldPrice.toFixed(2)} â†’ â‚¹${newAvgPrice.toFixed(2)}`;
+  if (previewQty) previewQty.textContent = `${oldQty.toLocaleString('en-IN')} → ${newQty.toLocaleString('en-IN')} shares`;
+  if (previewPrice) previewPrice.textContent = `₹${oldPrice.toFixed(2)} → ₹${newAvgPrice.toFixed(2)}`;
   if (previewTotal) previewTotal.textContent = formatINR(totalTradeVal);
 
   if (warningNote) {
@@ -2740,16 +3539,125 @@ function updateTradePreview() {
   }
 }
 
+// ========================================================
+// PANIC SELL COGNITIVE INTERCEPTOR (KAHNEMAN SYSTEM 2 BRAKE)
+// Protects 9-5 professionals from impulsive loss-booking
+// ========================================================
+let pendingPanicSellPayload = null;
+let panicSellTimer = null;
+let panicSellSecondsLeft = 15;
+let tradeConfirmedViaInterceptor = false;
+
+function openPanicSellInterceptor(holding, ticker, tradeQty, tradePrice) {
+  pendingPanicSellPayload = { holding, ticker, tradeQty, tradePrice };
+
+  const modal = document.getElementById("modalPanicSellInterceptor");
+  if (!modal) return;
+
+  // Set Stock Ticker
+  const tickerEl = document.getElementById("interceptorStockTicker");
+  if (tickerEl) tickerEl.textContent = ticker;
+
+  // Reality Check 1: Market Beta vs Company Decay
+  const betaEl = document.getElementById("interceptorBetaText");
+  const pnlPct = holding ? (holding.unrealizedPnLPercent || 0) : 0;
+  if (betaEl) {
+    betaEl.textContent = `Nifty 50 and sectoral indices are experiencing macro beta consolidation. ${ticker}'s current dip (${pnlPct.toFixed(1)}%) is driven predominantly by market liquidity tides, NOT company failure.`;
+  }
+
+  // Reality Check 2: Moat & ROCE Health
+  const moatEl = document.getElementById("interceptorMoatText");
+  const audit = currentDiagnostics?.thesisAudit?.find(a => a.ticker === ticker);
+  if (moatEl) {
+    if (audit && audit.fundamentalMoat) {
+      moatEl.textContent = `Fundamental Moat Verified: ${audit.fundamentalMoat}. Management's operating efficiency remains rock-solid.`;
+    } else {
+      moatEl.textContent = `Has ${ticker}'s competitive advantage or ROCE vanished today? No. Profitable businesses with low leverage continue compounding their earnings power uninterrupted.`;
+    }
+  }
+
+  // Kahneman 15-second intentional cooling period
+  panicSellSecondsLeft = 15;
+  const timerBadge = document.getElementById("interceptorCountdownTimer");
+  const overrideBtn = document.getElementById("btnOverridePanicSell");
+  if (timerBadge) {
+    timerBadge.textContent = "15s";
+    timerBadge.className = "font-mono font-bold text-amber-300 bg-amber-500/20 px-2 py-0.5 rounded";
+  }
+  if (overrideBtn) {
+    overrideBtn.disabled = true;
+    overrideBtn.textContent = "Proceed with Sell (Locked 15s)";
+    overrideBtn.className = "px-3 py-2 bg-[#0f1b32] text-slate-500 border border-[#16233d] text-xs font-medium rounded-lg transition disabled:opacity-40 disabled:cursor-not-allowed";
+  }
+
+  if (panicSellTimer) clearInterval(panicSellTimer);
+  panicSellTimer = setInterval(() => {
+    panicSellSecondsLeft--;
+    if (panicSellSecondsLeft > 0) {
+      if (timerBadge) timerBadge.textContent = `${panicSellSecondsLeft}s`;
+      if (overrideBtn) overrideBtn.textContent = `Proceed with Sell (Locked ${panicSellSecondsLeft}s)`;
+    } else {
+      clearInterval(panicSellTimer);
+      panicSellTimer = null;
+      if (timerBadge) {
+        timerBadge.textContent = "Ready";
+        timerBadge.className = "font-mono font-bold text-emerald-400 bg-emerald-500/20 px-2 py-0.5 rounded";
+      }
+      if (overrideBtn) {
+        overrideBtn.disabled = false;
+        overrideBtn.textContent = "Proceed with Permanent Loss";
+        overrideBtn.className = "px-3 py-2 bg-rose-600/30 hover:bg-rose-600/50 text-rose-200 border border-rose-500/40 text-xs font-semibold rounded-lg transition cursor-pointer";
+      }
+    }
+  }, 1000);
+
+  modal.classList.remove("hidden");
+}
+
+function closePanicSellInterceptor() {
+  if (panicSellTimer) {
+    clearInterval(panicSellTimer);
+    panicSellTimer = null;
+  }
+  pendingPanicSellPayload = null;
+  const modal = document.getElementById("modalPanicSellInterceptor");
+  if (modal) modal.classList.add("hidden");
+}
+
+function confirmHoldWithConviction() {
+  closePanicSellInterceptor();
+  closeTradeModal();
+  showToast("🛡️ Conviction Held: Prevented an impulsive market-hours bottom exit. Let your compounder compound!");
+}
+
+async function proceedWithSellExecution() {
+  if (!pendingPanicSellPayload) return;
+  tradeConfirmedViaInterceptor = true;
+  closePanicSellInterceptor();
+  await submitTradeModal();
+  tradeConfirmedViaInterceptor = false;
+}
+
 async function submitTradeModal() {
   if (!currentPortfolioId) return alert("Please select a portfolio first.");
 
   const ticker = (document.getElementById("tradeTickerInput")?.value || "").trim().toUpperCase();
-  const tradeQty = parseFloat(document.getElementById("tradeQuantityInput")?.value) || 0;
+  const tradeQty = Math.round(parseFloat(document.getElementById("tradeQuantityInput")?.value) || 0);
   const tradePrice = parseFloat(document.getElementById("tradePriceInput")?.value) || 0;
 
   if (!ticker) return alert("Please enter or select a valid NSE stock symbol.");
-  if (tradeQty <= 0) return alert("Quantity must be greater than 0.");
+  if (tradeQty <= 0) return alert("Quantity must be at least 1 whole share.");
   if (tradePrice <= 0) return alert("Trade price must be greater than 0.");
+
+  // Behavioral Psychology Check: Panic Sell Interceptor (System 2 Brake)
+  if (currentTradeAction === 'SELL' && !tradeConfirmedViaInterceptor) {
+    const holding = currentPortfolioData?.holdings?.find(h => h.ticker.toUpperCase() === ticker);
+    // Intercept if position has unrealized loss, or day PnL is red, or Work Shield is active
+    if (holding && ((holding.unrealizedPnL || 0) < 0 || (holding.dayPnL || 0) < 0 || isWorkShieldActive)) {
+      openPanicSellInterceptor(holding, ticker, tradeQty, tradePrice);
+      return;
+    }
+  }
 
   const btn = document.getElementById("btnSubmitTrade");
   if (btn) btn.disabled = true;
@@ -2843,21 +3751,101 @@ function switchAngelTab(tab) {
 }
 
 let selectedExcelFile = null;
+let selectedBrokerFile = null;
+let currentBrokerImportMode = "Merge"; // "Merge" | "KeepSeparate" | "Replace"
 
-function handleExcelFileSelected(event) {
+function openBrokerImportModal() {
+  openAngelOneModal();
+}
+
+function closeBrokerImportModal() {
+  closeAngelOneModal();
+}
+
+function setBrokerImportMode(mode) {
+  currentBrokerImportMode = mode;
+
+  const cardMerge = document.getElementById("cardImportModeMerge");
+  const cardKeep = document.getElementById("cardImportModeKeepSeparate");
+  const cardReplace = document.getElementById("cardImportModeReplace");
+  const rowNewName = document.getElementById("rowNewPortfolioName");
+  const btnText = document.getElementById("btnSubmitBrokerImportText");
+
+  // Reset all
+  [cardMerge, cardKeep, cardReplace].forEach(c => {
+    if (c) {
+      c.className = "cursor-pointer p-3 rounded-xl border border-slate-800 bg-slate-950/70 hover:border-slate-700 transition flex flex-col justify-between space-y-1.5";
+    }
+  });
+
+  if (mode === "Merge") {
+    if (cardMerge) cardMerge.className = "cursor-pointer p-3 rounded-xl border border-cyan-500 bg-cyan-500/10 hover:bg-cyan-500/15 transition flex flex-col justify-between space-y-1.5 shadow-sm";
+    if (rowNewName) rowNewName.classList.add("hidden");
+    if (btnText) btnText.textContent = "Import & Apply Holdings (Smart-Merge)";
+  } else if (mode === "KeepSeparate") {
+    if (cardKeep) cardKeep.className = "cursor-pointer p-3 rounded-xl border border-teal-500 bg-teal-500/10 hover:bg-teal-500/15 transition flex flex-col justify-between space-y-1.5 shadow-sm";
+    if (rowNewName) rowNewName.classList.remove("hidden");
+    if (btnText) btnText.textContent = "Import into New Dedicated Portfolio";
+    const nameInput = document.getElementById("txtNewPortfolioName");
+    if (nameInput && !nameInput.value) {
+      nameInput.value = "Zerodha Portfolio";
+    }
+    nameInput?.focus();
+  } else if (mode === "Replace") {
+    if (cardReplace) cardReplace.className = "cursor-pointer p-3 rounded-xl border border-rose-500 bg-rose-500/10 hover:bg-rose-500/15 transition flex flex-col justify-between space-y-1.5 shadow-sm";
+    if (rowNewName) rowNewName.classList.add("hidden");
+    if (btnText) btnText.textContent = "Overwrite & Replace Active Portfolio";
+  }
+}
+
+function handleBrokerFileSelected(event) {
   const file = event.target.files?.[0];
   if (!file) return;
+  selectedBrokerFile = file;
   selectedExcelFile = file;
 
   const dropLabel = document.getElementById("dropzoneLabel");
   const dropSub = document.getElementById("dropzoneSub");
-  const summary = document.getElementById("excelUploadSummary");
-  const fileName = document.getElementById("excelFileName");
+  const banner = document.getElementById("brokerDetectedBanner");
+  const icon = document.getElementById("brokerDetectedIcon");
+  const text = document.getElementById("brokerDetectedText");
+  const size = document.getElementById("brokerDetectedFileSize");
+  const txtNewName = document.getElementById("txtNewPortfolioName");
 
-  if (dropLabel) dropLabel.innerHTML = `Selected: <strong class="text-emerald-400">${file.name}</strong> (${(file.size / 1024).toFixed(1)} KB)`;
-  if (dropSub) dropSub.textContent = "Click 'Import & Sync Portfolio' below to apply";
-  if (fileName) fileName.textContent = file.name;
-  if (summary) summary.classList.remove("hidden");
+  const nameLower = file.name.toLowerCase();
+  const isZerodha = nameLower.endsWith(".csv") || nameLower.includes("kite") || nameLower.includes("zerodha") || nameLower.includes("console");
+  const detectedBroker = isZerodha ? "Zerodha" : "Angel One";
+
+  if (dropLabel) {
+    dropLabel.innerHTML = `Selected File: <strong class="text-white">${file.name}</strong>`;
+  }
+  if (dropSub) {
+    dropSub.textContent = "Broker recognized. Choose your import strategy below and click apply.";
+  }
+
+  if (banner) {
+    banner.classList.remove("hidden");
+    if (isZerodha) {
+      banner.className = "mt-2 p-2.5 rounded-xl border border-blue-500/40 bg-blue-500/10 text-blue-200 flex items-center justify-between text-xs";
+      if (icon) icon.className = "fa-solid fa-circle-check text-blue-400 text-sm";
+      if (text) text.innerHTML = `<strong>Zerodha Kite / Console Export Detected</strong> (${file.name})`;
+      if (txtNewName && (!txtNewName.value || txtNewName.value === "Angel One Portfolio")) {
+        txtNewName.value = "Zerodha Portfolio";
+      }
+    } else {
+      banner.className = "mt-2 p-2.5 rounded-xl border border-teal-500/40 bg-teal-500/10 text-teal-200 flex items-center justify-between text-xs";
+      if (icon) icon.className = "fa-solid fa-circle-check text-teal-400 text-sm";
+      if (text) text.innerHTML = `<strong>Angel One Demat Spreadsheet Detected</strong> (${file.name})`;
+      if (txtNewName && (!txtNewName.value || txtNewName.value === "Zerodha Portfolio")) {
+        txtNewName.value = "Angel One Portfolio";
+      }
+    }
+    if (size) size.textContent = `${(file.size / 1024).toFixed(1)} KB`;
+  }
+}
+
+function handleExcelFileSelected(event) {
+  handleBrokerFileSelected(event);
 }
 
 function saveExcelPassword(pwd) {
@@ -2887,50 +3875,85 @@ function togglePasswordVisibility(inputId, btn) {
   }
 }
 
-async function handleConfirmUploadExcel() {
-  if (!selectedExcelFile) return alert("Please select an Angel One Excel (.xlsx) file first.");
-  if (!currentPortfolioId) return alert("Please select a portfolio first.");
+async function submitBrokerImport() {
+  const fileToUpload = selectedBrokerFile || selectedExcelFile;
+  if (!fileToUpload) {
+    return alert("Please select a broker holdings file (.csv or .xlsx) from Zerodha or Angel One first.");
+  }
+  if (!currentPortfolioId && currentBrokerImportMode !== "KeepSeparate") {
+    return alert("Please select or create an active portfolio first.");
+  }
 
-  const btn = document.getElementById("btnConfirmUploadExcel");
+  const btn = document.getElementById("btnSubmitBrokerImport");
+  const originalBtnHtml = btn ? btn.innerHTML : "";
   if (btn) {
     btn.disabled = true;
-    btn.innerHTML = `<i class="fa-solid fa-spinner fa-spin mr-1"></i> Parsing Excel...`;
+    btn.innerHTML = `<i class="fa-solid fa-spinner fa-spin mr-1.5"></i> Processing ${fileToUpload.name}...`;
   }
 
   const pwd = getExcelPassword();
   const formData = new FormData();
-  formData.append("file", selectedExcelFile);
-  if (pwd) formData.append("password", pwd);
+  formData.append("file", fileToUpload);
+  if (currentPortfolioId) formData.append("portfolioId", currentPortfolioId);
+  formData.append("mode", currentBrokerImportMode);
+
+  if (currentBrokerImportMode === "KeepSeparate") {
+    const customName = document.getElementById("txtNewPortfolioName")?.value?.trim() || "Imported Broker Portfolio";
+    formData.append("newPortfolioName", customName);
+  }
+  if (pwd) {
+    formData.append("password", pwd);
+  }
 
   try {
-    const res = await fetch(`/api/portfolios/${currentPortfolioId}/upload-excel`, {
+    const res = await fetch("/api/portfolios/import-broker", {
       method: "POST",
       body: formData
     });
 
     if (res.ok) {
-      currentPortfolioData = await res.json();
-      normalizePortfolioData(currentPortfolioData);
-      renderPortfolioDetails(currentPortfolioData);
+      const data = await res.json();
       closeAngelOneModal();
-      showToast(`🎉 Successfully imported ${currentPortfolioData.holdings.length} holdings from ${selectedExcelFile.name}!`);
+
+      if (currentBrokerImportMode === "KeepSeparate") {
+        await loadPortfolios();
+        if (data.portfolioId) {
+          selectPortfolio(data.portfolioId);
+        }
+        showToast(`🎉 Created new portfolio "${data.portfolio?.name || 'Broker Portfolio'}" with ${data.totalParsed} positions from ${data.broker}!`);
+      } else if (currentBrokerImportMode === "Merge") {
+        currentPortfolioData = data.portfolio;
+        normalizePortfolioData(currentPortfolioData);
+        renderPortfolioDetails(currentPortfolioData);
+        showToast(`🎉 Merged ${data.broker} holdings: ${data.overlappingMerged} overlapping positions updated with volume-weighted price, ${data.newPositionsAdded} new positions added! Total: ${data.totalPositionsAfter} stocks.`);
+      } else {
+        currentPortfolioData = data.portfolio;
+        normalizePortfolioData(currentPortfolioData);
+        renderPortfolioDetails(currentPortfolioData);
+        showToast(`🎉 Replaced portfolio with ${data.totalParsed} positions from ${data.broker}!`);
+      }
     } else {
-      const err = await res.json();
-      alert(`Excel import failed: ${err.error || "Please verify the Excel format."}`);
-      if (err.error && err.error.toLowerCase().includes("password")) {
+      const err = await res.json().catch(() => ({}));
+      const msg = err.error || "Please verify the broker file format.";
+      alert(`Broker import failed: ${msg}`);
+      if (msg.toLowerCase().includes("password")) {
         const inp = document.getElementById("angelExcelPassword") || document.getElementById("manageExcelPassword");
         inp?.focus();
       }
     }
   } catch (err) {
-    console.error("Excel upload error:", err);
-    alert("Network error uploading Excel file.");
+    console.error("Broker import error:", err);
+    alert("Network error processing broker import.");
   } finally {
     if (btn) {
       btn.disabled = false;
-      btn.innerHTML = `<i class="fa-solid fa-check"></i> <span>Import & Sync Portfolio</span>`;
+      btn.innerHTML = originalBtnHtml;
     }
   }
+}
+
+async function handleConfirmUploadExcel() {
+  await submitBrokerImport();
 }
 
 async function handleAutoImportDownloadsExcel() {
@@ -3064,7 +4087,7 @@ async function processAngelOnePayload(payload) {
 
   const items = rawList.map(item => {
     const symbol = item.tradingsymbol || item.tradingSymbol || item.symbol || item.ticker || "";
-    const qty = parseFloat(item.quantity || item.holdingquantity || item.qty || 0);
+    const qty = Math.round(parseFloat(item.quantity || item.holdingquantity || item.qty || 0));
     const avgPrice = parseFloat(item.averageprice || item.avgprice || item.buyPrice || item.price || 0);
     const ltp = parseFloat(item.ltp || item.cmp || 0);
 
@@ -3168,6 +4191,11 @@ async function handleExcelUpload(event) {
 }
 
 // Explicit window bindings for HTML onclick event handlers
+window.openBrokerImportModal = openBrokerImportModal;
+window.closeBrokerImportModal = closeBrokerImportModal;
+window.setBrokerImportMode = setBrokerImportMode;
+window.handleBrokerFileSelected = handleBrokerFileSelected;
+window.submitBrokerImport = submitBrokerImport;
 window.saveExcelPassword = saveExcelPassword;
 window.getExcelPassword = getExcelPassword;
 window.togglePasswordVisibility = togglePasswordVisibility;
@@ -3705,12 +4733,12 @@ async function loadSwingRadarFeed() {
         : `<span class="px-1.5 py-0.5 rounded text-[9px] font-mono font-bold bg-cyan-500/15 text-cyan-300 border border-cyan-500/30">Beta VDU</span>`;
 
       return `
-        <div class="p-4 bg-slate-950/80 rounded-xl border border-slate-800 hover:border-teal-500/40 transition shadow-sm space-y-2.5 flex flex-col justify-between">
+        <div class="p-4 bg-[#0a1222]/90 rounded-xl border border-[#16233d] hover:border-cyan-500/40 transition shadow-sm space-y-2.5 flex flex-col justify-between">
           <div class="space-y-2">
             <div class="flex items-center justify-between">
               <div class="flex items-center space-x-2">
                 <span class="text-sm font-black text-white">${item.ticker}</span>
-                <span class="text-xs font-mono text-slate-400">₹${item.currentPrice.toFixed(2)}</span>
+                <span class="text-xs font-mono text-slate-300">₹${item.currentPrice.toFixed(2)}</span>
                 ${teamPill}
               </div>
               <span class="px-2 py-0.5 rounded text-[9px] font-mono font-bold ${statusClass} border uppercase">
@@ -3718,22 +4746,22 @@ async function loadSwingRadarFeed() {
               </span>
             </div>
 
-            <div class="text-xs text-slate-300 font-semibold truncate">
+            <div class="text-xs text-slate-200 font-semibold truncate">
               ${swing.setupType}
             </div>
 
-            <div class="grid grid-cols-3 gap-1 text-center font-mono text-[10px] bg-slate-900/60 p-1.5 rounded-lg border border-slate-800/80">
+            <div class="grid grid-cols-3 gap-1 text-center font-mono text-[10px] bg-[#060c18] p-1.5 rounded-lg border border-[#16233d]">
               <div>
-                <span class="text-slate-500 block text-[8px] uppercase">Target (+${swing.targetGainPercent}%)</span>
+                <span class="text-slate-400 block text-[8px] uppercase">Target (+${swing.targetGainPercent}%)</span>
                 <span class="text-emerald-300 font-bold">₹${swing.targetPrice.toFixed(2)}</span>
               </div>
               <div>
-                <span class="text-slate-500 block text-[8px] uppercase">Stop (-${swing.stopLossPercent}%)</span>
+                <span class="text-slate-400 block text-[8px] uppercase">Stop (-${swing.stopLossPercent}%)</span>
                 <span class="text-rose-300 font-bold">₹${swing.stopLossPrice.toFixed(2)}</span>
               </div>
               <div>
-                <span class="text-slate-500 block text-[8px] uppercase">R : R</span>
-                <span class="text-teal-300 font-bold">1 : ${swing.riskRewardRatio}</span>
+                <span class="text-slate-400 block text-[8px] uppercase">R : R</span>
+                <span class="text-cyan-300 font-bold">1 : ${swing.riskRewardRatio}</span>
               </div>
             </div>
 
@@ -3742,8 +4770,8 @@ async function loadSwingRadarFeed() {
             </div>
           </div>
 
-          <div class="pt-2 border-t border-slate-800/80 flex items-center justify-between gap-1 text-[11px]">
-            <button type="button" onclick="quickInspectTicker('${item.ticker}')" class="px-2.5 py-1 rounded bg-slate-800 hover:bg-slate-700 text-teal-400 transition font-semibold flex items-center space-x-1">
+          <div class="pt-2 border-t border-[#16233d] flex items-center justify-between gap-1 text-[11px]">
+            <button type="button" onclick="quickInspectTicker('${item.ticker}')" class="px-2.5 py-1 rounded bg-[#0f1b32] hover:bg-[#16233d] text-cyan-300 transition font-semibold flex items-center space-x-1">
               <i class="fa-solid fa-chart-line text-[10px]"></i>
               <span>Inspect &amp; Chart</span>
             </button>
@@ -3933,14 +4961,14 @@ function renderPortfolioSwingCard(h, status) {
   const isTriggered = status === 'TRIGGERED';
   const badgeClass = isTriggered
     ? "bg-emerald-500/20 text-emerald-300 border-emerald-500/40"
-    : "bg-amber-500/20 text-amber-300 border-amber-500/40";
+    : "bg-cyan-500/20 text-cyan-300 border-cyan-500/40";
   const badgeText = isTriggered ? "ACTIVE BUY PIVOT" : "FORMING SQUEEZE";
 
   return `
-    <div class="p-4 bg-slate-950/90 rounded-xl border border-slate-800 hover:border-teal-500/40 transition space-y-3 shadow-md">
-      <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-800 pb-2.5">
+    <div class="p-4 bg-[#0a1222]/90 rounded-xl border border-[#16233d] hover:border-cyan-500/40 transition space-y-3 shadow-md">
+      <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-[#16233d] pb-2.5">
         <div class="flex items-center space-x-3">
-          <div class="w-8 h-8 rounded-lg bg-teal-500/15 border border-teal-500/30 flex items-center justify-center text-teal-400 text-sm font-bold">
+          <div class="w-8 h-8 rounded-lg bg-cyan-500/15 border border-cyan-500/30 flex items-center justify-center text-cyan-400 text-sm font-bold">
             ${h.ticker.slice(0, 2)}
           </div>
           <div>
@@ -3951,12 +4979,12 @@ function renderPortfolioSwingCard(h, status) {
                 ${badgeText}
               </span>
             </div>
-            <p class="text-[11px] text-slate-400 mt-0.5">${h.sector} &bull; Portfolio Weight: <strong class="text-slate-200">${h.weightPercent.toFixed(1)}%</strong> &bull; Holding Horizon: <strong class="text-teal-300">${sw.timeHorizon}</strong></p>
+            <p class="text-[11px] text-slate-400 mt-0.5">${h.sector} &bull; Portfolio Weight: <strong class="text-slate-200">${h.weightPercent.toFixed(1)}%</strong> &bull; Holding Horizon: <strong class="text-cyan-300">${sw.timeHorizon}</strong></p>
           </div>
         </div>
 
         <div class="flex items-center space-x-2">
-          <button type="button" onclick="quickInspectTicker('${h.ticker}')" class="px-2.5 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-teal-400 text-xs font-semibold transition">
+          <button type="button" onclick="quickInspectTicker('${h.ticker}')" class="px-2.5 py-1.5 rounded-lg bg-[#0f1b32] hover:bg-[#16233d] text-cyan-400 text-xs font-semibold transition">
             <i class="fa-solid fa-chart-line mr-1"></i> Chart
           </button>
           <button type="button" onclick="openCreateAlertModal('${h.ticker}', ${h.currentPrice}, ${sw.targetPrice}, 'CrossesAbove')" class="px-2.5 py-1.5 rounded-lg bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-300 border border-emerald-500/40 text-xs font-semibold flex items-center space-x-1 transition shadow-sm">
@@ -3972,23 +5000,23 @@ function renderPortfolioSwingCard(h, status) {
 
       <!-- Parameters Strip -->
       <div class="grid grid-cols-2 sm:grid-cols-5 gap-2 text-center text-[10px] font-mono">
-        <div class="bg-slate-900 p-2 rounded-lg border border-slate-800">
+        <div class="bg-[#060c18] p-2 rounded-lg border border-[#16233d]">
           <span class="text-slate-500 block text-[9px] uppercase">CMP / Entry</span>
           <span class="font-bold text-white text-xs mt-0.5 block">₹${h.currentPrice.toFixed(2)}</span>
         </div>
-        <div class="bg-slate-900 p-2 rounded-lg border border-emerald-500/30">
+        <div class="bg-[#060c18] p-2 rounded-lg border border-emerald-500/30">
           <span class="text-emerald-400 block text-[9px] uppercase">Swing Target</span>
           <span class="font-bold text-emerald-300 text-xs mt-0.5 block">₹${sw.targetPrice.toFixed(2)} (+${sw.targetGainPercent}%)</span>
         </div>
-        <div class="bg-slate-900 p-2 rounded-lg border border-rose-500/30">
+        <div class="bg-[#060c18] p-2 rounded-lg border border-rose-500/30">
           <span class="text-rose-400 block text-[9px] uppercase">Stop Loss</span>
           <span class="font-bold text-rose-300 text-xs mt-0.5 block">₹${sw.stopLossPrice.toFixed(2)} (-${sw.stopLossPercent}%)</span>
         </div>
-        <div class="bg-slate-900 p-2 rounded-lg border border-slate-800">
+        <div class="bg-[#060c18] p-2 rounded-lg border border-[#16233d]">
           <span class="text-slate-500 block text-[9px] uppercase">Risk / Reward</span>
-          <span class="font-bold text-teal-300 text-xs mt-0.5 block">1 : ${sw.riskRewardRatio}</span>
+          <span class="font-bold text-cyan-300 text-xs mt-0.5 block">1 : ${sw.riskRewardRatio}</span>
         </div>
-        <div class="bg-slate-900 p-2 rounded-lg border border-slate-800 col-span-2 sm:col-span-1">
+        <div class="bg-[#060c18] p-2 rounded-lg border border-[#16233d] col-span-2 sm:col-span-1">
           <span class="text-slate-500 block text-[9px] uppercase">Holding Cycle</span>
           <span class="font-bold text-amber-300 text-xs mt-0.5 block">${sw.expectedHoldingDays} Days (1-2 Mo)</span>
         </div>
@@ -3996,15 +5024,2031 @@ function renderPortfolioSwingCard(h, status) {
 
       <!-- Triggers -->
       ${(sw.triggers && sw.triggers.length > 0) ? `
-        <div class="bg-slate-900/60 p-2 rounded-lg border border-slate-800/80 space-y-0.5 text-[10px] text-slate-300">
-          ${sw.triggers.map(t => `<div class="flex items-start space-x-1.5"><i class="fa-solid fa-angle-right text-teal-400 mt-0.5 text-[9px]"></i><span>${t}</span></div>`).join('')}
+        <div class="bg-[#060c18]/60 p-2 rounded-lg border border-[#16233d]/80 space-y-0.5 text-[10px] text-slate-300">
+          ${sw.triggers.map(t => `<div class="flex items-start space-x-1.5"><i class="fa-solid fa-angle-right text-cyan-400 mt-0.5 text-[9px]"></i><span>${t}</span></div>`).join('')}
         </div>
       ` : ''}
     </div>
   `;
 }
 
+// ==========================================
+// ==========================================
+// EYE-COMFORT & 3-THEME ERGONOMICS SYSTEM
+// (Current Dark, Eye Comfort, Light Theme)
+// ==========================================
+function toggleHeaderMoreDropdown() {
+  const menu = document.getElementById("headerMoreDropdownMenu");
+  if (menu) menu.classList.toggle("hidden");
+}
+
+document.addEventListener("click", (e) => {
+  const dropdown = document.getElementById("headerMoreDropdownMenu");
+  const btn = document.getElementById("btnHeaderMore");
+  if (dropdown && !dropdown.classList.contains("hidden")) {
+    if (!dropdown.contains(e.target) && !btn?.contains(e.target)) {
+      dropdown.classList.add("hidden");
+    }
+  }
+});
+
+function applyAppTheme(themeName) {
+  document.body.classList.remove('theme-charcoal', 'theme-obsidian', 'theme-slate', 'theme-tradingview', 'theme-angelone', 'theme-screener', 'theme-dark', 'theme-eye-comfort', 'theme-light');
+
+  // Normalize theme options: 'dark', 'eye-comfort', 'light'
+  if (themeName === 'light') {
+    themeName = 'light';
+    document.body.classList.add('theme-light');
+  } else if (themeName === 'eye-comfort' || themeName === 'charcoal') {
+    themeName = 'eye-comfort';
+    document.body.classList.add('theme-eye-comfort');
+  } else {
+    themeName = 'dark';
+    document.body.classList.add('theme-dark');
+  }
+
+  // Update segmented control buttons in header
+  const btnDark = document.getElementById("themeBtnDark");
+  const btnEye = document.getElementById("themeBtnEyeComfort");
+  const btnLight = document.getElementById("themeBtnLight");
+
+  const activeDark = "theme-opt-btn px-2.5 py-1 rounded-lg text-[11px] font-medium flex items-center space-x-1 text-teal-300 bg-teal-500/15 border border-teal-500/30 transition shadow-xs";
+  const activeEye = "theme-opt-btn px-2.5 py-1 rounded-lg text-[11px] font-medium flex items-center space-x-1 text-amber-300 bg-amber-500/15 border border-amber-500/30 transition shadow-xs";
+  const activeLight = "theme-opt-btn px-2.5 py-1 rounded-lg text-[11px] font-medium flex items-center space-x-1 text-sky-700 bg-sky-100 border border-sky-300 transition shadow-xs";
+  const inactiveDark = "theme-opt-btn px-2.5 py-1 rounded-lg text-[11px] font-medium flex items-center space-x-1 text-slate-400 hover:text-slate-200 transition";
+  const inactiveLight = "theme-opt-btn px-2.5 py-1 rounded-lg text-[11px] font-medium flex items-center space-x-1 text-slate-500 hover:text-slate-800 transition";
+
+  if (themeName === 'light') {
+    if (btnDark) btnDark.className = inactiveLight;
+    if (btnEye) btnEye.className = inactiveLight;
+    if (btnLight) btnLight.className = activeLight;
+  } else if (themeName === 'eye-comfort') {
+    if (btnDark) btnDark.className = inactiveDark;
+    if (btnEye) btnEye.className = activeEye;
+    if (btnLight) btnLight.className = inactiveDark;
+  } else {
+    if (btnDark) btnDark.className = activeDark;
+    if (btnEye) btnEye.className = inactiveDark;
+    if (btnLight) btnLight.className = inactiveDark;
+  }
+
+  localStorage.setItem("portfolioRebalancerTheme", themeName);
+
+  // Smoothly refresh Donut allocation charts and holdings table to synchronize theme
+  if (currentPortfolioData) {
+    if (typeof renderPortfolioAllocationCharts === 'function') {
+      renderPortfolioAllocationCharts(currentPortfolioData, currentDiagnostics);
+    }
+    if (typeof renderHoldingsTable === 'function') {
+      renderHoldingsTable();
+    }
+  }
+
+  // If a stock chart is currently open, smoothly re-render with matching background and grid
+  if (activeChartTicker && currentChartInstance) {
+    loadAndRenderStockChart(activeChartTicker, activeChartRange, activeChartMos);
+  }
+}
+
+function initThemeFromStorage() {
+  const urlParam = new URLSearchParams(window.location.search).get("theme");
+  const savedTheme = urlParam || localStorage.getItem("portfolioRebalancerTheme") || "dark";
+  applyAppTheme(savedTheme);
+}
+
 // Window exports
+
+// ============================================================================
+// INSTITUTIONAL SUPPLY CHAIN & VALUE ECOSYSTEM GRAPH VISUAL SYSTEM
+// Inspired by Bloomberg SPLC, FactSet Revere, Koyfin, Linear.app & Stripe
+// Multi-Tier Visual DAG, Interactive Tabs, COGS Tree, Revenue Mix & Stress Test
+// ============================================================================
+
+window._scDataMap = window._scDataMap || {};
+window._scStateMap = window._scStateMap || {};
+
+function renderInstitutionalSupplyChainEcosystem(supplyChain, ticker, companyName) {
+  if (!supplyChain) return '';
+
+  // Store in memory for dynamic reactivity without network re-fetch
+  window._scDataMap[ticker] = { supplyChain, ticker, companyName };
+
+  if (!window._scStateMap[ticker]) {
+    window._scStateMap[ticker] = {
+      activeTab: 'graph', // default to flagship interactive directed graph!
+      activeShockIndex: 0,
+      activeMacroTrigger: 'COPPER_SPIKE', // 'COPPER_SPIKE' | 'COPPER_DROP' | 'CRUDE_SPIKE' | 'STEEL_SPIKE' | 'INR_WEAK' | 'BASE'
+      sliderDeltaPercent: 20,
+      expandedNodes: {}
+    };
+  }
+
+  const state = window._scStateMap[ticker];
+  const activeTab = state.activeTab || 'graph';
+  const activeShockIdx = state.activeShockIndex || 0;
+
+  // Extract key summary metrics
+  const primaryInput = supplyChain.keyInputs && supplyChain.keyInputs.length > 0 ? supplyChain.keyInputs[0] : null;
+  const primaryOutput = supplyChain.keyOutputs && supplyChain.keyOutputs.length > 0 ? supplyChain.keyOutputs[0] : null;
+  const moatRating = supplyChain.valueChain?.moatRating || 'Wide Economic Moat';
+  const conversionMargin = supplyChain.valueChain?.grossConversionMargin || '38-45% Gross Value-Add';
+  const buyerConcentration = primaryOutput?.customerConcentration || 'Diversified End Market';
+
+  return `
+    <div id="sc-component-${ticker}" class="supply-node-card p-4 sm:p-5 bg-gradient-to-r from-[#060c18] via-[#091120] to-[#060c18] rounded-2xl border border-cyan-500/30 space-y-4 shadow-2xl relative overflow-hidden">
+      <!-- Ambient Glow Behind Centerpiece -->
+      <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-cyan-500/5 rounded-full blur-3xl pointer-events-none"></div>
+
+      <!-- Top Header & Navigation Bar -->
+      <div class="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-3 pb-3 border-b border-[#16233d]">
+        <div class="flex items-center space-x-3">
+          <div class="w-9 h-9 rounded-xl bg-gradient-to-tr from-cyan-500/20 via-blue-500/20 to-indigo-500/20 border border-cyan-500/40 flex items-center justify-center text-cyan-400 shadow-md shadow-cyan-500/10">
+            <i class="fa-solid fa-diagram-project text-sm"></i>
+          </div>
+          <div>
+            <div class="flex items-center space-x-2">
+              <h4 class="text-xs sm:text-sm font-bold text-white uppercase tracking-wider">
+                Supply Chain &amp; Value-Creation Ecosystem
+              </h4>
+              <span class="px-2 py-0.5 rounded text-[9px] font-mono font-bold bg-cyan-500/15 text-cyan-300 border border-cyan-500/30">
+                BLOOMBERG SPLC &bull; TIER-1 DAG
+              </span>
+            </div>
+            <p class="text-[11px] text-slate-400 mt-0.5">
+              Multi-tier upstream sourcing &bull; core transformation moat &bull; downstream customer realization
+            </p>
+          </div>
+        </div>
+
+        <!-- 5 Quick-Toggle Institutional Tabs -->
+        <div class="flex flex-wrap items-center gap-1 p-1 bg-[#060c18] border border-[#16233d] rounded-xl self-start md:self-center shadow-inner">
+          <button type="button" onclick="switchSupplyChainTab('graph', '${ticker}')"
+            class="supply-pill-tab px-2.5 py-1 rounded-lg text-[10px] font-semibold flex items-center space-x-1.5 transition ${activeTab === 'graph' ? 'bg-cyan-500/20 text-cyan-200 border border-cyan-500/40 shadow-sm' : 'text-slate-400 hover:text-slate-200 hover:bg-[#0f1b32]/50 border border-transparent'}">
+            <i class="fa-solid fa-diagram-project text-[10px] text-cyan-400"></i>
+            <span>1. Product &amp; Shock Graph</span>
+          </button>
+          <button type="button" onclick="switchSupplyChainTab('pipeline', '${ticker}')"
+            class="supply-pill-tab px-2.5 py-1 rounded-lg text-[10px] font-semibold flex items-center space-x-1.5 transition ${activeTab === 'pipeline' ? 'bg-amber-500/20 text-amber-200 border border-amber-500/40 shadow-sm' : 'text-slate-400 hover:text-slate-200 hover:bg-[#0f1b32]/50 border border-transparent'}">
+            <i class="fa-solid fa-network-wired text-[10px]"></i>
+            <span>2. Pipeline Flow</span>
+          </button>
+          <button type="button" onclick="switchSupplyChainTab('cogs', '${ticker}')"
+            class="supply-pill-tab px-2.5 py-1 rounded-lg text-[10px] font-semibold flex items-center space-x-1.5 transition ${activeTab === 'cogs' ? 'bg-amber-500/20 text-amber-200 border border-amber-500/40 shadow-sm' : 'text-slate-400 hover:text-slate-200 hover:bg-[#0f1b32]/50 border border-transparent'}">
+            <i class="fa-solid fa-boxes-stacked text-[10px]"></i>
+            <span>3. COGS Tree</span>
+          </button>
+          <button type="button" onclick="switchSupplyChainTab('revenue', '${ticker}')"
+            class="supply-pill-tab px-2.5 py-1 rounded-lg text-[10px] font-semibold flex items-center space-x-1.5 transition ${activeTab === 'revenue' ? 'bg-emerald-500/20 text-emerald-200 border border-emerald-500/40 shadow-sm' : 'text-slate-400 hover:text-slate-200 hover:bg-[#0f1b32]/50 border border-transparent'}">
+            <i class="fa-solid fa-chart-pie text-[10px]"></i>
+            <span>4. Revenue Mix</span>
+          </button>
+          <button type="button" onclick="switchSupplyChainTab('stress', '${ticker}')"
+            class="supply-pill-tab px-2.5 py-1 rounded-lg text-[10px] font-semibold flex items-center space-x-1.5 transition ${activeTab === 'stress' ? 'bg-rose-500/20 text-rose-200 border border-rose-500/40 shadow-sm' : 'text-slate-400 hover:text-slate-200 hover:bg-[#0f1b32]/50 border border-transparent'}">
+            <i class="fa-solid fa-bolt-lightning text-[10px]"></i>
+            <span>5. Macro Stress Test</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- High-Density Executive Summary Strip -->
+      <div class="relative z-10 grid grid-cols-2 sm:grid-cols-4 gap-2 text-[10px]">
+        <div class="p-2 rounded-xl bg-[#060c18]/90 border border-amber-500/20 space-y-0.5">
+          <div class="text-slate-500 uppercase font-mono tracking-wider text-[9px] flex items-center justify-between">
+            <span>Upstream Anchor</span>
+            <i class="fa-solid fa-arrow-down-up-across-line text-amber-400 text-[9px]"></i>
+          </div>
+          <div class="font-bold text-white truncate" title="${primaryInput?.name || 'Feedstock'}">
+            ${primaryInput?.name || 'Feedstock'}
+          </div>
+          <div class="text-[9px] text-amber-300/80 font-mono">
+            ${primaryInput?.costWeightEstimate || 'COGS Driver'}
+          </div>
+        </div>
+
+        <div class="p-2 rounded-xl bg-[#060c18]/90 border border-cyan-500/25 space-y-0.5">
+          <div class="text-slate-500 uppercase font-mono tracking-wider text-[9px] flex items-center justify-between">
+            <span>Moat Rating</span>
+            <i class="fa-solid fa-chess-rook text-cyan-400 text-[9px]"></i>
+          </div>
+          <div class="font-bold text-cyan-200 truncate">
+            ${moatRating}
+          </div>
+          <div class="text-[9px] text-cyan-400/80 font-mono">
+            ${conversionMargin}
+          </div>
+        </div>
+
+        <div class="p-2 rounded-xl bg-[#060c18]/90 border border-emerald-500/20 space-y-0.5">
+          <div class="text-slate-500 uppercase font-mono tracking-wider text-[9px] flex items-center justify-between">
+            <span>Customer Dispersion</span>
+            <i class="fa-solid fa-users-viewfinder text-emerald-400 text-[9px]"></i>
+          </div>
+          <div class="font-bold text-white truncate" title="${buyerConcentration}">
+            ${buyerConcentration}
+          </div>
+          <div class="text-[9px] text-emerald-300/80 font-mono">
+            ${primaryOutput?.revenueContribution || 'Core Output'}
+          </div>
+        </div>
+
+        <div class="p-2 rounded-xl bg-[#060c18]/90 border border-indigo-500/25 space-y-0.5">
+          <div class="text-slate-500 uppercase font-mono tracking-wider text-[9px] flex items-center justify-between">
+            <span>Pass-Through Lag</span>
+            <i class="fa-solid fa-hourglass-half text-indigo-400 text-[9px]"></i>
+          </div>
+          <div class="font-bold text-indigo-200 font-mono">
+            ${primaryInput?.passThroughLagDays || '30-45 Days'}
+          </div>
+          <div class="text-[9px] text-slate-400 truncate">
+            Margin Repricing Window
+          </div>
+        </div>
+      </div>
+
+      <!-- Business Model High-Level Summary Note -->
+      <div class="relative z-10 p-2.5 bg-[#060c18]/80 border border-[#16233d] rounded-xl text-xs text-slate-300 leading-relaxed flex items-start space-x-2">
+        <i class="fa-solid fa-circle-nodes text-cyan-400 text-xs mt-0.5 flex-shrink-0"></i>
+        <div class="text-[11px] leading-relaxed">
+          <strong class="text-white">Business Model Synthesis:</strong> ${supplyChain.businessModelSummary}
+        </div>
+      </div>
+
+      <!-- Dynamic Tab Content Renderers -->
+      <div class="relative z-10 pt-1">
+        ${activeTab === 'graph' ? renderInteractiveProductShockGraph(supplyChain, ticker, companyName) : ''}
+        ${activeTab === 'pipeline' ? renderPipelineFlowTab(supplyChain, ticker) : ''}
+        ${activeTab === 'cogs' ? renderCogsTreeTab(supplyChain, ticker) : ''}
+        ${activeTab === 'revenue' ? renderRevenueMixTab(supplyChain, ticker) : ''}
+        ${activeTab === 'stress' ? renderStressTestTab(supplyChain, ticker, activeShockIdx) : ''}
+      </div>
+    </div>
+  `;
+}
+
+// ----------------------------------------------------------------------------
+// TAB 1: FLAGSHIP INTERACTIVE PRODUCT & COMMODITY RELATIONSHIP GRAPH
+// ----------------------------------------------------------------------------
+function renderInteractiveProductShockGraph(supplyChain, ticker, companyName) {
+  const state = window._scStateMap[ticker] || { activeMacroTrigger: 'COPPER_SPIKE', sliderDeltaPercent: 20 };
+  const triggerKey = state.activeMacroTrigger || 'COPPER_SPIKE';
+  const deltaVal = state.sliderDeltaPercent !== undefined ? state.sliderDeltaPercent : 20;
+
+  const inputs = supplyChain.keyInputs || [];
+  const valueChain = supplyChain.valueChain || {};
+  const outputs = supplyChain.keyOutputs || [];
+
+  // Determine Company Archetype & Reaction under current trigger
+  const reaction = computeCompanyShockReaction(ticker, triggerKey, deltaVal, supplyChain);
+
+  return `
+    <div class="space-y-4">
+      <!-- 1. Interactive Macro Trigger & Price Sensitivity Controller -->
+      <div class="p-3.5 bg-gradient-to-r from-slate-950 via-[#0a1324] to-slate-950 rounded-xl border border-cyan-500/35 shadow-lg space-y-3">
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-2 border-b border-[#16233d]">
+          <div class="flex items-center space-x-2">
+            <span class="w-6 h-6 rounded-md bg-cyan-500/20 border border-cyan-500/40 flex items-center justify-center text-cyan-300 text-xs shadow-inner">
+              <i class="fa-solid fa-sliders"></i>
+            </span>
+            <span class="text-xs font-bold text-white uppercase tracking-wider">
+              Macro Price Shock &amp; Trigger Propagation Engine
+            </span>
+            <span class="text-[9px] font-mono px-2 py-0.5 rounded bg-cyan-500/15 text-cyan-300 border border-cyan-500/30">
+              SIMULATION DESK
+            </span>
+          </div>
+          <div class="text-[11px] font-mono text-slate-400">
+            Simulate how swings in primary commodities transmit through suppliers to margins
+          </div>
+        </div>
+
+        <!-- Quick-Select Preset Scenario Buttons -->
+        <div class="flex flex-wrap items-center gap-1.5">
+          <span class="text-[10px] uppercase font-mono font-bold text-slate-400 mr-1">Triggers:</span>
+          <button type="button" onclick="triggerMacroCommodityShock('COPPER_SPIKE', '${ticker}')"
+            class="px-2.5 py-1 rounded-lg text-[10px] font-semibold transition flex items-center space-x-1.5 ${triggerKey === 'COPPER_SPIKE' ? 'bg-amber-500/25 text-amber-200 border border-amber-500/50 shadow-sm' : 'bg-slate-900/80 text-slate-300 hover:bg-slate-800 border border-slate-700/60'}">
+            <i class="fa-solid fa-bolt text-amber-400 text-[10px]"></i>
+            <span>Copper Surge (+20%)</span>
+          </button>
+          <button type="button" onclick="triggerMacroCommodityShock('COPPER_DROP', '${ticker}')"
+            class="px-2.5 py-1 rounded-lg text-[10px] font-semibold transition flex items-center space-x-1.5 ${triggerKey === 'COPPER_DROP' ? 'bg-emerald-500/25 text-emerald-200 border border-emerald-500/50 shadow-sm' : 'bg-slate-900/80 text-slate-300 hover:bg-slate-800 border border-slate-700/60'}">
+            <i class="fa-solid fa-arrow-trend-down text-emerald-400 text-[10px]"></i>
+            <span>Copper Drop (-20%)</span>
+          </button>
+          <button type="button" onclick="triggerMacroCommodityShock('CRUDE_SPIKE', '${ticker}')"
+            class="px-2.5 py-1 rounded-lg text-[10px] font-semibold transition flex items-center space-x-1.5 ${triggerKey === 'CRUDE_SPIKE' ? 'bg-rose-500/25 text-rose-200 border border-rose-500/50 shadow-sm' : 'bg-slate-900/80 text-slate-300 hover:bg-slate-800 border border-slate-700/60'}">
+            <i class="fa-solid fa-oil-well text-rose-400 text-[10px]"></i>
+            <span>Crude Oil Spike (+25%)</span>
+          </button>
+          <button type="button" onclick="triggerMacroCommodityShock('STEEL_SPIKE', '${ticker}')"
+            class="px-2.5 py-1 rounded-lg text-[10px] font-semibold transition flex items-center space-x-1.5 ${triggerKey === 'STEEL_SPIKE' ? 'bg-indigo-500/25 text-indigo-200 border border-indigo-500/50 shadow-sm' : 'bg-slate-900/80 text-slate-300 hover:bg-slate-800 border border-slate-700/60'}">
+            <i class="fa-solid fa-cubes-stacked text-indigo-400 text-[10px]"></i>
+            <span>Steel &amp; Coal (+15%)</span>
+          </button>
+          <button type="button" onclick="triggerMacroCommodityShock('INR_WEAK', '${ticker}')"
+            class="px-2.5 py-1 rounded-lg text-[10px] font-semibold transition flex items-center space-x-1.5 ${triggerKey === 'INR_WEAK' ? 'bg-teal-500/25 text-teal-200 border border-teal-500/50 shadow-sm' : 'bg-slate-900/80 text-slate-300 hover:bg-slate-800 border border-slate-700/60'}">
+            <i class="fa-solid fa-dollar-sign text-teal-400 text-[10px]"></i>
+            <span>USD/INR Weakens (+5%)</span>
+          </button>
+          <button type="button" onclick="resetMacroCommodityShock('${ticker}')"
+            class="px-2 py-1 rounded-lg text-[10px] font-semibold transition text-slate-400 hover:text-white bg-slate-900 hover:bg-slate-800 border border-slate-700">
+            <i class="fa-solid fa-rotate-left mr-1"></i>Reset
+          </button>
+        </div>
+
+        <!-- Interactive Continuous Price Shock Slider -->
+        <div class="p-2.5 bg-slate-950/80 rounded-lg border border-slate-800 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs">
+          <div class="flex items-center space-x-2">
+            <span class="text-slate-400 font-medium">Custom Magnitude:</span>
+            <input type="range" min="-40" max="40" step="5" value="${deltaVal}"
+              oninput="updateCustomShockSlider(this.value, '${ticker}')"
+              class="w-36 sm:w-48 accent-cyan-400 cursor-pointer" />
+            <span class="font-mono font-bold ${deltaVal > 0 ? 'text-amber-400' : deltaVal < 0 ? 'text-emerald-400' : 'text-slate-300'} text-xs">
+              ${deltaVal > 0 ? '+' : ''}${deltaVal}%
+            </span>
+          </div>
+
+          <div class="flex items-center space-x-2 text-[11px] font-mono">
+            <span class="text-slate-400">Current Shock Scenario:</span>
+            <span class="px-2 py-0.5 rounded font-bold ${reaction.badgeClass}">
+              ${reaction.headline}
+            </span>
+          </div>
+        </div>
+      </div>
+
+      <!-- 2. The Directed Product & Commodity Relationship Graph (5-Tier Node Grid) -->
+      <div class="p-4 bg-[#050a14] rounded-2xl border border-[#16233d] shadow-inner space-y-4">
+        <div class="flex items-center justify-between text-[11px] text-slate-400 pb-2 border-b border-[#16233d]">
+          <span class="flex items-center space-x-1.5 font-bold uppercase tracking-wider text-slate-300">
+            <i class="fa-solid fa-network-wired text-cyan-400"></i>
+            <span>Directed Product &amp; Commodity Flow Graph</span>
+          </span>
+          <span class="text-[10px] font-mono text-cyan-400">
+            Live Shock Heatmap &bull; Upstream &rarr; Moat &rarr; Downstream
+          </span>
+        </div>
+
+        <!-- 5-Tier Directed Node Canvas with Animated Flow Connectors -->
+        <div class="grid grid-cols-1 md:grid-cols-5 gap-3 items-center">
+          
+          <!-- NODE COLUMN 1: Upstream Commodities & Feedstocks -->
+          <div class="space-y-2">
+            <div class="text-[10px] uppercase font-mono font-bold text-amber-400 flex items-center justify-between">
+              <span>1. Upstream Inputs</span>
+              <span class="text-[9px] text-slate-500">Raw Feedstock</span>
+            </div>
+            ${inputs.map((inp, idx) => {
+              const isShockTarget = isInputAffectedByShock(inp.name, triggerKey);
+              const nodeGlow = isShockTarget ? (deltaVal > 0 ? 'border-amber-500/80 bg-amber-950/20 text-amber-200 shadow-amber-500/20' : 'border-emerald-500/80 bg-emerald-950/20 text-emerald-200 shadow-emerald-500/20') : 'border-slate-800 bg-[#091120] text-slate-200';
+              return `
+                <div class="p-2.5 rounded-xl border ${nodeGlow} transition shadow-sm space-y-1 text-[11px] relative">
+                  ${isShockTarget ? `<span class="absolute -top-1.5 -right-1 px-1.5 py-0.2 rounded text-[8px] font-mono font-bold bg-amber-500 text-slate-950 animate-pulse">SHOCK</span>` : ''}
+                  <div class="font-bold flex items-center justify-between">
+                    <span class="truncate pr-1">${inp.name}</span>
+                    <i class="fa-solid fa-box text-[10px] text-amber-400"></i>
+                  </div>
+                  <div class="text-[9px] font-mono text-slate-400 flex items-center justify-between">
+                    <span>${inp.costWeightEstimate}</span>
+                    <span class="text-amber-300/80">${inp.category}</span>
+                  </div>
+                </div>
+              `;
+            }).join('')}
+          </div>
+
+          <!-- CONNECTOR 1 -> 2 (Animated SVG) -->
+          <div class="hidden md:flex flex-col items-center justify-center">
+            <svg viewBox="0 0 60 40" class="w-full h-12 overflow-visible">
+              <path d="M 0,20 L 60,20" fill="none" stroke="#f59e0b" stroke-width="2" class="flow-dash-anim" opacity="0.75" />
+              <polygon points="54,16 60,20 54,24" fill="#f59e0b" />
+            </svg>
+            <span class="text-[8px] font-mono text-slate-500 uppercase tracking-tighter">Sourcing</span>
+          </div>
+
+          <!-- NODE COLUMN 3: Target Company Transformation & Moat Hub (Centerpiece) -->
+          <div class="p-4 rounded-2xl border ${reaction.cardGlowClass} bg-gradient-to-b from-[#091326] via-[#0b1730] to-[#081020] space-y-2.5 text-center shadow-xl relative">
+            <div class="flex items-center justify-center space-x-2">
+              <span class="w-7 h-7 rounded-lg bg-cyan-500/20 border border-cyan-500/40 flex items-center justify-center text-cyan-300 text-xs shadow-inner">
+                <i class="fa-solid fa-building-columns"></i>
+              </span>
+              <div class="text-left">
+                <div class="font-extrabold text-white text-sm font-mono tracking-tight">${ticker}</div>
+                <div class="text-[10px] text-slate-400 truncate max-w-[130px]">${companyName}</div>
+              </div>
+            </div>
+
+            <!-- Value Transformation Core -->
+            <div class="p-2 bg-slate-950/80 rounded-xl border border-slate-800 text-[10px] space-y-1">
+              <span class="text-[9px] font-mono uppercase text-cyan-400 font-bold block">Transformation Moat</span>
+              <div class="font-semibold text-slate-200 leading-tight">${valueChain.coreProcess || 'Value Conversion Engine'}</div>
+              <div class="text-[9px] font-mono text-emerald-400">${valueChain.grossConversionMargin || '28-35% Value-Add'}</div>
+            </div>
+
+            <!-- Dynamic Shock Margin Impact Badge -->
+            <div class="p-2.5 rounded-xl ${reaction.reactionBannerClass} space-y-1 text-left">
+              <div class="flex items-center justify-between text-[10px] font-bold font-mono">
+                <span class="flex items-center"><i class="${reaction.icon} mr-1.5"></i>${reaction.statusLabel}</span>
+                <span>${reaction.marginDeltaBps}</span>
+              </div>
+              <p class="text-[10px] text-slate-300 leading-tight">
+                ${reaction.mechanismSummary}
+              </p>
+              <div class="text-[9px] font-mono text-slate-400 pt-0.5 border-t border-white/10 flex items-center justify-between">
+                <span>Pass-Through Window:</span>
+                <span class="font-bold text-white">${reaction.lagText}</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- CONNECTOR 3 -> 4 (Animated SVG) -->
+          <div class="hidden md:flex flex-col items-center justify-center">
+            <svg viewBox="0 0 60 40" class="w-full h-12 overflow-visible">
+              <path d="M 0,20 L 60,20" fill="none" stroke="#06b6d4" stroke-width="2" class="flow-dash-anim" opacity="0.75" />
+              <polygon points="54,16 60,20 54,24" fill="#06b6d4" />
+            </svg>
+            <span class="text-[8px] font-mono text-slate-500 uppercase tracking-tighter">Output Flow</span>
+          </div>
+
+          <!-- NODE COLUMN 5: Finished Products & End Client Markets -->
+          <div class="space-y-2">
+            <div class="text-[10px] uppercase font-mono font-bold text-emerald-400 flex items-center justify-between">
+              <span>5. Realized End Markets</span>
+              <span class="text-[9px] text-slate-500">Revenue Drivers</span>
+            </div>
+            ${outputs.map((out, idx) => `
+              <div class="p-2.5 rounded-xl border border-slate-800 bg-[#091120] text-slate-200 transition shadow-sm space-y-1 text-[11px]">
+                <div class="font-bold text-white flex items-center justify-between">
+                  <span class="truncate pr-1">${out.productOrService}</span>
+                  <span class="text-[9px] font-mono px-1.5 py-0.2 rounded bg-emerald-500/15 text-emerald-300 border border-emerald-500/30 font-bold">${out.revenueContribution || 'Core'}</span>
+                </div>
+                <div class="text-[9px] text-slate-400 truncate">
+                  <strong class="text-slate-300">Client:</strong> ${out.customerSegment}
+                </div>
+                <div class="text-[9px] font-mono text-cyan-400 flex items-center justify-between pt-0.5">
+                  <span>Pricing Power: ${out.pricingPowerScore || 8}/10</span>
+                  <span class="text-slate-400">${out.demandDrivers ? out.demandDrivers.split(',')[0] : 'Capex'}</span>
+                </div>
+              </div>
+            `).join('')}
+          </div>
+
+        </div>
+      </div>
+
+      <!-- 3. Commercial Analysis: Cross-Stock Domino Market Radar (Winners vs Squeezed) -->
+      ${renderCrossStockDominoRadar(triggerKey, deltaVal, ticker)}
+    </div>
+  `;
+}
+
+// ----------------------------------------------------------------------------
+// COMPUTE COMPANY SHOCK REACTION LOGIC (PRODUCER VS CONSUMER SENSITIVITY)
+// ----------------------------------------------------------------------------
+function computeCompanyShockReaction(ticker, triggerKey, deltaVal, supplyChain) {
+  const cleanTicker = ticker.toUpperCase();
+  const absDelta = Math.abs(deltaVal);
+  const isPositiveShock = deltaVal > 0;
+
+  // 1. COPPER SCENARIOS
+  if (triggerKey === 'COPPER_SPIKE' || triggerKey === 'COPPER_DROP') {
+    if (['HINDCOPPER', 'HINDALCO', 'VEDL'].includes(cleanTicker)) {
+      // Producer / Miner / Smelter
+      if (isPositiveShock) {
+        return {
+          headline: 'UPSTREAM PRODUCER BENEFICIARY (Direct Top-Line Windfall)',
+          badgeClass: 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/35',
+          cardGlowClass: 'border-emerald-500 shadow-emerald-500/30 shock-glow-beneficiary',
+          reactionBannerClass: 'bg-emerald-950/40 border border-emerald-500/40 text-emerald-200',
+          statusLabel: 'PRODUCER MARGIN EXPANSION',
+          marginDeltaBps: `+${Math.round(280 * (absDelta / 20))} to +${Math.round(420 * (absDelta / 20))} bps EBITDA`,
+          mechanismSummary: 'Mine extraction & fixed smelting costs remain steady while cathode realization expands 1:1 with LME spot prices.',
+          lagText: 'Immediate (Day 1 Spot Realization)',
+          icon: 'fa-solid fa-arrow-trend-up text-emerald-400'
+        };
+      } else {
+        return {
+          headline: 'UPSTREAM MARGIN SQUEEZE (Lower Realization on Fixed Mining Base)',
+          badgeClass: 'bg-rose-500/20 text-rose-300 border border-rose-500/35',
+          cardGlowClass: 'border-rose-500 shadow-rose-500/30 shock-glow-squeezed',
+          reactionBannerClass: 'bg-rose-950/40 border border-rose-500/40 text-rose-200',
+          statusLabel: 'PRODUCER CASH FLOW COMPRESSION',
+          marginDeltaBps: `-${Math.round(320 * (absDelta / 20))} bps EBITDA`,
+          mechanismSummary: 'LME price decline depresses gross realizations while underground mining labor remains fixed.',
+          lagText: 'Immediate',
+          icon: 'fa-solid fa-arrow-trend-down text-rose-400'
+        };
+      }
+    } else if (['POLYCAB', 'KEI'].includes(cleanTicker)) {
+      // Consumer with High Pricing Power
+      if (isPositiveShock) {
+        return {
+          headline: 'HIGH-MOAT CONSUMER (Short-Term Squeeze -> 100% Pass-Through)',
+          badgeClass: 'bg-amber-500/20 text-amber-300 border border-amber-500/35',
+          cardGlowClass: 'border-amber-500/70 shadow-amber-500/20',
+          reactionBannerClass: 'bg-amber-950/40 border border-amber-500/40 text-amber-200',
+          statusLabel: 'TEMPORARY INPUT COST SQUEEZE',
+          marginDeltaBps: `-${Math.round(140 * (absDelta / 20))} bps (30d Lag)`,
+          mechanismSummary: 'Raw copper is ~65% of COGS. Margin dips during 30-day inventory burn, then fully recovered via weekly formula price hikes to dealers.',
+          lagText: '30-45 Days (Dealer Pricing Formula)',
+          icon: 'fa-solid fa-shield-halved text-amber-400'
+        };
+      } else {
+        return {
+          headline: 'CONSUMER WINDFALL (Gross Margin Expansion on Softening Copper)',
+          badgeClass: 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/35',
+          cardGlowClass: 'border-emerald-500 shadow-emerald-500/30 shock-glow-beneficiary',
+          reactionBannerClass: 'bg-emerald-950/40 border border-emerald-500/40 text-emerald-200',
+          statusLabel: 'INVENTORY MARGIN EXPANSION',
+          marginDeltaBps: `+${Math.round(180 * (absDelta / 20))} bps Gross Margin`,
+          mechanismSummary: 'Cheaper raw feedstock expands conversion spreads before finished cable prices adjust downward.',
+          lagText: '30-45 Days',
+          icon: 'fa-solid fa-arrow-trend-up text-emerald-400'
+        };
+      }
+    } else if (['HAVELLS', 'VOLTAS'].includes(cleanTicker)) {
+      // Consumer with Moderate or Low Pricing Power
+      return {
+        headline: 'DOWNSTREAM APPLIANCE SQUEEZE (Extended Pricing Lag)',
+        badgeClass: 'bg-rose-500/20 text-rose-300 border border-rose-500/35',
+        cardGlowClass: 'border-rose-500 shadow-rose-500/30 shock-glow-squeezed',
+        reactionBannerClass: 'bg-rose-950/40 border border-rose-500/40 text-rose-200',
+        statusLabel: 'MARGIN COMPRESSION (EXTENDED LAG)',
+        marginDeltaBps: `-${Math.round(180 * (absDelta / 20))} bps Operating EBITDA`,
+        mechanismSummary: 'Copper represents 18-32% of bill of materials. Consumer retail resistance delays retail price hikes by 60-90 days.',
+        lagText: '60-90 Days (Consumer Catalog Lag)',
+        icon: 'fa-solid fa-triangle-exclamation text-rose-400'
+      };
+    }
+  }
+
+  // 2. CRUDE OIL SCENARIOS
+  if (triggerKey === 'CRUDE_SPIKE') {
+    if (['ONGC', 'OIL'].includes(cleanTicker)) {
+      return {
+        headline: 'UPSTREAM HYDROCARBON WINNER (Direct Net Realization Windfall)',
+        badgeClass: 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/35',
+        cardGlowClass: 'border-emerald-500 shadow-emerald-500/30 shock-glow-beneficiary',
+        reactionBannerClass: 'bg-emerald-950/40 border border-emerald-500/40 text-emerald-200',
+        statusLabel: 'EBITDA EXPANSION (+$20/bbl = +₹9,200 Cr PAT)',
+        marginDeltaBps: `+${Math.round(380 * (absDelta / 25))} bps Operating EBITDA`,
+        mechanismSummary: 'Every $10/bbl rise in Brent flows directly to upstream operating profit with zero extra extraction cost.',
+        lagText: 'Day 1 Spot Realization',
+        icon: 'fa-solid fa-arrow-trend-up text-emerald-400'
+      };
+    } else if (['ASIANPAINT', 'BERGEPAINT'].includes(cleanTicker)) {
+      return {
+        headline: 'PETROCHEM CONSUMER (Input Cost Surge -> Brand Pricing Power Defense)',
+        badgeClass: 'bg-amber-500/20 text-amber-300 border border-amber-500/35',
+        cardGlowClass: 'border-amber-500/70 shadow-amber-500/20',
+        reactionBannerClass: 'bg-amber-950/40 border border-amber-500/40 text-amber-200',
+        statusLabel: 'INTERMEDIATE MONOMER SQUEEZE',
+        marginDeltaBps: `-${Math.round(180 * (absDelta / 25))} bps Gross Margin`,
+        mechanismSummary: 'Crude derivatives (solvents, phthalic anhydride, monomers) are 36% of COGS. 60-day lag before retail paint price hikes catch up.',
+        lagText: '45-60 Days',
+        icon: 'fa-solid fa-shield text-amber-400'
+      };
+    } else if (['INDIGO', 'INTERGLOBE', 'MRF'].includes(cleanTicker)) {
+      return {
+        headline: 'SEVERE CRUDE SHOCK VICTIM (High Fuel/Rubber Squeeze)',
+        badgeClass: 'bg-rose-500/20 text-rose-300 border border-rose-500/35',
+        cardGlowClass: 'border-rose-500 shadow-rose-500/30 shock-glow-squeezed',
+        reactionBannerClass: 'bg-rose-950/40 border border-rose-500/40 text-rose-200',
+        statusLabel: 'OPERATING MARGIN EROSION',
+        marginDeltaBps: `-${Math.round(420 * (absDelta / 25))} bps EBIT`,
+        mechanismSummary: 'Jet ATF fuel or synthetic rubber absorbs 40%+ of revenue. Inability to immediately raise ticket/tyre prices creates deep margin erosion.',
+        lagText: '90+ Days',
+        icon: 'fa-solid fa-triangle-exclamation text-rose-400'
+      };
+    }
+  }
+
+  // 3. STEEL & COAL SCENARIOS
+  if (triggerKey === 'STEEL_SPIKE') {
+    if (['TATASTEEL', 'JSWSTEEL'].includes(cleanTicker)) {
+      return {
+        headline: 'STEEL PRODUCER BENCHMARK (Hot-Rolled Coil Realization Surge)',
+        badgeClass: 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/35',
+        cardGlowClass: 'border-emerald-500 shadow-emerald-500/30 shock-glow-beneficiary',
+        reactionBannerClass: 'bg-emerald-950/40 border border-emerald-500/40 text-emerald-200',
+        statusLabel: 'PRODUCER EBITDA EXPANSION',
+        marginDeltaBps: `+${Math.round(290 * (absDelta / 15))} bps EBITDA`,
+        mechanismSummary: 'Domestic HRC price hikes expand operating spreads over iron ore and captive coking coal.',
+        lagText: '15-20 Days',
+        icon: 'fa-solid fa-arrow-trend-up text-emerald-400'
+      };
+    } else if (['TATAMOTORS', 'MARUTI', 'LT'].includes(cleanTicker)) {
+      return {
+        headline: 'AUTO & INFRA CONSUMER (Steel Sheet & Rebar Input Pressure)',
+        badgeClass: 'bg-rose-500/20 text-rose-300 border border-rose-500/35',
+        cardGlowClass: 'border-rose-500 shadow-rose-500/30 shock-glow-squeezed',
+        reactionBannerClass: 'bg-rose-950/40 border border-rose-500/40 text-rose-200',
+        statusLabel: 'AUTOMOTIVE SHEET METAL SQUEEZE',
+        marginDeltaBps: `-${Math.round(130 * (absDelta / 15))} bps Gross Margin`,
+        mechanismSummary: 'Automotive cold-rolled steel and EPC structural rebars pressure gross margin during quarterly OEM negotiation cycles.',
+        lagText: '60-90 Days',
+        icon: 'fa-solid fa-arrow-trend-down text-rose-400'
+      };
+    }
+  }
+
+  // 4. USD/INR CURRENCY WEAKENING
+  if (triggerKey === 'INR_WEAK') {
+    if (['TCS', 'INFY', 'KPITTECH', 'SUNPHARMA'].includes(cleanTicker)) {
+      return {
+        headline: 'EXPORTER CURRENCY TAILWIND (90%+ USD Billings vs INR Base)',
+        badgeClass: 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/35',
+        cardGlowClass: 'border-emerald-500 shadow-emerald-500/30 shock-glow-beneficiary',
+        reactionBannerClass: 'bg-emerald-950/40 border border-emerald-500/40 text-emerald-200',
+        statusLabel: 'OPERATING MARGIN EXPANSION',
+        marginDeltaBps: `+${Math.round(110 * (absDelta / 5))} bps Operating Margin`,
+        mechanismSummary: 'Every 1% rupee depreciation expands IT/pharma operating margin by ~25-30 bps after hedging.',
+        lagText: 'Quarterly Settlement',
+        icon: 'fa-solid fa-arrow-trend-up text-emerald-400'
+      };
+    }
+  }
+
+  // Default / Sector Fallback
+  return {
+    headline: 'BALANCED OPERATIONAL ELASTICITY (Diversified Input Structure)',
+    badgeClass: 'bg-cyan-500/20 text-cyan-300 border border-cyan-500/35',
+    cardGlowClass: 'border-cyan-500/50',
+    reactionBannerClass: 'bg-slate-900/60 border border-slate-800 text-slate-300',
+    statusLabel: 'DIVERSIFIED PASS-THROUGH',
+    marginDeltaBps: `${deltaVal >= 0 ? '-' : '+'}${Math.round(Math.abs(deltaVal) * 4.5)} bps Estimated Impact`,
+    mechanismSummary: 'Balanced input-output dynamics insulate company from catastrophic single-commodity swings.',
+    lagText: '30-45 Days',
+    icon: 'fa-solid fa-scale-balanced text-cyan-400'
+  };
+}
+
+function isInputAffectedByShock(inputName, triggerKey) {
+  const norm = (inputName || '').toLowerCase();
+  if (triggerKey === 'COPPER_SPIKE' || triggerKey === 'COPPER_DROP') {
+    return norm.includes('copper') || norm.includes('metal') || norm.includes('ore');
+  }
+  if (triggerKey === 'CRUDE_SPIKE') {
+    return norm.includes('crude') || norm.includes('petro') || norm.includes('polymer') || norm.includes('monomer') || norm.includes('fuel');
+  }
+  if (triggerKey === 'STEEL_SPIKE') {
+    return norm.includes('steel') || norm.includes('coal') || norm.includes('iron') || norm.includes('coking');
+  }
+  if (triggerKey === 'INR_WEAK') {
+    return norm.includes('import') || norm.includes('semiconductor') || norm.includes('hardware');
+  }
+  return false;
+}
+
+// ----------------------------------------------------------------------------
+// COMMERCIAL DOMINO EFFECT: CROSS-STOCK SENSITIVITY TABLE
+// ----------------------------------------------------------------------------
+function renderCrossStockDominoRadar(triggerKey, deltaVal, currentTicker) {
+  let dominoRows = [];
+
+  if (triggerKey === 'COPPER_SPIKE' || triggerKey === 'COPPER_DROP') {
+    dominoRows = [
+      { ticker: 'HINDCOPPER', name: 'Hindustan Copper', role: 'Pure-Play Sovereign Miner', exp: '100% Topline tied to LME Copper', bps: '+420 bps EBITDA', lag: 'Day 1 (Spot)', verdict: 'Primary Mining Winner', type: 'winner' },
+      { ticker: 'HINDALCO', name: 'Hindalco Industries', role: 'Birla Copper Smelter & Refiner', exp: 'Cathode Spot Pricing (Dahej Smelter)', bps: '+280 bps EBITDA', lag: '5-7 Days', verdict: 'Large-Cap Beneficiary', type: 'winner' },
+      { ticker: 'POLYCAB', name: 'Polycab India', role: 'Cables & Wires Hegemon', exp: '65% of Raw Material COGS', bps: '-140 bps (30d Lag)', lag: '30-45 Days', verdict: '100% Pass-Through Formula', type: 'buffer' },
+      { ticker: 'HAVELLS', name: 'Havells India', role: 'Consumer Electricals & Switchgears', exp: '32% of Bill of Materials', bps: '-180 bps EBITDA', lag: '45-60 Days', verdict: 'Moderate Consumer Squeeze', type: 'loser' },
+      { ticker: 'VOLTAS', name: 'Voltas Ltd', role: 'AC Copper Tube Appliance Maker', exp: '18% of Cooling Appliance BOM', bps: '-120 bps EBIT', lag: '60-90 Days', verdict: 'Seasonal Pricing Lag Hit', type: 'loser' }
+    ];
+  } else if (triggerKey === 'CRUDE_SPIKE') {
+    dominoRows = [
+      { ticker: 'ONGC', name: 'Oil & Natural Gas Corp', role: 'National Upstream Flagship', exp: '71% Domestic Crude Output', bps: '+380 bps EBITDA', lag: 'Day 1 (Spot)', verdict: 'Upstream Windfall Winner', type: 'winner' },
+      { ticker: 'OIL', name: 'Oil India Ltd', role: 'Pure Upstream Hydrocarbons', exp: '100% Hydrocarbon Realization', bps: '+410 bps EBITDA', lag: 'Day 1 (Spot)', verdict: 'Direct E&P Beneficiary', type: 'winner' },
+      { ticker: 'ASIANPAINT', name: 'Asian Paints', role: 'Decorative Paint Leader', exp: '36% Monomer & Solvent COGS', bps: '-180 bps Margin', lag: '45-60 Days', verdict: 'Unmatched Pricing Power', type: 'buffer' },
+      { ticker: 'INDIGO', name: 'InterGlobe Aviation', role: 'Commercial Airline', exp: '40% Operating Costs (ATF Fuel)', bps: '-420 bps EBIT', lag: '90+ Days', verdict: 'Severe Fuel Cost Squeeze', type: 'loser' },
+      { ticker: 'MRF', name: 'MRF Tyres', role: 'Tyre & Rubber Manufacturer', exp: 'Synthetic Rubber & Carbon Black', bps: '-210 bps EBITDA', lag: '60 Days', verdict: 'Raw Material Margin Erosion', type: 'loser' }
+    ];
+  } else if (triggerKey === 'STEEL_SPIKE') {
+    dominoRows = [
+      { ticker: 'TATASTEEL', name: 'Tata Steel', role: 'Integrated Primary Steelmaker', exp: 'Domestic HRC Realizations', bps: '+290 bps EBITDA', lag: '15 Days', verdict: 'Hot-Rolled Coil Beneficiary', type: 'winner' },
+      { ticker: 'JSWSTEEL', name: 'JSW Steel', role: 'Primary Steel & Coated Coils', exp: 'Spot Steel Price Spreads', bps: '+260 bps EBITDA', lag: '15 Days', verdict: 'Steel Margin Expansion', type: 'winner' },
+      { ticker: 'TATAMOTORS', name: 'Tata Motors', role: 'Commercial & Passenger Auto OEM', exp: 'Sheet Steel & Heavy Forgings', bps: '-130 bps Margin', lag: '60-90 Days', verdict: 'OEM Cost Absorption Lag', type: 'loser' },
+      { ticker: 'LT', name: 'Larsen & Toubro', role: 'Heavy Infrastructure EPC', exp: 'Structural Steel & Rebar Contracts', bps: '-90 bps EBIT', lag: 'Fixed PPAs', verdict: 'Legacy Fixed-Price Squeeze', type: 'loser' }
+    ];
+  } else {
+    dominoRows = [
+      { ticker: 'KPITTECH', name: 'KPIT Technologies', role: 'Automotive Software Exporter', exp: '94% Revenue in USD/EUR', bps: '+120 bps EBITDA', lag: 'Immediate', verdict: 'Exporter Currency Tailwind', type: 'winner' },
+      { ticker: 'TCS', name: 'Tata Consultancy Services', role: 'IT Global Services', exp: 'Global Cross-Currency Inflows', bps: '+95 bps EBIT', lag: 'Quarterly', verdict: 'Stable FX Cash Expansion', type: 'winner' },
+      { ticker: 'POLYCAB', name: 'Polycab India', role: 'Cable Infrastructure Leader', exp: 'Formula-Indexed Domestic Books', bps: 'Neutral Buffer', lag: '30 Days', verdict: 'Balanced Domestic Footprint', type: 'buffer' }
+    ];
+  }
+
+  return `
+    <div class="p-3.5 bg-slate-950/90 rounded-xl border border-slate-800 space-y-2.5">
+      <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-800/80 pb-2">
+        <div class="flex items-center space-x-2">
+          <span class="w-2 h-2 rounded-full bg-cyan-400 animate-pulse"></span>
+          <h5 class="text-xs font-bold text-white uppercase tracking-wider">
+            Commercial Domino Effect: Cross-Stock Sensitivity for Selected Trigger
+          </h5>
+          <span class="text-[9px] font-mono px-2 py-0.5 rounded bg-slate-800 text-slate-300 border border-slate-700">
+            INDIAN EQUITIES MULTIPLIER
+          </span>
+        </div>
+        <div class="text-[10px] text-slate-400 font-mono">
+          Click any stock to inspect its full 5-pillar profile
+        </div>
+      </div>
+
+      <div class="overflow-x-auto rounded-lg border border-slate-800/80">
+        <table class="w-full text-left text-xs font-mono">
+          <thead class="bg-slate-900/90 text-[10px] uppercase text-slate-400 border-b border-slate-800">
+            <tr>
+              <th class="py-2 px-3">Stock Ticker</th>
+              <th class="py-2 px-3">Role in Ecosystem</th>
+              <th class="py-2 px-3">Commodity Exposure</th>
+              <th class="py-2 px-3 text-right">EBITDA Impact (bps)</th>
+              <th class="py-2 px-3 text-center">Pass-Through Lag</th>
+              <th class="py-2 px-3">Market Verdict</th>
+              <th class="py-2 px-2 text-right">Action</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-slate-800/60 bg-slate-950/50">
+            ${dominoRows.map(row => {
+              const isCurrent = row.ticker.toUpperCase() === currentTicker.toUpperCase();
+              const badge = row.type === 'winner'
+                ? 'bg-emerald-500/15 text-emerald-300 border-emerald-500/30'
+                : row.type === 'buffer'
+                  ? 'bg-amber-500/15 text-amber-300 border-amber-500/30'
+                  : 'bg-rose-500/15 text-rose-300 border-rose-500/30';
+
+              return `
+                <tr class="hover:bg-slate-900/60 transition ${isCurrent ? 'bg-cyan-950/20 border-l-2 border-l-cyan-400' : ''}">
+                  <td class="py-2 px-3 font-bold text-white">
+                    <span class="text-cyan-300">${row.ticker}</span>
+                    <span class="text-[10px] text-slate-400 block font-normal font-sans">${row.name}</span>
+                  </td>
+                  <td class="py-2 px-3 text-slate-300 text-[11px] font-sans">${row.role}</td>
+                  <td class="py-2 px-3 text-slate-400 text-[11px] font-sans">${row.exp}</td>
+                  <td class="py-2 px-3 text-right font-bold ${row.type === 'winner' ? 'text-emerald-400' : row.type === 'buffer' ? 'text-amber-400' : 'text-rose-400'}">
+                    ${row.bps}
+                  </td>
+                  <td class="py-2 px-3 text-center text-slate-300 text-[10px]">${row.lag}</td>
+                  <td class="py-2 px-3">
+                    <span class="px-2 py-0.5 rounded text-[9px] font-bold border ${badge}">${row.verdict}</span>
+                  </td>
+                  <td class="py-2 px-2 text-right">
+                    ${isCurrent ? `
+                      <span class="text-[9px] font-mono text-cyan-400 px-2 py-0.5 rounded bg-cyan-500/10 border border-cyan-500/20 font-bold">CURRENT</span>
+                    ` : `
+                      <button type="button" onclick="quickInspectTicker('${row.ticker}')" class="px-2 py-0.5 rounded bg-slate-800 hover:bg-slate-700 text-teal-300 hover:text-white border border-slate-700 text-[10px] font-bold transition">
+                        Inspect &rarr;
+                      </button>
+                    `}
+                  </td>
+                </tr>
+              `;
+            }).join('')}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  `;
+}
+
+// Global Macro Trigger Handlers
+window.triggerMacroCommodityShock = function(shockKey, ticker) {
+  if (!window._scStateMap[ticker]) {
+    window._scStateMap[ticker] = { activeTab: 'graph', activeShockIndex: 0, expandedNodes: {} };
+  }
+  window._scStateMap[ticker].activeMacroTrigger = shockKey;
+  if (shockKey === 'COPPER_SPIKE') window._scStateMap[ticker].sliderDeltaPercent = 20;
+  else if (shockKey === 'COPPER_DROP') window._scStateMap[ticker].sliderDeltaPercent = -20;
+  else if (shockKey === 'CRUDE_SPIKE') window._scStateMap[ticker].sliderDeltaPercent = 25;
+  else if (shockKey === 'STEEL_SPIKE') window._scStateMap[ticker].sliderDeltaPercent = 15;
+  else if (shockKey === 'INR_WEAK') window._scStateMap[ticker].sliderDeltaPercent = 5;
+
+  const container = document.getElementById(`sc-component-${ticker}`);
+  if (container && window._scDataMap[ticker]) {
+    const { supplyChain, companyName } = window._scDataMap[ticker];
+    container.outerHTML = renderInstitutionalSupplyChainEcosystem(supplyChain, ticker, companyName);
+  }
+};
+
+window.updateCustomShockSlider = function(val, ticker) {
+  if (!window._scStateMap[ticker]) {
+    window._scStateMap[ticker] = { activeTab: 'graph', activeShockIndex: 0, expandedNodes: {} };
+  }
+  window._scStateMap[ticker].sliderDeltaPercent = parseInt(val, 10);
+  const container = document.getElementById(`sc-component-${ticker}`);
+  if (container && window._scDataMap[ticker]) {
+    const { supplyChain, companyName } = window._scDataMap[ticker];
+    container.outerHTML = renderInstitutionalSupplyChainEcosystem(supplyChain, ticker, companyName);
+  }
+};
+
+window.resetMacroCommodityShock = function(ticker) {
+  if (window._scStateMap[ticker]) {
+    window._scStateMap[ticker].activeMacroTrigger = 'BASE';
+    window._scStateMap[ticker].sliderDeltaPercent = 0;
+  }
+  const container = document.getElementById(`sc-component-${ticker}`);
+  if (container && window._scDataMap[ticker]) {
+    const { supplyChain, companyName } = window._scDataMap[ticker];
+    container.outerHTML = renderInstitutionalSupplyChainEcosystem(supplyChain, ticker, companyName);
+  }
+};
+
+
+function renderPipelineFlowTab(supplyChain, ticker) {
+  const inputs = supplyChain.keyInputs || [];
+  const valueChain = supplyChain.valueChain || {};
+  const outputs = supplyChain.keyOutputs || [];
+
+  return `
+    <div class="grid grid-cols-1 lg:grid-cols-11 gap-3 items-stretch">
+      <!-- TIER 1: WHAT IT CONSUMES (INPUTS / RAW MATERIALS / SUPPLIERS) -->
+      <div class="lg:col-span-4 p-3.5 bg-[#060c18] border border-amber-500/30 rounded-xl space-y-3 flex flex-col justify-between shadow-sm">
+        <div>
+          <div class="flex items-center justify-between pb-2 border-b border-amber-500/20">
+            <div class="flex items-center space-x-2">
+              <span class="w-6 h-6 rounded-md bg-amber-500/20 border border-amber-500/40 flex items-center justify-center text-amber-300 text-xs">
+                <i class="fa-solid fa-boxes-packing"></i>
+              </span>
+              <span class="text-xs font-bold text-amber-300 uppercase tracking-wide">1. Sourcing &amp; Inputs</span>
+            </div>
+            <span class="text-[9px] font-mono px-1.5 py-0.5 rounded bg-amber-500/10 text-amber-400 border border-amber-500/20">
+              Raw Feedstock / COGS
+            </span>
+          </div>
+
+          <div class="space-y-2 pt-2.5">
+            ${inputs.map((inp, idx) => {
+              const bPower = inp.supplierBargainingPower || 'Moderate';
+              const bPowerColor = bPower.includes('High') || bPower.includes('Oligopol') ? 'rose' : (bPower.includes('Low') ? 'emerald' : 'amber');
+              const lag = inp.passThroughLagDays || '30-45 Days';
+              const detailId = `sc-inp-detail-${ticker}-${idx}`;
+
+              return `
+                <div class="supply-node-card p-2.5 bg-[#0a1222] rounded-lg border border-[#16233d] hover:border-amber-500/40 transition space-y-1.5 text-[11px]">
+                  <div class="flex items-start justify-between gap-1.5">
+                    <span class="font-bold text-white flex items-center leading-snug">
+                      <i class="fa-solid fa-arrow-right-to-bracket text-amber-400 mr-1.5 text-[9px] flex-shrink-0"></i>
+                      ${inp.name}
+                    </span>
+                    <span class="text-[9px] font-mono px-1.5 py-0.5 rounded bg-amber-500/15 text-amber-300 border border-amber-500/25 whitespace-nowrap">
+                      ${inp.costWeightEstimate}
+                    </span>
+                  </div>
+
+                  <div class="text-slate-400 text-[10px]">
+                    <strong class="text-slate-300">Sources:</strong> ${inp.typicalSourceOrSuppliers}
+                  </div>
+
+                  <!-- Institutional Telemetry Badges -->
+                  <div class="flex flex-wrap items-center gap-1 pt-1 text-[9px] font-mono">
+                    <span class="px-1.5 py-0.5 rounded bg-${bPowerColor}-500/10 text-${bPowerColor}-300 border border-${bPowerColor}-500/20" title="Supplier Pricing & Bargaining Leverage">
+                      <i class="fa-solid fa-handshake-simple mr-1 text-[8px]"></i>Bargaining: ${bPower}
+                    </span>
+                    <span class="px-1.5 py-0.5 rounded bg-slate-800 text-slate-300 border border-slate-700" title="Cost Repricing / Pass-Through Lag Window">
+                      <i class="fa-regular fa-clock mr-1 text-[8px]"></i>Lag: ${lag}
+                    </span>
+                    <button type="button" onclick="toggleSupplyChainNodeDetail('${detailId}', '${ticker}')" class="ml-auto text-[9px] text-amber-400 hover:text-amber-300 underline transition">
+                      Details
+                    </button>
+                  </div>
+
+                  <!-- Expandable Volatility Drawer -->
+                  <div id="${detailId}" class="hidden pt-1.5 border-t border-[#16233d] text-[10px] text-slate-400 italic">
+                    <strong class="text-amber-400/90 not-italic">Risk Exposure:</strong> ${inp.riskOrVolatilityNote}
+                  </div>
+                </div>
+              `;
+            }).join('')}
+          </div>
+        </div>
+
+        <div class="mt-2 pt-2 border-t border-[#16233d] text-[10px] text-slate-500 flex items-center justify-between">
+          <span>Cost Structure Risk</span>
+          <span class="text-amber-400/90 font-mono">COGS Sensitivity</span>
+        </div>
+      </div>
+
+      <!-- CONNECTOR 1 (Upstream to Core Moat) -->
+      <div class="hidden lg:flex lg:col-span-1 flex-col items-center justify-center space-y-2">
+        <svg viewBox="0 0 40 80" class="w-10 h-20 overflow-visible">
+          <defs>
+            <linearGradient id="scGradIn" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stop-color="#f59e0b" stop-opacity="0.9"/>
+              <stop offset="100%" stop-color="#06b6d4" stop-opacity="0.9"/>
+            </linearGradient>
+          </defs>
+          <path d="M 0,40 L 40,40" fill="none" stroke="url(#scGradIn)" stroke-width="2.5" class="supply-flow-path" />
+          <polygon points="34,36 40,40 34,44" fill="#06b6d4" />
+        </svg>
+        <span class="text-[8px] font-mono uppercase text-slate-500 tracking-wider text-center">Value Added</span>
+      </div>
+
+      <!-- TIER 2: VALUE-ADD TRANSFORMATION (THE MOAT / ENGINE) -->
+      <div class="lg:col-span-2 p-3.5 bg-[#060c18] border border-cyan-500/40 rounded-xl space-y-3 flex flex-col justify-between shadow-md supply-glow-cyan">
+        <div>
+          <div class="flex items-center space-x-2 pb-2 border-b border-cyan-500/20">
+            <span class="w-6 h-6 rounded-md bg-cyan-500/20 border border-cyan-500/40 flex items-center justify-center text-cyan-300 text-xs">
+              <i class="fa-solid fa-gears"></i>
+            </span>
+            <span class="text-xs font-bold text-cyan-300 uppercase tracking-wide">2. Transformation</span>
+          </div>
+
+          <div class="space-y-2.5 pt-2.5 text-[11px]">
+            <div class="p-2.5 bg-[#0a1222] rounded-lg border border-[#16233d] space-y-1">
+              <span class="text-[9px] font-mono font-bold text-cyan-400 uppercase tracking-wider block">Core Conversion Process</span>
+              <p class="font-semibold text-white leading-tight">${valueChain.coreProcess || 'Industrial Architecture & Systems'}</p>
+            </div>
+
+            <div class="p-2.5 bg-[#0a1222] rounded-lg border border-[#16233d] space-y-1">
+              <span class="text-[9px] font-mono font-bold text-cyan-400 uppercase tracking-wider block">Value-Addition</span>
+              <p class="text-slate-300 text-[10px] leading-relaxed">${valueChain.valueAdditionSummary || 'Transforms inputs into high-value market offerings.'}</p>
+            </div>
+
+            <div class="p-2.5 bg-cyan-950/40 rounded-lg border border-cyan-500/35 space-y-1">
+              <div class="flex items-center justify-between">
+                <span class="text-[9px] font-mono font-bold text-emerald-400 uppercase tracking-wider">Economic Moat</span>
+                <span class="px-1.5 py-0.2 rounded text-[8px] font-mono bg-emerald-500/15 text-emerald-300 border border-emerald-500/25">
+                  ${valueChain.moatRating || 'Wide Moat'}
+                </span>
+              </div>
+              <p class="text-emerald-200 text-[10px] leading-snug">${valueChain.moatFactor || 'Proprietary IP and high client switching lock-in.'}</p>
+            </div>
+
+            ${valueChain.grossConversionMargin ? `
+              <div class="p-1.5 rounded-md bg-indigo-950/30 border border-indigo-500/20 text-[9px] text-indigo-300 font-mono text-center">
+                <i class="fa-solid fa-scale-balanced mr-1"></i> ${valueChain.grossConversionMargin}
+              </div>
+            ` : ''}
+          </div>
+        </div>
+
+        <div class="mt-2 pt-2 border-t border-[#16233d] text-[10px] text-slate-500 flex items-center justify-between">
+          <span>Pricing Power</span>
+          <span class="text-cyan-400/90 font-mono">Gross Margin Anchor</span>
+        </div>
+      </div>
+
+      <!-- CONNECTOR 2 (Core Moat to Downstream) -->
+      <div class="hidden lg:flex lg:col-span-1 flex-col items-center justify-center space-y-2">
+        <svg viewBox="0 0 40 80" class="w-10 h-20 overflow-visible">
+          <defs>
+            <linearGradient id="scGradOut" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stop-color="#06b6d4" stop-opacity="0.9"/>
+              <stop offset="100%" stop-color="#10b981" stop-opacity="0.9"/>
+            </linearGradient>
+          </defs>
+          <path d="M 0,40 L 40,40" fill="none" stroke="url(#scGradOut)" stroke-width="2.5" class="supply-flow-path" />
+          <polygon points="34,36 40,40 34,44" fill="#10b981" />
+        </svg>
+        <span class="text-[8px] font-mono uppercase text-slate-500 tracking-wider text-center">Revenue Out</span>
+      </div>
+
+      <!-- TIER 3: WHAT IT PRODUCES & WHO BUYS IT (OUTPUTS / CUSTOMERS) -->
+      <div class="lg:col-span-3 p-3.5 bg-[#060c18] border border-emerald-500/30 rounded-xl space-y-3 flex flex-col justify-between shadow-sm">
+        <div>
+          <div class="flex items-center justify-between pb-2 border-b border-emerald-500/20">
+            <div class="flex items-center space-x-2">
+              <span class="w-6 h-6 rounded-md bg-emerald-500/20 border border-emerald-500/40 flex items-center justify-center text-emerald-300 text-xs">
+                <i class="fa-solid fa-truck-ramp-box"></i>
+              </span>
+              <span class="text-xs font-bold text-emerald-300 uppercase tracking-wide">3. Commercial Outputs</span>
+            </div>
+            <span class="text-[9px] font-mono px-1.5 py-0.5 rounded bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+              End Customers / Revenue
+            </span>
+          </div>
+
+          <div class="space-y-2 pt-2.5">
+            ${outputs.map(out => {
+              const custConc = out.customerConcentration || 'Diversified';
+              const concColor = custConc.includes('High') || custConc.includes('Top 3') || custConc.includes('Top 5') ? 'amber' : 'emerald';
+
+              return `
+                <div class="supply-node-card p-2.5 bg-[#0a1222] rounded-lg border border-[#16233d] hover:border-emerald-500/40 transition space-y-1 text-[11px]">
+                  <div class="flex items-start justify-between gap-1.5">
+                    <span class="font-bold text-white flex items-center leading-snug">
+                      <i class="fa-solid fa-arrow-up-right-from-square text-emerald-400 mr-1.5 text-[9px] flex-shrink-0"></i>
+                      ${out.productOrService}
+                    </span>
+                    <span class="text-[9px] font-mono px-1.5 py-0.5 rounded bg-emerald-500/15 text-emerald-300 border border-emerald-500/25 whitespace-nowrap">
+                      ${out.revenueContribution}
+                    </span>
+                  </div>
+
+                  <div class="text-slate-400 text-[10px]">
+                    <strong class="text-slate-300">Target Buyers:</strong> ${out.customerSegment}
+                  </div>
+
+                  <div class="text-slate-400 text-[10px]">
+                    <strong class="text-emerald-400/90">Growth Catalyst:</strong> ${out.demandDrivers}
+                  </div>
+
+                  <!-- Customer Concentration Pill -->
+                  <div class="pt-1 flex items-center justify-between text-[9px] font-mono">
+                    <span class="text-slate-500">Concentration:</span>
+                    <span class="px-1.5 py-0.2 rounded bg-${concColor}-500/10 text-${concColor}-300 border border-${concColor}-500/20">
+                      ${custConc}
+                    </span>
+                  </div>
+                </div>
+              `;
+            }).join('')}
+          </div>
+        </div>
+
+        <div class="mt-2 pt-2 border-t border-[#16233d] text-[10px] text-slate-500 flex items-center justify-between">
+          <span>Revenue Engine</span>
+          <span class="text-emerald-400/90 font-mono">End-Market Demand</span>
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+// ----------------------------------------------------------------------------
+// TAB 2: COST BREAKDOWN (COGS) TREE (Hierarchical Sourcing Vulnerability)
+// ----------------------------------------------------------------------------
+function renderCogsTreeTab(supplyChain, ticker) {
+  const inputs = supplyChain.keyInputs || [];
+
+  return `
+    <div class="space-y-3.5">
+      <!-- Section Briefing -->
+      <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 p-3 rounded-xl bg-[#060c18] border border-amber-500/25">
+        <div>
+          <span class="text-xs font-bold text-white uppercase tracking-wider flex items-center">
+            <i class="fa-solid fa-layer-group text-amber-400 mr-1.5"></i> Upstream Cost Structure &amp; Sourcing Security Tree
+          </span>
+          <p class="text-[11px] text-slate-400 mt-0.5">
+            Evaluate bill-of-materials (BOM) concentration, supplier pricing power, and pass-through margin lag.
+          </p>
+        </div>
+        <div class="flex items-center space-x-2 text-[10px] font-mono">
+          <span class="px-2 py-1 rounded bg-amber-500/15 text-amber-300 border border-amber-500/30">
+            ${inputs.length} Cost Centers Tracked
+          </span>
+        </div>
+      </div>
+
+      <!-- COGS Hierarchy Cards -->
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+        ${inputs.map((inp, idx) => {
+          const bPower = inp.supplierBargainingPower || 'Moderate';
+          const bPowerBadge = bPower.includes('High') || bPower.includes('Oligopol')
+            ? '<span class="px-1.5 py-0.5 rounded text-[9px] font-mono bg-rose-500/15 text-rose-300 border border-rose-500/30">High (Oligopoly Risk)</span>'
+            : (bPower.includes('Low')
+              ? '<span class="px-1.5 py-0.5 rounded text-[9px] font-mono bg-emerald-500/15 text-emerald-300 border border-emerald-500/30">Low (Commoditized)</span>'
+              : '<span class="px-1.5 py-0.5 rounded text-[9px] font-mono bg-amber-500/15 text-amber-300 border border-amber-500/30">Moderate (Competitive)</span>');
+
+          const lag = inp.passThroughLagDays || '30-45 Days';
+
+          return `
+            <div class="supply-node-card p-3.5 bg-[#0a1222] rounded-xl border border-[#16233d] hover:border-amber-500/40 space-y-2.5 transition text-[11px]">
+              <div class="flex items-start justify-between gap-2">
+                <div>
+                  <div class="flex items-center space-x-2">
+                    <span class="w-2 h-2 rounded-full bg-amber-400"></span>
+                    <span class="font-bold text-white text-xs">${inp.name}</span>
+                  </div>
+                  <span class="text-[9px] font-mono text-slate-400 block mt-0.5 ml-4">
+                    Category: <strong class="text-slate-300">${inp.category}</strong>
+                  </span>
+                </div>
+                <span class="px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-amber-500/15 text-amber-300 border border-amber-500/30">
+                  ${inp.costWeightEstimate}
+                </span>
+              </div>
+
+              <!-- Visual Progress Bar for Cost Weight -->
+              <div class="w-full bg-[#060c18] h-1.5 rounded-full overflow-hidden border border-[#16233d]">
+                <div class="bg-gradient-to-r from-amber-500 to-orange-500 h-1.5 rounded-full" style="width: ${inp.costWeightEstimate.includes('High') ? '75%' : (inp.costWeightEstimate.includes('Medium') ? '45%' : '25%')}"></div>
+              </div>
+
+              <!-- Supplier Geographies & Sourcing Partners -->
+              <div class="p-2 rounded-lg bg-[#060c18] border border-[#16233d] space-y-1 text-[10px]">
+                <div class="flex items-center justify-between text-slate-400">
+                  <span>Sourcing Hubs &amp; Vendors:</span>
+                  <span class="font-semibold text-slate-200 truncate ml-2 text-right">${inp.typicalSourceOrSuppliers}</span>
+                </div>
+                <div class="flex items-center justify-between text-slate-400">
+                  <span>Supplier Bargaining Leverage:</span>
+                  ${bPowerBadge}
+                </div>
+                <div class="flex items-center justify-between text-slate-400">
+                  <span>Pricing Pass-Through Lag:</span>
+                  <span class="font-mono text-indigo-300 font-semibold">${lag}</span>
+                </div>
+              </div>
+
+              <!-- Sourcing Vulnerability Note -->
+              <div class="text-[10px] text-slate-400 leading-snug">
+                <strong class="text-amber-400/90">Sensitivity Mechanism:</strong> ${inp.riskOrVolatilityNote}
+              </div>
+            </div>
+          `;
+        }).join('')}
+      </div>
+
+      <!-- Institutional Takeaway -->
+      <div class="p-3 bg-[#060c18] rounded-xl border border-slate-800 text-xs text-slate-300 flex items-start space-x-2.5">
+        <i class="fa-solid fa-shield-halved text-cyan-400 text-sm mt-0.5 flex-shrink-0"></i>
+        <div class="space-y-1">
+          <strong class="text-white block text-[11px] uppercase tracking-wide">Gross Margin Protection &amp; Pass-Through Dynamics:</strong>
+          <p class="text-[11px] text-slate-400 leading-relaxed">
+            Companies with diversified domestic vendor pools and contractual quarterly indexation clauses can absorb raw material price surges with minimal structural margin dilution. Long-term contractual pass-through lag under 45 days indicates strong gross margin defensibility.
+          </p>
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+// ----------------------------------------------------------------------------
+// TAB 3: CUSTOMER & REVENUE MIX (Segmental Waterfall & Concentration Risk)
+// ----------------------------------------------------------------------------
+function renderRevenueMixTab(supplyChain, ticker) {
+  const outputs = supplyChain.keyOutputs || [];
+
+  return `
+    <div class="space-y-3.5">
+      <!-- Section Briefing -->
+      <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 p-3 rounded-xl bg-[#060c18] border border-emerald-500/25">
+        <div>
+          <span class="text-xs font-bold text-white uppercase tracking-wider flex items-center">
+            <i class="fa-solid fa-chart-pie text-emerald-400 mr-1.5"></i> Downstream Customer &amp; Revenue Concentration Mix
+          </span>
+          <p class="text-[11px] text-slate-400 mt-0.5">
+            Identify core revenue drivers, buyer diversification, single-client exposure, and long-term demand drivers.
+          </p>
+        </div>
+        <div class="flex items-center space-x-2 text-[10px] font-mono">
+          <span class="px-2 py-1 rounded bg-emerald-500/15 text-emerald-300 border border-emerald-500/30">
+            ${outputs.length} Revenue Streams Tracked
+          </span>
+        </div>
+      </div>
+
+      <!-- Revenue Mix Cards -->
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
+        ${outputs.map(out => {
+          const custConc = out.customerConcentration || 'Diversified';
+          const isHighConc = custConc.includes('High') || custConc.includes('Top 3') || custConc.includes('Top 5');
+
+          return `
+            <div class="supply-node-card p-3.5 bg-[#0a1222] rounded-xl border border-[#16233d] hover:border-emerald-500/40 space-y-2.5 transition text-[11px] flex flex-col justify-between">
+              <div class="space-y-2">
+                <div class="flex items-start justify-between gap-1.5">
+                  <div class="font-bold text-white text-xs flex items-center">
+                    <i class="fa-solid fa-circle-dot text-emerald-400 mr-1.5 text-[8px] flex-shrink-0"></i>
+                    ${out.productOrService}
+                  </div>
+                  <span class="px-1.5 py-0.5 rounded text-[9px] font-mono font-bold bg-emerald-500/15 text-emerald-300 border border-emerald-500/30 whitespace-nowrap">
+                    ${out.revenueContribution}
+                  </span>
+                </div>
+
+                <!-- Visual Bar for Revenue Contribution -->
+                <div class="w-full bg-[#060c18] h-1.5 rounded-full overflow-hidden border border-[#16233d]">
+                  <div class="bg-gradient-to-r from-emerald-500 to-teal-400 h-1.5 rounded-full" style="width: ${out.revenueContribution.includes('80%') || out.revenueContribution.includes('75%') || out.revenueContribution.includes('72%') ? '75%' : (out.revenueContribution.includes('40%') || out.revenueContribution.includes('42%') || out.revenueContribution.includes('32%') ? '40%' : '20%')}"></div>
+                </div>
+
+                <!-- Target Client Segment -->
+                <div class="p-2 rounded-lg bg-[#060c18] border border-[#16233d] space-y-1 text-[10px]">
+                  <div class="text-slate-400">
+                    <span class="text-slate-500 block text-[9px] uppercase font-mono">End Buyer Base</span>
+                    <strong class="text-slate-200">${out.customerSegment}</strong>
+                  </div>
+                  <div class="pt-1 flex items-center justify-between text-slate-400 border-t border-[#16233d]/60">
+                    <span>Concentration:</span>
+                    <span class="font-mono text-[9px] font-semibold ${isHighConc ? 'text-amber-300' : 'text-emerald-300'}">
+                      ${custConc}
+                    </span>
+                  </div>
+                </div>
+
+                <div class="text-[10px] text-slate-400 leading-snug">
+                  <strong class="text-emerald-400/90">Growth Catalyst:</strong> ${out.demandDrivers}
+                </div>
+              </div>
+
+              <div class="mt-2 pt-2 border-t border-[#16233d] text-[9px] text-slate-500 font-mono flex items-center justify-between">
+                <span>Contract Type</span>
+                <span class="text-emerald-400">Multi-Year Anchor</span>
+              </div>
+            </div>
+          `;
+        }).join('')}
+      </div>
+
+      <!-- Concentration Risk Verdict -->
+      <div class="p-3 bg-[#060c18] rounded-xl border border-slate-800 text-xs text-slate-300 flex items-start space-x-2.5">
+        <i class="fa-solid fa-users-viewfinder text-emerald-400 text-sm mt-0.5 flex-shrink-0"></i>
+        <div class="space-y-1">
+          <strong class="text-white block text-[11px] uppercase tracking-wide">Downstream Customer Diversification Verdict:</strong>
+          <p class="text-[11px] text-slate-400 leading-relaxed">
+            Revenue resilience depends heavily on customer fragmentation. Highly granular consumer retail revenue carries near-zero client cancellation risk, whereas enterprise B2B models with >50% concentration in top-5 clients require sticky IP and multi-year master service agreements to defend enterprise valuation multiples.
+          </p>
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+// ----------------------------------------------------------------------------
+// TAB 4: MACRO SHOCK STRESS TEST (Interactive Scenario Simulator)
+// ----------------------------------------------------------------------------
+function renderStressTestTab(supplyChain, ticker, activeShockIdx) {
+  const sensitivities = supplyChain.macroCostSensitivities || [];
+  const currentSensitivity = sensitivities[activeShockIdx] || sensitivities[0] || {
+    factorName: 'Macro Inflation / Squeeze',
+    impactDirection: 'Negative',
+    mechanism: 'Tests operational pass-through agility and pricing discipline.',
+    elasticityMetric: '-80 to -120 bps margin compression'
+  };
+
+  const isNeg = currentSensitivity.impactDirection === 'Negative';
+  const themeColor = isNeg ? 'rose' : 'emerald';
+  const icon = isNeg ? 'fa-arrow-trend-down' : 'fa-arrow-trend-up';
+
+  return `
+    <div class="space-y-3.5">
+      <!-- Section Briefing & Shock Scenario Switcher -->
+      <div class="p-3.5 rounded-xl bg-[#060c18] border border-cyan-500/25 space-y-2.5">
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+          <span class="text-xs font-bold text-white uppercase tracking-wider flex items-center">
+            <i class="fa-solid fa-bolt-lightning text-rose-400 mr-1.5"></i> Macro Shock &amp; Elasticity Stress Test Lab
+          </span>
+          <span class="text-[10px] text-slate-400 font-mono">
+            Interactive Scenario Simulator
+          </span>
+        </div>
+        <p class="text-[11px] text-slate-400 leading-relaxed">
+          Simulate macroeconomic stress events (raw material spikes, currency moves, capex cycles) to quantify their impact on gross margins and earnings power.
+        </p>
+
+        <!-- Scenario Selection Chips -->
+        <div class="flex flex-wrap gap-1.5 pt-1">
+          ${sensitivities.map((s, idx) => {
+            const sIsNeg = s.impactDirection === 'Negative';
+            const sActive = idx === activeShockIdx;
+            const btnColor = sIsNeg ? 'rose' : 'emerald';
+
+            return `
+              <button type="button" onclick="selectSupplyChainShock(${idx}, '${ticker}')"
+                class="supply-pill-tab px-2.5 py-1.5 rounded-lg text-[10px] font-semibold flex items-center space-x-1.5 transition ${sActive ? `bg-${btnColor}-500/20 text-${btnColor}-200 border border-${btnColor}-500/40 shadow-sm shadow-${btnColor}-500/10` : 'bg-[#0a1222] text-slate-400 hover:text-slate-200 border border-[#16233d]'}" title="Test scenario: ${s.factorName}">
+                <i class="fa-solid ${sIsNeg ? 'fa-triangle-exclamation text-rose-400' : 'fa-circle-arrow-up text-emerald-400'} text-[10px]"></i>
+                <span class="truncate max-w-[200px]">${s.factorName}</span>
+              </button>
+            `;
+          }).join('')}
+        </div>
+      </div>
+
+      <!-- Active Scenario Telemetry Dashboard -->
+      <div class="supply-node-card p-4 rounded-xl bg-[#0a1222] border border-${themeColor}-500/35 space-y-3 shadow-xl supply-glow-${themeColor}">
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-2.5 border-b border-[#16233d]">
+          <div class="flex items-center space-x-2">
+            <span class="w-7 h-7 rounded-lg bg-${themeColor}-500/15 border border-${themeColor}-500/30 flex items-center justify-center text-${themeColor}-400 text-xs">
+              <i class="fa-solid ${icon}"></i>
+            </span>
+            <div>
+              <span class="text-xs font-bold text-white block">
+                ${currentSensitivity.factorName}
+              </span>
+              <span class="text-[9px] font-mono text-slate-400">
+                Stress Vector &bull; Direct Financial Transmission
+              </span>
+            </div>
+          </div>
+
+          <div class="flex items-center space-x-2 self-start sm:self-center">
+            <span class="px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-${themeColor}-500/15 text-${themeColor}-300 border border-${themeColor}-500/30">
+              ${currentSensitivity.impactDirection === 'Negative' ? 'MARGIN SQUEEZE' : 'MARGIN EXPANSION'}
+            </span>
+          </div>
+        </div>
+
+        <!-- Telemetry Numbers -->
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-2 text-[10px]">
+          <div class="p-2.5 rounded-lg bg-[#060c18] border border-[#16233d] space-y-1">
+            <span class="text-slate-500 uppercase font-mono tracking-wider text-[9px] block">Estimated Impact Metric</span>
+            <div class="font-bold text-white text-xs font-mono text-${themeColor}-300">
+              ${currentSensitivity.elasticityMetric || (isNeg ? '-110 to -160 bps Margin' : '+90 to +140 bps EBITDA')}
+            </div>
+          </div>
+          <div class="p-2.5 rounded-lg bg-[#060c18] border border-[#16233d] space-y-1">
+            <span class="text-slate-500 uppercase font-mono tracking-wider text-[9px] block">Transmission Speed</span>
+            <div class="font-bold text-indigo-300 font-mono text-xs">
+              30 - 60 Days (Working Capital Lag)
+            </div>
+          </div>
+          <div class="p-2.5 rounded-lg bg-[#060c18] border border-[#16233d] space-y-1">
+            <span class="text-slate-500 uppercase font-mono tracking-wider text-[9px] block">Moat Protection Buffer</span>
+            <div class="font-bold text-emerald-300 font-mono text-xs">
+              ${supplyChain.valueChain?.moatRating || 'High Switching Moat'}
+            </div>
+          </div>
+        </div>
+
+        <!-- Mechanism Explanation -->
+        <div class="p-2.5 rounded-lg bg-[#060c18] border border-[#16233d] space-y-1 text-xs">
+          <strong class="text-white text-[11px] block">Transmission Mechanism &amp; Value Chain Vulnerability:</strong>
+          <p class="text-[11px] text-slate-300 leading-relaxed">
+            ${currentSensitivity.mechanism}
+          </p>
+        </div>
+      </div>
+
+      <!-- Sensitivity Matrix Overview -->
+      <div class="p-3 bg-[#060c18] rounded-xl border border-slate-800 space-y-2">
+        <div class="flex items-center justify-between text-xs">
+          <span class="font-bold text-slate-200 flex items-center text-[11px]">
+            <i class="fa-solid fa-list-check text-cyan-400 mr-1.5"></i> All Profiled Macro Sensitivities (${sensitivities.length})
+          </span>
+          <span class="text-[9px] text-slate-500 font-mono">Elasticity Multipliers</span>
+        </div>
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-2 pt-0.5">
+          ${sensitivities.map((s, idx) => {
+            const sIsNeg = s.impactDirection === 'Negative';
+            const sColor = sIsNeg ? 'rose' : 'emerald';
+            const sIcon = sIsNeg ? 'fa-arrow-trend-down' : 'fa-arrow-trend-up';
+
+            return `
+              <div class="p-2 rounded-lg bg-[#0a1222] border border-[#16233d] hover:border-${sColor}-500/40 transition space-y-1 text-[10px]">
+                <div class="flex items-center justify-between">
+                  <span class="font-bold text-white flex items-center truncate">
+                    <i class="fa-solid ${sIcon} text-${sColor}-400 mr-1 text-[9px]"></i>
+                    ${s.factorName}
+                  </span>
+                  <span class="px-1 py-0.2 rounded text-[8px] font-mono bg-${sColor}-500/10 text-${sColor}-300">
+                    ${s.impactDirection}
+                  </span>
+                </div>
+                <p class="text-[9px] text-slate-400 line-clamp-2 leading-tight">
+                  ${s.mechanism}
+                </p>
+              </div>
+            `;
+          }).join('')}
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+// Global Tab & Scenario Controllers
+window.switchSupplyChainTab = function(tabId, ticker) {
+  if (!window._scStateMap[ticker]) {
+    window._scStateMap[ticker] = { activeTab: 'pipeline', activeShockIndex: 0, expandedNodes: {} };
+  }
+  window._scStateMap[ticker].activeTab = tabId;
+  const container = document.getElementById(`sc-component-${ticker}`);
+  if (container && window._scDataMap[ticker]) {
+    const { supplyChain, companyName } = window._scDataMap[ticker];
+    container.outerHTML = renderInstitutionalSupplyChainEcosystem(supplyChain, ticker, companyName);
+  }
+};
+
+window.selectSupplyChainShock = function(shockIdx, ticker) {
+  if (!window._scStateMap[ticker]) {
+    window._scStateMap[ticker] = { activeTab: 'stress', activeShockIndex: 0, expandedNodes: {} };
+  }
+  window._scStateMap[ticker].activeShockIndex = shockIdx;
+  const container = document.getElementById(`sc-component-${ticker}`);
+  if (container && window._scDataMap[ticker]) {
+    const { supplyChain, companyName } = window._scDataMap[ticker];
+    container.outerHTML = renderInstitutionalSupplyChainEcosystem(supplyChain, ticker, companyName);
+  }
+};
+
+window.toggleSupplyChainNodeDetail = function(nodeId, ticker) {
+  const el = document.getElementById(nodeId);
+  if (el) {
+    el.classList.toggle('hidden');
+  }
+};
+
+function renderShareholdingPatternAndWhaleAlerts(pattern, ticker, companyName, price) {
+  if (!pattern) return '';
+
+  window._shDataMap = window._shDataMap || {};
+  window._shDataMap[ticker] = { pattern, ticker, companyName, price };
+
+  window._shStateMap = window._shStateMap || {};
+  if (!window._shStateMap[ticker]) {
+    window._shStateMap[ticker] = {
+      dealFilter: 'ALL' // 'ALL' | 'BUY' | 'BLOCK' | 'BULK' | 'PROMOTER'
+    };
+  }
+
+  const activeDealFilter = window._shStateMap[ticker].dealFilter || 'ALL';
+
+  const prom = pattern.promoterPercent ?? 0;
+  const fii = pattern.fiiPercent ?? 0;
+  const dii = pattern.diiPercent ?? 0;
+  const govt = pattern.governmentPercent ?? 0;
+  const pub = pattern.publicPercent ?? 0;
+  const pledge = pattern.promoterPledgePercent ?? 0;
+
+  const qoqProm = pattern.qoQPromoterChange ?? 0;
+  const qoqFii = pattern.qoQFiiChange ?? 0;
+  const qoqDii = pattern.qoQDiiChange ?? 0;
+
+  const allDeals = pattern.recentWhaleDeals || [];
+  const bigPubPct = pattern.bigPublicInvestorsPercent ?? 0;
+  const generalRetailPct = pattern.generalRetailPublicPercent ?? (pub - bigPubPct);
+  const bigInvestors = pattern.bigPublicInvestors || [];
+
+  // Filter deals based on active tab
+  const filteredDeals = allDeals.filter(d => {
+    if (activeDealFilter === 'BUY') return d.dealType === 'BUY';
+    if (activeDealFilter === 'BLOCK') return (d.transactionType || '').includes('BLOCK');
+    if (activeDealFilter === 'BULK') return (d.transactionType || '').includes('BULK');
+    if (activeDealFilter === 'PROMOTER') return (d.transactionType || '').includes('PROMOTER');
+    return true;
+  });
+
+  // Calculate Smart Money Whale Conviction Score (0 to 100)
+  let convictionScore = 50;
+  if (qoqFii > 0) convictionScore += 16; else if (qoqFii < 0) convictionScore -= 12;
+  if (qoqDii > 0) convictionScore += 16; else if (qoqDii < 0) convictionScore -= 10;
+  if (bigInvestors.some(i => i.trendDirection === 'ACCUMULATING' || i.trendDirection === 'NEW ENTRY')) convictionScore += 12;
+  if (pledge === 0) convictionScore += 8; else if (pledge > 15) convictionScore -= 22;
+  convictionScore = Math.max(15, Math.min(98, convictionScore));
+
+  const convictionClass = convictionScore >= 80 ? 'text-emerald-400' : convictionScore >= 65 ? 'text-teal-400' : convictionScore >= 45 ? 'text-amber-400' : 'text-rose-400';
+  const convictionStatus = convictionScore >= 80 
+    ? 'AGGRESSIVE INSTITUTIONAL ACCUMULATION (Smart Money Float Absorption)'
+    : convictionScore >= 65 
+      ? 'STEADY INSTITUTIONAL SPONSORSHIP (Net Buying & SIP Float Holding)'
+      : convictionScore >= 45 
+        ? 'BALANCED FLOAT EQUILIBRIUM'
+        : 'INSTITUTIONAL DISTRIBUTION / TRIMMING PHASE';
+  const convictionBadge = convictionScore >= 80 
+    ? 'bg-emerald-500/20 text-emerald-300 border-emerald-500/35'
+    : convictionScore >= 65 
+      ? 'bg-teal-500/20 text-teal-300 border-teal-500/35'
+      : convictionScore >= 45 
+        ? 'bg-amber-500/20 text-amber-300 border-amber-500/35'
+        : 'bg-rose-500/20 text-rose-300 border-rose-500/35';
+
+  return `
+    <div id="sh-component-${ticker}" class="p-4 sm:p-5 rounded-2xl bg-gradient-to-r from-[#060c18] via-[#091120] to-[#060c18] border border-teal-500/30 shadow-2xl space-y-4">
+      
+      <!-- Top Header & Live Surveillance Action -->
+      <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-[#16233d] pb-3">
+        <div class="flex items-center space-x-2.5">
+          <div class="w-9 h-9 rounded-xl bg-gradient-to-tr from-teal-500/20 via-cyan-500/20 to-blue-500/20 border border-teal-500/40 flex items-center justify-center text-teal-400 shadow-md">
+            <i class="fa-solid fa-chart-pie text-sm"></i>
+          </div>
+          <div>
+            <div class="flex items-center space-x-2">
+              <h3 class="text-xs sm:text-sm font-bold text-white uppercase tracking-wider">Institutional Shareholding &amp; Whale Radar</h3>
+              <span class="text-[9px] font-mono px-2 py-0.5 rounded bg-slate-800 text-teal-300 border border-teal-500/30 font-semibold">
+                ${pattern.quarterPeriod || 'Latest Quarter'} &bull; SEBI LODR Reg 31
+              </span>
+            </div>
+            <p class="text-[11px] text-slate-400 mt-0.5">
+              Live tracking of Foreign FIIs, Domestic DIIs, Superstar Whales, and Exchange Block/Bulk Deals
+            </p>
+          </div>
+        </div>
+
+        <div class="flex items-center space-x-2 self-start sm:self-center">
+          <button type="button" onclick="openCreateAlertModal('${ticker}', ${price || 0})" 
+            class="px-2.5 py-1 rounded-lg text-xs font-semibold bg-teal-500/15 hover:bg-teal-500/25 text-teal-300 border border-teal-500/30 transition flex items-center space-x-1.5 shadow-sm"
+            title="Set real-time bulk deal and price surveillance alerts for ${ticker}">
+            <i class="fa-solid fa-bell text-[11px]"></i>
+            <span>Track Whale Alerts</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- 1. Flagship Smart Money Conviction Radar (0-100) & FII/DII Tug-of-War -->
+      <div class="p-3.5 bg-slate-950/90 rounded-xl border border-teal-500/30 shadow-lg space-y-3">
+        <div class="flex flex-col md:flex-row md:items-center justify-between gap-3">
+          <div class="space-y-1">
+            <div class="flex items-center space-x-2">
+              <span class="text-[10px] uppercase font-mono font-bold text-slate-400">Whale Conviction Index:</span>
+              <span class="text-xl font-black font-mono ${convictionClass}">${convictionScore}<span class="text-xs text-slate-500 font-normal"> / 100</span></span>
+              <span class="px-2 py-0.5 rounded text-[10px] font-mono font-bold border ${convictionBadge}">
+                ${convictionStatus}
+              </span>
+            </div>
+            <p class="text-[11px] text-slate-300">
+              Evaluates FII accumulation pace, DII mutual fund cushion, marquee superstar entries, and 0% promoter pledge safety.
+            </p>
+          </div>
+
+          <!-- Conviction Visual Gauge -->
+          <div class="w-full md:w-64 space-y-1">
+            <div class="flex justify-between text-[9px] font-mono text-slate-400">
+              <span>Distribute</span>
+              <span>Neutral</span>
+              <span class="text-emerald-400 font-bold">Accumulate</span>
+            </div>
+            <div class="w-full h-2.5 bg-slate-900 rounded-full overflow-hidden flex border border-slate-800 shadow-inner">
+              <div class="h-full bg-gradient-to-r from-rose-500 via-amber-400 to-emerald-400 transition-all duration-500" style="width: ${convictionScore}%"></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- FII vs DII Tug-of-War Bar (Foreign Hot Money vs Domestic SIP Float Cushion) -->
+        <div class="p-2.5 bg-[#0a1324] rounded-lg border border-[#16233d] space-y-1 text-xs">
+          <div class="flex justify-between text-[10px] font-mono">
+            <span class="text-emerald-400 flex items-center"><i class="fa-solid fa-building-columns mr-1"></i> Foreign FII: <strong>${fii.toFixed(2)}%</strong> (${qoqFii >= 0 ? '+' : ''}${qoqFii.toFixed(2)}% QoQ)</span>
+            <span class="text-cyan-400 flex items-center">Domestic DII: <strong>${dii.toFixed(2)}%</strong> (${qoqDii >= 0 ? '+' : ''}${qoqDii.toFixed(2)}% QoQ) <i class="fa-solid fa-vault ml-1"></i></span>
+          </div>
+          <div class="w-full h-3 bg-slate-950 rounded-full overflow-hidden flex border border-slate-800 shadow-inner">
+            <div class="bg-emerald-500 hover:brightness-110 transition" style="width: ${((fii / ((fii + dii) || 1)) * 100).toFixed(1)}%" title="Foreign Institutions (FII): ${fii.toFixed(2)}%"></div>
+            <div class="bg-cyan-500 hover:brightness-110 transition" style="width: ${((dii / ((fii + dii) || 1)) * 100).toFixed(1)}%" title="Domestic Institutions (DII): ${dii.toFixed(2)}%"></div>
+          </div>
+          <div class="text-[9px] text-slate-400 flex items-center justify-between font-mono pt-0.5">
+            <span>Foreign Capital: ${qoqFii >= 0 ? 'Net Accumulating' : 'Trimming Position'}</span>
+            <span>Domestic SIP Cushion: ${qoqDii >= 0 ? 'Float Absorption Active' : 'Holding Steady'}</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- 2. 100% Equity Spectrum & 5-Way Ownership Metric Grid -->
+      <div class="space-y-1.5">
+        <div class="flex items-center justify-between text-[11px] text-slate-400">
+          <span class="font-medium text-slate-300 flex items-center">
+            <i class="fa-solid fa-layer-group text-teal-400 mr-1.5 text-[10px]"></i> Total Equity Spectrum (100% Floating Balance)
+          </span>
+          <span class="font-mono text-[10px] text-slate-500">Promoter: ${prom.toFixed(1)}% | Inst (FII+DII): ${(fii + dii).toFixed(1)}% | Govt: ${govt.toFixed(1)}% | Public: ${pub.toFixed(1)}%</span>
+        </div>
+        <div class="w-full h-3.5 bg-slate-950 rounded-lg overflow-hidden flex border border-slate-800 shadow-inner" title="Promoter: ${prom}%, FII: ${fii}%, DII: ${dii}%, Govt: ${govt}%, Public: ${pub}%">
+          <div class="bg-indigo-500 hover:brightness-110 transition cursor-pointer" style="width: ${prom}%" title="Promoters: ${prom.toFixed(2)}%"></div>
+          <div class="bg-emerald-500 hover:brightness-110 transition cursor-pointer" style="width: ${fii}%" title="FII (Foreign): ${fii.toFixed(2)}%"></div>
+          <div class="bg-cyan-500 hover:brightness-110 transition cursor-pointer" style="width: ${dii}%" title="DII (Domestic MFs/Banks): ${dii.toFixed(2)}%"></div>
+          <div class="bg-amber-500 hover:brightness-110 transition cursor-pointer" style="width: ${govt}%" title="Government / Sovereign: ${govt.toFixed(2)}%"></div>
+          <div class="bg-slate-600 hover:brightness-110 transition cursor-pointer" style="width: ${pub}%" title="Total Public Float: ${pub.toFixed(2)}%"></div>
+        </div>
+      </div>
+
+      <!-- 5-Way Ownership Metric Grid -->
+      <div class="grid grid-cols-2 sm:grid-cols-5 gap-2.5">
+        <!-- 1. Promoters -->
+        <div class="bg-slate-950/70 p-2.5 rounded-xl border border-indigo-500/30 flex flex-col justify-between">
+          <div>
+            <div class="flex items-center justify-between text-[10px] text-slate-400 font-medium">
+              <span class="flex items-center"><span class="w-2 h-2 rounded-full bg-indigo-500 mr-1.5"></span>Promoters</span>
+              <span class="text-[9px] font-mono ${qoqProm >= 0 ? 'text-emerald-400' : 'text-rose-400'} font-bold">
+                ${qoqProm >= 0 ? '+' : ''}${qoqProm.toFixed(2)}% QoQ
+              </span>
+            </div>
+            <div class="text-base font-bold font-mono text-white mt-1">${prom.toFixed(2)}%</div>
+          </div>
+          <div class="mt-2 pt-1.5 border-t border-slate-800/80 text-[10px] flex items-center justify-between">
+            <span class="text-slate-500">Pledge:</span>
+            <span class="font-mono font-bold ${pledge === 0 ? 'text-emerald-400' : pledge > 20 ? 'text-rose-400' : 'text-amber-400'}">
+              ${pledge.toFixed(1)}% ${pledge === 0 ? '(Pristine)' : ''}
+            </span>
+          </div>
+        </div>
+
+        <!-- 2. Foreign (FII) -->
+        <div class="bg-slate-950/70 p-2.5 rounded-xl border border-emerald-500/30 flex flex-col justify-between">
+          <div>
+            <div class="flex items-center justify-between text-[10px] text-slate-400 font-medium">
+              <span class="flex items-center"><span class="w-2 h-2 rounded-full bg-emerald-500 mr-1.5"></span>Foreign (FII)</span>
+              <span class="text-[9px] font-mono ${qoqFii >= 0 ? 'text-emerald-400' : 'text-rose-400'} font-bold">
+                ${qoqFii >= 0 ? '+' : ''}${qoqFii.toFixed(2)}% QoQ
+              </span>
+            </div>
+            <div class="text-base font-bold font-mono text-white mt-1">${fii.toFixed(2)}%</div>
+          </div>
+          <div class="mt-2 pt-1.5 border-t border-slate-800/80 text-[10px] flex items-center justify-between">
+            <span class="text-slate-500">Smart Capital:</span>
+            <span class="font-mono text-emerald-300 text-[10px]">${qoqFii >= 0 ? 'Accumulating' : 'Trimming'}</span>
+          </div>
+        </div>
+
+        <!-- 3. Domestic (DII) -->
+        <div class="bg-slate-950/70 p-2.5 rounded-xl border border-cyan-500/30 flex flex-col justify-between">
+          <div>
+            <div class="flex items-center justify-between text-[10px] text-slate-400 font-medium">
+              <span class="flex items-center"><span class="w-2 h-2 rounded-full bg-cyan-500 mr-1.5"></span>Domestic (DII)</span>
+              <span class="text-[9px] font-mono ${qoqDii >= 0 ? 'text-emerald-400' : 'text-rose-400'} font-bold">
+                ${qoqDii >= 0 ? '+' : ''}${qoqDii.toFixed(2)}% QoQ
+              </span>
+            </div>
+            <div class="text-base font-bold font-mono text-white mt-1">${dii.toFixed(2)}%</div>
+          </div>
+          <div class="mt-2 pt-1.5 border-t border-slate-800/80 text-[10px] flex items-center justify-between">
+            <span class="text-slate-500">MF / LIC Float:</span>
+            <span class="font-mono text-cyan-300 text-[10px]">${qoqDii >= 0 ? 'Net Buyer' : 'Steady'}</span>
+          </div>
+        </div>
+
+        <!-- 4. Government -->
+        <div class="bg-slate-950/70 p-2.5 rounded-xl border border-amber-500/30 flex flex-col justify-between">
+          <div>
+            <div class="flex items-center justify-between text-[10px] text-slate-400 font-medium">
+              <span class="flex items-center"><span class="w-2 h-2 rounded-full bg-amber-500 mr-1.5"></span>Government</span>
+              <span class="text-[9px] font-mono text-amber-400 font-bold">PSU / Sovereign</span>
+            </div>
+            <div class="text-base font-bold font-mono text-white mt-1">${govt.toFixed(2)}%</div>
+          </div>
+          <div class="mt-2 pt-1.5 border-t border-slate-800/80 text-[10px] flex items-center justify-between">
+            <span class="text-slate-500">Govt Stake:</span>
+            <span class="font-mono text-amber-300 text-[10px]">${govt > 0 ? 'Sovereign' : 'None (Private)'}</span>
+          </div>
+        </div>
+
+        <!-- 5. Public -->
+        <div class="bg-slate-950/70 p-2.5 rounded-xl border border-slate-700 flex flex-col justify-between col-span-2 sm:col-span-1 shadow-inner">
+          <div>
+            <div class="flex items-center justify-between text-[10px] text-slate-400 font-medium">
+              <span class="flex items-center"><span class="w-2 h-2 rounded-full bg-slate-500 mr-1.5"></span>Total Public</span>
+              <span class="text-[9px] font-mono text-teal-400 font-bold">Float</span>
+            </div>
+            <div class="text-base font-bold font-mono text-white mt-1">${pub.toFixed(2)}%</div>
+          </div>
+          <div class="mt-2 pt-1.5 border-t border-slate-800/80 text-[10px] flex items-center justify-between">
+            <span class="text-slate-500">Whale HNIs:</span>
+            <span class="font-mono text-teal-300 text-[10px] font-bold">${bigPubPct.toFixed(2)}%</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- 3. Superstar "Whales" Disclosed Float Breakdown (Trendlyne Superstars Style) -->
+      <div class="p-3.5 bg-slate-950/90 rounded-xl border border-slate-700/80 space-y-3">
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-800 pb-2">
+          <div class="flex items-center space-x-2">
+            <span class="w-2.5 h-2.5 rounded-full bg-teal-400"></span>
+            <h4 class="text-xs font-bold text-white uppercase tracking-wider">
+              Superstar Investors &amp; Marquee Public Float (&ge;0.5% Disclosed)
+            </h4>
+            <span class="text-[9px] font-mono px-2 py-0.5 rounded bg-slate-800 text-slate-300 border border-slate-700">
+              SEBI REG 31 DISCLOSED
+            </span>
+          </div>
+          <div class="text-[11px] font-mono text-slate-400">
+            Whale HNIs (&ge;0.5%): <span class="text-teal-400 font-bold">${bigPubPct.toFixed(2)}%</span> | 
+            Retail Public Float: <span class="text-slate-300 font-bold">${generalRetailPct.toFixed(2)}%</span>
+          </div>
+        </div>
+
+        <!-- Big Public Investors Table -->
+        ${bigInvestors.length > 0 ? `
+          <div class="overflow-x-auto rounded-lg border border-slate-800/80">
+            <table class="w-full text-left text-xs font-mono">
+              <thead class="bg-slate-900/90 text-[10px] uppercase text-slate-400 border-b border-slate-800">
+                <tr>
+                  <th class="py-1.5 px-3">Superstar Investor / Marquee Fund</th>
+                  <th class="py-1.5 px-3">Classification</th>
+                  <th class="py-1.5 px-3 text-right">Stake (%)</th>
+                  <th class="py-1.5 px-3 text-right">Holding Value (₹ Cr)</th>
+                  <th class="py-1.5 px-3 text-center">Quarterly Action</th>
+                </tr>
+              </thead>
+              <tbody class="divide-y divide-slate-800/60 bg-slate-950/40">
+                ${bigInvestors.map(inv => {
+                  const isAcc = inv.trendDirection === 'ACCUMULATING' || inv.trendDirection === 'NEW ENTRY';
+                  const isTrim = inv.trendDirection === 'TRIMMING';
+                  const badge = isAcc
+                    ? 'bg-emerald-500/20 text-emerald-300 border-emerald-500/30'
+                    : isTrim
+                      ? 'bg-rose-500/20 text-rose-300 border-rose-500/30'
+                      : 'bg-slate-800 text-slate-300 border-slate-700';
+                  return `
+                    <tr class="hover:bg-slate-900/50 transition">
+                      <td class="py-2 px-3 font-sans font-semibold text-white flex items-center">
+                        <i class="fa-solid fa-crown text-amber-400 text-[10px] mr-2"></i>
+                        <span>${inv.investorName}</span>
+                      </td>
+                      <td class="py-2 px-3 text-slate-400 text-[11px] font-sans">${inv.investorType}</td>
+                      <td class="py-2 px-3 text-right font-bold text-teal-300">${inv.stakePercent.toFixed(2)}%</td>
+                      <td class="py-2 px-3 text-right text-white font-bold">₹${inv.holdingValueCrores.toFixed(1)} Cr</td>
+                      <td class="py-2 px-3 text-center">
+                        <span class="px-2 py-0.5 rounded text-[9px] font-bold border ${badge}">${inv.trendDirection}</span>
+                      </td>
+                    </tr>
+                  `;
+                }).join('')}
+              </tbody>
+            </table>
+          </div>
+        ` : `
+          <div class="p-2.5 bg-slate-900/60 rounded-lg border border-slate-800 text-slate-400 text-xs text-center italic">
+            No single public shareholder holding &ge;0.5% disclosed in latest regulatory filing. Float is 100% granular retail.
+          </div>
+        `}
+      </div>
+
+      <!-- 4. SEBI Real-Time Bulk & Block Deals Terminal Feed with Interactive Filter Tabs -->
+      <div class="p-3.5 bg-slate-950/90 rounded-xl border border-teal-500/25 space-y-3">
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-800 pb-2">
+          <div class="flex items-center space-x-2">
+            <span class="w-6 h-6 rounded-md bg-teal-500/20 border border-teal-500/40 flex items-center justify-center text-teal-300 text-xs">
+              <i class="fa-solid fa-tower-broadcast"></i>
+            </span>
+            <h4 class="text-xs font-bold text-white uppercase tracking-wider">
+              Whale Deals Terminal: NSE / BSE Bulk &amp; Block Stream
+            </h4>
+            <span class="text-[9px] font-mono px-2 py-0.5 rounded bg-teal-500/15 text-teal-300 border border-teal-500/30">
+              SAME-DAY SEBI SURVEILLANCE
+            </span>
+          </div>
+
+          <!-- Deal Filter Pills -->
+          <div class="flex items-center gap-1 text-[10px] font-mono">
+            <button type="button" onclick="filterWhaleDeals('ALL', '${ticker}')"
+              class="px-2 py-0.5 rounded transition ${activeDealFilter === 'ALL' ? 'bg-teal-500 text-slate-950 font-bold' : 'bg-slate-900 text-slate-400 hover:text-white border border-slate-800'}">
+              All (${allDeals.length})
+            </button>
+            <button type="button" onclick="filterWhaleDeals('BUY', '${ticker}')"
+              class="px-2 py-0.5 rounded transition ${activeDealFilter === 'BUY' ? 'bg-emerald-500 text-slate-950 font-bold' : 'bg-slate-900 text-slate-400 hover:text-white border border-slate-800'}">
+              Buys Only
+            </button>
+            <button type="button" onclick="filterWhaleDeals('BLOCK', '${ticker}')"
+              class="px-2 py-0.5 rounded transition ${activeDealFilter === 'BLOCK' ? 'bg-teal-500 text-slate-950 font-bold' : 'bg-slate-900 text-slate-400 hover:text-white border border-slate-800'}">
+              Block Deals (&gt;₹10Cr)
+            </button>
+            <button type="button" onclick="filterWhaleDeals('BULK', '${ticker}')"
+              class="px-2 py-0.5 rounded transition ${activeDealFilter === 'BULK' ? 'bg-amber-500 text-slate-950 font-bold' : 'bg-slate-900 text-slate-400 hover:text-white border border-slate-800'}">
+              Bulk Deals (&gt;0.5%)
+            </button>
+          </div>
+        </div>
+
+        ${filteredDeals.length > 0 ? `
+          <div class="overflow-x-auto rounded-lg border border-slate-800/80">
+            <table class="w-full text-left text-xs font-mono">
+              <thead class="bg-slate-900/90 text-[10px] uppercase text-slate-400 border-b border-slate-800">
+                <tr>
+                  <th class="py-2 px-3">Execution Date</th>
+                  <th class="py-2 px-3">Institutional Client</th>
+                  <th class="py-2 px-2 text-center">Action</th>
+                  <th class="py-2 px-3 text-center">Transaction Window</th>
+                  <th class="py-2 px-3 text-right">Shares</th>
+                  <th class="py-2 px-3 text-right">Trade Price</th>
+                  <th class="py-2 px-3 text-right">Stake (%)</th>
+                  <th class="py-2 px-3 text-right">Value (₹ Cr)</th>
+                  <th class="py-2 px-3">Strategic Significance</th>
+                </tr>
+              </thead>
+              <tbody class="divide-y divide-slate-800/60 bg-slate-950/40">
+                ${filteredDeals.map(d => {
+                  const isBuy = d.dealType === 'BUY';
+                  const actionBadge = isBuy
+                    ? 'bg-emerald-500/20 text-emerald-300 border-emerald-500/30'
+                    : 'bg-rose-500/20 text-rose-300 border-rose-500/30';
+
+                  const catBadge = (d.transactionType || '').includes('BLOCK')
+                    ? 'bg-teal-500/10 text-teal-300 border border-teal-500/30'
+                    : (d.transactionType || '').includes('BULK')
+                      ? 'bg-amber-500/10 text-amber-300 border border-amber-500/30'
+                      : 'bg-indigo-500/10 text-indigo-300 border border-indigo-500/30';
+
+                  return `
+                    <tr class="hover:bg-slate-800/40 transition">
+                      <td class="py-2.5 px-3 text-slate-300 text-[11px] whitespace-nowrap">${d.dealDate}</td>
+                      <td class="py-2.5 px-3 font-sans font-semibold text-white whitespace-nowrap">${d.clientName}</td>
+                      <td class="py-2.5 px-2 text-center">
+                        <span class="px-2 py-0.5 rounded text-[10px] font-bold ${actionBadge}">${d.dealType}</span>
+                      </td>
+                      <td class="py-2.5 px-3 text-center whitespace-nowrap">
+                        <span class="px-2 py-0.5 rounded text-[10px] font-bold ${catBadge}">${d.transactionType}</span>
+                      </td>
+                      <td class="py-2.5 px-3 text-right text-slate-300">${d.quantity.toLocaleString('en-IN')}</td>
+                      <td class="py-2.5 px-3 text-right text-white">₹${d.tradePrice.toLocaleString('en-IN')}</td>
+                      <td class="py-2.5 px-3 text-right font-bold ${d.stakePercent >= 1.0 ? 'text-amber-400' : 'text-teal-300'}">${d.stakePercent.toFixed(2)}%</td>
+                      <td class="py-2.5 px-3 text-right font-bold text-white">₹${d.dealValueCrores.toFixed(1)} Cr</td>
+                      <td class="py-2.5 px-3 font-sans text-slate-300 text-[11px] truncate max-w-[200px]" title="${d.significance}">${d.significance}</td>
+                    </tr>
+                  `;
+                }).join('')}
+              </tbody>
+            </table>
+          </div>
+        ` : `
+          <div class="p-3 bg-slate-950/60 rounded-xl border border-slate-800 text-center text-slate-400 text-xs italic">
+            No deals found matching filter '${activeDealFilter}'. Institutional float remains tightly locked.
+          </div>
+        `}
+      </div>
+
+    </div>
+  `;
+}
+
+window.filterWhaleDeals = function(filterType, ticker) {
+  window._shStateMap = window._shStateMap || {};
+  if (!window._shStateMap[ticker]) {
+    window._shStateMap[ticker] = {};
+  }
+  window._shStateMap[ticker].dealFilter = filterType;
+  const container = document.getElementById(`sh-component-${ticker}`);
+  if (container && window._shDataMap && window._shDataMap[ticker]) {
+    const { pattern, companyName, price } = window._shDataMap[ticker];
+    container.outerHTML = renderShareholdingPatternAndWhaleAlerts(pattern, ticker, companyName, price);
+  }
+};
+
+
+function renderManagementAuditSection(mgmt, ticker, companyName) {
+  if (!mgmt) return '';
+
+  const govScore = mgmt.governanceScore || 75;
+  const scoreColor = govScore >= 80 ? 'text-emerald-400' : govScore >= 50 ? 'text-amber-400' : 'text-rose-400';
+  const scoreBg = govScore >= 80 ? 'bg-emerald-500/10 border-emerald-500/30' : govScore >= 50 ? 'bg-amber-500/10 border-amber-500/30' : 'bg-rose-500/10 border-rose-500/30';
+
+  const sentiment = mgmt.managementSentiment || 'CAUTIOUSLY_OPTIMISTIC';
+  let sentimentBadge = 'bg-teal-500/15 text-teal-300 border-teal-500/30';
+  let sentimentIcon = 'fa-chart-line';
+  let sentimentLabel = 'Cautiously Optimistic';
+
+  if (sentiment === 'BULLISH_EXPANSION') {
+    sentimentBadge = 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40';
+    sentimentIcon = 'fa-arrow-trend-up';
+    sentimentLabel = 'Bullish Expansion / High Conviction';
+  } else if (sentiment === 'DEFENSIVE_CHOP') {
+    sentimentBadge = 'bg-amber-500/20 text-amber-300 border-amber-500/40';
+    sentimentIcon = 'fa-shield-halved';
+    sentimentLabel = 'Defensive Working Capital Focus';
+  } else if (sentiment === 'DISTRESSED') {
+    sentimentBadge = 'bg-rose-500/20 text-rose-300 border-rose-500/40';
+    sentimentIcon = 'fa-triangle-exclamation';
+    sentimentLabel = 'Distressed / Restructuring';
+  }
+
+  const events = mgmt.majorEventsAndUproar || [];
+
+  return `
+    <div class="p-4 rounded-xl bg-slate-900/80 border border-slate-800 shadow-lg space-y-4">
+      <!-- Header -->
+      <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-800/80 pb-3">
+        <div class="flex items-center space-x-2.5">
+          <div class="w-8 h-8 rounded-lg bg-indigo-500/10 border border-indigo-500/30 flex items-center justify-center text-indigo-400">
+            <i class="fa-solid fa-user-tie text-sm"></i>
+          </div>
+          <div>
+            <div class="flex items-center space-x-2">
+              <h3 class="text-sm font-bold text-white tracking-tight">Management Rating, Concall Sentiment &amp; Governance Radar</h3>
+              <span class="text-[10px] font-mono px-2 py-0.5 rounded ${scoreBg} ${scoreColor} font-bold border">
+                ${govScore}/100 Score
+              </span>
+            </div>
+            <p class="text-[11px] text-slate-400">
+              Integrity, capital allocation track record, concall sentiment &amp; major governance uproar/catalysts
+            </p>
+          </div>
+        </div>
+
+        <div class="flex items-center space-x-2">
+          <span class="px-2.5 py-1 rounded-lg text-xs font-bold border flex items-center space-x-1.5 ${sentimentBadge}">
+            <i class="fa-solid ${sentimentIcon} text-xs mr-1"></i>
+            <span>${sentimentLabel}</span>
+          </span>
+        </div>
+      </div>
+
+      <!-- Management Scorecards (3 Pillars: Integrity, Capital Allocation, Execution) -->
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-2.5">
+        <!-- 1. Integrity & Accounting Quality -->
+        <div class="p-3 bg-slate-950/70 rounded-xl border border-slate-800/80 space-y-1">
+          <div class="text-[10px] uppercase font-bold tracking-wider text-slate-400 flex items-center justify-between">
+            <span><i class="fa-solid fa-medal text-amber-400 mr-1.5"></i>Integrity &amp; Stewardship</span>
+            <span class="text-emerald-400 font-mono text-[9px] font-bold">Verified</span>
+          </div>
+          <div class="text-xs font-bold text-white">${mgmt.integrityRating}</div>
+          <p class="text-[11px] text-slate-400 leading-snug">
+            Promoter alignment, statutory audit qualifications, and related-party transaction scrutiny.
+          </p>
+        </div>
+
+        <!-- 2. Capital Allocation Discipline -->
+        <div class="p-3 bg-slate-950/70 rounded-xl border border-slate-800/80 space-y-1">
+          <div class="text-[10px] uppercase font-bold tracking-wider text-slate-400 flex items-center justify-between">
+            <span><i class="fa-solid fa-sack-dollar text-emerald-400 mr-1.5"></i>Capital Allocation</span>
+            <span class="text-teal-400 font-mono text-[9px] font-bold">ROCE &amp; FCF</span>
+          </div>
+          <div class="text-xs font-bold text-white">${mgmt.capitalAllocationTrackRecord}</div>
+          <p class="text-[11px] text-slate-400 leading-snug">
+            Reinvestment discipline, dividend payout consistency, and equity dilution avoidance.
+          </p>
+        </div>
+
+        <!-- 3. Operational Execution Capability -->
+        <div class="p-3 bg-slate-950/70 rounded-xl border border-slate-800/80 space-y-1">
+          <div class="text-[10px] uppercase font-bold tracking-wider text-slate-400 flex items-center justify-between">
+            <span><i class="fa-solid fa-bolt text-cyan-400 mr-1.5"></i>Execution Track Record</span>
+            <span class="text-indigo-400 font-mono text-[9px] font-bold">Operational</span>
+          </div>
+          <div class="text-xs font-bold text-white">${mgmt.executionCapability}</div>
+          <p class="text-[11px] text-slate-400 leading-snug">
+            Delivery against guidance, market share gains, and capacity rollout velocity.
+          </p>
+        </div>
+      </div>
+
+      <!-- Latest Earnings Call (Concall) Highlights & Sentiment Commentary -->
+      <div class="p-3.5 bg-gradient-to-r from-slate-950 via-indigo-950/20 to-slate-950 rounded-xl border border-indigo-500/25 space-y-2">
+        <div class="flex items-center justify-between">
+          <div class="text-xs font-bold text-white flex items-center">
+            <i class="fa-solid fa-microphone-lines text-indigo-400 mr-2 text-sm"></i>
+            Latest Management Commentary &amp; Earnings Concall Pulse
+          </div>
+          <span class="text-[10px] font-mono px-2 py-0.5 rounded bg-indigo-500/10 text-indigo-300 border border-indigo-500/20">
+            ${mgmt.concallDate || 'Latest Earnings Call'}
+          </span>
+        </div>
+
+        <p class="text-xs text-slate-200 leading-relaxed italic bg-slate-900/40 p-2.5 rounded-lg border border-slate-800/60">
+          &ldquo;${mgmt.sentimentSummary}&rdquo;
+        </p>
+
+        <div class="text-[11px] text-slate-300 leading-snug pt-1">
+          <strong class="text-white block mb-1">Key Strategic Takeaways:</strong>
+          <div class="text-slate-400 whitespace-pre-line pl-2 border-l-2 border-indigo-500/40">
+            ${mgmt.latestConcallHighlights}
+          </div>
+        </div>
+      </div>
+
+      <!-- Major Events, Governance Uproar & Catalyst Radar -->
+      <div class="space-y-2 pt-1">
+        <div class="flex items-center justify-between text-xs">
+          <span class="font-bold text-white flex items-center">
+            <i class="fa-solid fa-tower-broadcast text-teal-400 mr-2"></i>
+            Major Management Changes, Governance Uproar &amp; Strategic Catalysts
+          </span>
+          <span class="text-slate-500 font-mono text-[10px]">Real-time Regulatory Event Feed</span>
+        </div>
+
+        ${events.length > 0 ? `
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-2.5">
+            ${events.map(ev => {
+              const isPositive = ev.severity === 'POSITIVE_CATALYST';
+              const isCritical = ev.severity === 'CRITICAL_RED_FLAG';
+              const cardBg = isPositive
+                ? 'bg-emerald-950/20 border-emerald-500/30'
+                : isCritical
+                  ? 'bg-rose-950/30 border-rose-500/40'
+                  : 'bg-amber-950/20 border-amber-500/30';
+              const badgeClass = isPositive
+                ? 'bg-emerald-500/20 text-emerald-300 border-emerald-500/30'
+                : isCritical
+                  ? 'bg-rose-500/20 text-rose-300 border-rose-500/40'
+                  : 'bg-amber-500/20 text-amber-300 border-amber-500/30';
+              const icon = isPositive
+                ? 'fa-circle-check text-emerald-400'
+                : isCritical
+                  ? 'fa-skull-crossbones text-rose-400'
+                  : 'fa-triangle-exclamation text-amber-400';
+
+              return `
+                <div class="p-3 rounded-xl border ${cardBg} space-y-1.5 shadow-sm">
+                  <div class="flex items-center justify-between text-[10px] font-mono">
+                    <span class="text-slate-400">${ev.eventDate}</span>
+                    <span class="px-2 py-0.5 rounded text-[9px] font-bold border ${badgeClass}">
+                      ${ev.eventType.replace('_', ' ')}
+                    </span>
+                  </div>
+                  <div class="text-xs font-bold text-white flex items-start space-x-1.5">
+                    <i class="fa-solid ${icon} text-[11px] mt-0.5 flex-shrink-0"></i>
+                    <span>${ev.headline}</span>
+                  </div>
+                  <p class="text-[11px] text-slate-300 leading-snug">${ev.details}</p>
+                  <div class="pt-1 border-t border-slate-800/80 text-[10px] text-slate-400 flex items-center space-x-1">
+                    <strong class="text-slate-300">Impact:</strong>
+                    <span>${ev.strategicImpact}</span>
+                  </div>
+                </div>
+              `;
+            }).join('')}
+          </div>
+        ` : `
+          <div class="p-3 bg-slate-950/60 rounded-xl border border-slate-800 text-center text-slate-400 text-xs italic">
+            Zero negative governance uproar, management resignations, or regulatory show-cause notices recorded. Leadership structure remains stable.
+          </div>
+        `}
+      </div>
+    </div>
+  `;
+}
+
+function jumpToInspectorSection(sectionId, btn) {
+  const el = document.getElementById(sectionId);
+  if (el) {
+    el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }
+  if (btn && btn.parentElement) {
+    btn.parentElement.querySelectorAll('.inspector-subnav-btn').forEach(b => {
+      b.className = 'inspector-subnav-btn px-3 py-1.5 rounded-lg text-xs font-medium text-slate-400 hover:text-white hover:bg-slate-800/60 transition whitespace-nowrap';
+    });
+    btn.className = 'inspector-subnav-btn px-3 py-1.5 rounded-lg text-xs font-bold text-cyan-300 bg-cyan-500/15 border border-cyan-500/30 transition whitespace-nowrap';
+  }
+}
+
+window.jumpToInspectorSection = jumpToInspectorSection;
+window.renderInstitutionalSupplyChainEcosystem = renderInstitutionalSupplyChainEcosystem;
+window.renderShareholdingPatternAndWhaleAlerts = renderShareholdingPatternAndWhaleAlerts;
+window.renderManagementAuditSection = renderManagementAuditSection;
+
+
 window.openCreateAlertModal = openCreateAlertModal;
 window.closeCreateAlertModal = closeCreateAlertModal;
 window.setAlertDirection = setAlertDirection;
@@ -4024,8 +7068,1602 @@ window.openPortfolioSwingRadarModal = openPortfolioSwingRadarModal;
 window.closePortfolioSwingRadarModal = closePortfolioSwingRadarModal;
 window.switchPortSwingTab = switchPortSwingTab;
 window.loadPortfolioSwingRadar = loadPortfolioSwingRadar;
+window.toggleHeaderMoreDropdown = toggleHeaderMoreDropdown;
+window.applyAppTheme = applyAppTheme;
+window.toggleSectorFilter = toggleSectorFilter;
+window.toggleMarketCapFilter = toggleMarketCapFilter;
+window.renderPortfolioAllocationCharts = renderPortfolioAllocationCharts;
 
-// Initial surveillance badge fetch
+// ========================================================
+// HERO FEATURE SHOWCASE: WHY WE'RE DIFFERENT MODAL
+// ========================================================
+function openWhyDifferentModal() {
+  const modal = document.getElementById("modalWhyDifferent");
+  if (modal) modal.classList.remove("hidden");
+}
+
+function closeWhyDifferentModal() {
+  const modal = document.getElementById("modalWhyDifferent");
+  if (modal) modal.classList.add("hidden");
+}
+
+function scrollToBriefing() {
+  navigateTo('portfolio');
+  const section = document.getElementById("morningBriefingSection");
+  if (section) {
+    section.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    section.classList.add("ring-2", "ring-cyan-400/80");
+    setTimeout(() => section.classList.remove("ring-2", "ring-cyan-400/80"), 2500);
+  }
+}
+
+window.openWhyDifferentModal = openWhyDifferentModal;
+window.closeWhyDifferentModal = closeWhyDifferentModal;
+window.scrollToBriefing = scrollToBriefing;
+
+// Initial theme setup & surveillance badge fetch
+initThemeFromStorage();
 setTimeout(updateHeaderAlertsBadge, 500);
+
+
+
+
+// ============================================================================
+// REAL-TIME INSTANT STOCK SEARCH & AUTOCOMPLETE RECOMMENDATIONS ENGINE
+// Triggers instantly on the 1st character with dual-tier synchronous + async matching
+// ============================================================================
+
+function setupStockSearchAutocomplete() {
+  const holdingsInput = document.getElementById("holdingsSearch");
+  const holdingsDropdown = document.getElementById("holdingsSearchSuggestions");
+  const holdingsWrapper = document.getElementById("holdingsSearchWrapper");
+
+  const inspectorInput = document.getElementById("inspectorTicker");
+  const inspectorDropdown = document.getElementById("inspectorTickerSuggestions");
+  const inspectorWrapper = document.getElementById("inspectorSearchWrapper");
+
+  // Helper to escape HTML characters
+  function escapeHtml(str) {
+    if (!str) return "";
+    return str.replace(/[&<>"']/g, m => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[m]);
+  }
+
+  // Highlight query within text
+  function highlightMatch(text, query) {
+    if (!text || !query) return escapeHtml(text);
+    const escaped = escapeHtml(text);
+    const regex = new RegExp(`(${query.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')})`, 'gi');
+    return escaped.replace(regex, '<mark class="bg-cyan-500/30 text-cyan-200 font-bold px-0.5 rounded">$1</mark>');
+  }
+
+  // Dual-tier stock search provider
+  function getSynchronousMatches(q) {
+    if (!q) return [];
+    const query = q.toUpperCase();
+    const results = [];
+    const seen = new Set();
+
+    // 1. Prioritize portfolio holdings
+    if (currentPortfolioData && currentPortfolioData.holdings) {
+      currentPortfolioData.holdings.forEach(h => {
+        const ticker = (h.ticker || "").toUpperCase();
+        const name = (h.name || "").toUpperCase();
+        const sector = (h.sector || "").toUpperCase();
+
+        let priority = 0;
+        if (ticker === query) priority = 100;
+        else if (ticker.startsWith(query)) priority = 90;
+        else if (name.startsWith(query)) priority = 80;
+        else if (ticker.includes(query)) priority = 60;
+        else if (name.includes(query)) priority = 50;
+        else if (sector.includes(query)) priority = 30;
+
+        if (priority > 0) {
+          seen.add(ticker);
+          results.push({
+            ticker: h.ticker,
+            name: h.name,
+            sector: h.sector,
+            currentPrice: h.price || h.currentPrice || 0,
+            isHeld: true,
+            quantityHeld: h.quantity,
+            unrealizedPnLPercent: h.unrealizedPnLPercent,
+            priority: priority + 20 // boost holdings
+          });
+        }
+      });
+    }
+
+    return results.sort((a, b) => b.priority - a.priority).slice(0, 10);
+  }
+
+  // Render suggestion items into dropdown
+  function renderDropdown(items, dropdown, query, onSelect) {
+    if (!dropdown) return;
+    if (!items || items.length === 0) {
+      dropdown.innerHTML = `<div class="p-3.5 text-center text-xs text-slate-400 italic">No matching stocks found for "${escapeHtml(query)}"</div>`;
+      dropdown.classList.remove("hidden");
+      return;
+    }
+
+    let activeIndex = -1;
+
+    dropdown.innerHTML = items.map((it, idx) => {
+      const pnlBadge = it.isHeld
+        ? `<span class="text-[9px] font-mono px-1.5 py-0.2 rounded bg-emerald-500/15 text-emerald-400 border border-emerald-500/30">Held: ${Math.round(it.quantityHeld || 0)} sh (${(it.unrealizedPnLPercent ?? 0) >= 0 ? '+' : ''}${(it.unrealizedPnLPercent ?? 0).toFixed(1)}%)</span>`
+        : `<span class="text-[9px] font-mono px-1.5 py-0.2 rounded bg-slate-800 text-slate-400 border border-slate-700">Watchlist</span>`;
+
+      return `
+        <div class="search-suggestion-item group" data-index="${idx}" data-ticker="${it.ticker}">
+          <div class="flex items-center space-x-2.5 min-w-0 pr-2">
+            <span class="font-mono font-bold text-white text-xs tracking-wide group-hover:text-cyan-300 transition flex-shrink-0">${highlightMatch(it.ticker, query)}</span>
+            <div class="min-w-0 flex-1">
+              <div class="text-[11px] text-slate-300 truncate" title="${it.name}">${highlightMatch(it.name, query)}</div>
+              <div class="text-[9px] text-slate-400 flex items-center gap-1.5 mt-0.5">
+                <span class="px-1.5 py-0.2 rounded bg-[#060c18] border border-[#16233d]">${it.sector}</span>
+                ${pnlBadge}
+              </div>
+            </div>
+          </div>
+          <div class="text-right flex-shrink-0 font-mono">
+            <div class="text-xs font-bold text-white">&#8377;${(it.currentPrice || 0).toLocaleString('en-IN', { minimumFractionDigits: 1, maximumFractionDigits: 1 })}</div>
+            <div class="text-[9px] text-cyan-400 font-semibold group-hover:underline">Select &rarr;</div>
+          </div>
+        </div>
+      `;
+    }).join("");
+
+    dropdown.classList.remove("hidden");
+
+    // Add click listeners to items
+    const rows = dropdown.querySelectorAll(".search-suggestion-item");
+    rows.forEach((row, i) => {
+      row.addEventListener("mousedown", (e) => {
+        e.preventDefault(); // prevent input blur before selection
+        const ticker = row.getAttribute("data-ticker");
+        const selected = items.find(x => x.ticker === ticker) || items[i];
+        onSelect(selected);
+      });
+      row.addEventListener("mouseenter", () => {
+        rows.forEach(r => r.classList.remove("active"));
+        row.classList.add("active");
+        activeIndex = i;
+      });
+    });
+
+    return {
+      navigate(direction) {
+        if (rows.length === 0) return;
+        rows.forEach(r => r.classList.remove("active"));
+        if (direction === "down") {
+          activeIndex = (activeIndex + 1) % rows.length;
+        } else if (direction === "up") {
+          activeIndex = (activeIndex - 1 + rows.length) % rows.length;
+        }
+        if (activeIndex >= 0 && activeIndex < rows.length) {
+          rows[activeIndex].classList.add("active");
+          rows[activeIndex].scrollIntoView({ block: 'nearest' });
+        }
+      },
+      selectActive() {
+        if (rows.length === 0) return;
+        const targetIdx = activeIndex >= 0 ? activeIndex : 0;
+        const ticker = rows[targetIdx].getAttribute("data-ticker");
+        const selected = items.find(x => x.ticker === ticker) || items[targetIdx];
+        onSelect(selected);
+      }
+    };
+  }
+
+  // -------------------------------------------------------------
+  // Wire Autocomplete for Holdings Table Search Box (#holdingsSearch)
+  // -------------------------------------------------------------
+  if (holdingsInput && holdingsDropdown) {
+    let activeNav = null;
+    let asyncFetchTimer = null;
+
+    holdingsInput.addEventListener("input", (e) => {
+      const q = e.target.value.trim();
+      if (q.length < 1) {
+        holdingsDropdown.classList.add("hidden");
+        holdingsDropdown.innerHTML = "";
+        return;
+      }
+
+      // Tier 1: Instant Synchronous Matching (0ms delay)
+      const syncMatches = getSynchronousMatches(q);
+      activeNav = renderDropdown(syncMatches, holdingsDropdown, q, (item) => {
+        holdingsInput.value = item.ticker;
+        searchQuery = item.ticker.toLowerCase();
+        renderHoldingsTable();
+        holdingsDropdown.classList.add("hidden");
+
+        // Smooth scroll and pulse-highlight selected table row
+        setTimeout(() => {
+          const rows = document.querySelectorAll("#holdingsTableBody tr");
+          rows.forEach(r => {
+            if (r.textContent.includes(item.ticker)) {
+              r.scrollIntoView({ behavior: 'smooth', block: 'center' });
+              r.classList.add("ring-2", "ring-cyan-400", "bg-cyan-500/10");
+              setTimeout(() => {
+                r.classList.remove("ring-2", "ring-cyan-400", "bg-cyan-500/10");
+              }, 2200);
+            }
+          });
+        }, 80);
+      });
+
+      // Tier 2: Debounced Asynchronous Enrichment from Backend (/api/stocks/search)
+      clearTimeout(asyncFetchTimer);
+      asyncFetchTimer = setTimeout(async () => {
+        try {
+          const res = await fetch(`/api/stocks/search?query=${encodeURIComponent(q)}`);
+          if (res.ok) {
+            const apiItems = await res.json();
+            if (apiItems && apiItems.length > 0 && holdingsInput.value.trim().toUpperCase() === q.toUpperCase()) {
+              activeNav = renderDropdown(apiItems, holdingsDropdown, q, (item) => {
+                holdingsInput.value = item.ticker;
+                searchQuery = item.ticker.toLowerCase();
+                renderHoldingsTable();
+                holdingsDropdown.classList.add("hidden");
+                setTimeout(() => {
+                  const rows = document.querySelectorAll("#holdingsTableBody tr");
+                  rows.forEach(r => {
+                    if (r.textContent.includes(item.ticker)) {
+                      r.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                      r.classList.add("ring-2", "ring-cyan-400", "bg-cyan-500/10");
+                      setTimeout(() => {
+                        r.classList.remove("ring-2", "ring-cyan-400", "bg-cyan-500/10");
+                      }, 2200);
+                    }
+                  });
+                }, 80);
+              });
+            }
+          }
+        } catch (e) {
+          // Keep instant sync matches intact
+        }
+      }, 120);
+    });
+
+    holdingsInput.addEventListener("keydown", (e) => {
+      if (!holdingsDropdown.classList.contains("hidden")) {
+        if (e.key === "ArrowDown") {
+          e.preventDefault();
+          activeNav?.navigate("down");
+        } else if (e.key === "ArrowUp") {
+          e.preventDefault();
+          activeNav?.navigate("up");
+        } else if (e.key === "Enter") {
+          e.preventDefault();
+          activeNav?.selectActive();
+        } else if (e.key === "Escape") {
+          holdingsDropdown.classList.add("hidden");
+        }
+      }
+    });
+  }
+
+  // -------------------------------------------------------------
+  // Wire Autocomplete for Discover / Inspector Search Box (#inspectorTicker)
+  // -------------------------------------------------------------
+  if (inspectorInput && inspectorDropdown) {
+    let activeNav = null;
+    let asyncFetchTimer = null;
+
+    inspectorInput.addEventListener("input", (e) => {
+      const q = e.target.value.trim();
+      if (q.length < 1) {
+        inspectorDropdown.classList.add("hidden");
+        inspectorDropdown.innerHTML = "";
+        return;
+      }
+
+      // Tier 1: Instant Synchronous Matching (0ms delay)
+      const syncMatches = getSynchronousMatches(q);
+      activeNav = renderDropdown(syncMatches, inspectorDropdown, q, (item) => {
+        inspectorInput.value = item.ticker;
+        inspectorDropdown.classList.add("hidden");
+        handleInspectStock();
+      });
+
+      // Tier 2: Debounced Asynchronous Enrichment from Backend (/api/stocks/search)
+      clearTimeout(asyncFetchTimer);
+      asyncFetchTimer = setTimeout(async () => {
+        try {
+          const res = await fetch(`/api/stocks/search?query=${encodeURIComponent(q)}`);
+          if (res.ok) {
+            const apiItems = await res.json();
+            if (apiItems && apiItems.length > 0 && inspectorInput.value.trim().toUpperCase() === q.toUpperCase()) {
+              activeNav = renderDropdown(apiItems, inspectorDropdown, q, (item) => {
+                inspectorInput.value = item.ticker;
+                inspectorDropdown.classList.add("hidden");
+                handleInspectStock();
+              });
+            }
+          }
+        } catch (e) {
+          // Keep instant sync matches intact
+        }
+      }, 100);
+    });
+
+    inspectorInput.addEventListener("keydown", (e) => {
+      if (!inspectorDropdown.classList.contains("hidden")) {
+        if (e.key === "ArrowDown") {
+          e.preventDefault();
+          activeNav?.navigate("down");
+        } else if (e.key === "ArrowUp") {
+          e.preventDefault();
+          activeNav?.navigate("up");
+        } else if (e.key === "Enter") {
+          e.preventDefault();
+          activeNav?.selectActive();
+        } else if (e.key === "Escape") {
+          inspectorDropdown.classList.add("hidden");
+        }
+      }
+    });
+  }
+
+  // Global click-outside listener to dismiss autocomplete dropdowns
+  document.addEventListener("click", (e) => {
+    if (holdingsWrapper && !holdingsWrapper.contains(e.target)) {
+      holdingsDropdown?.classList.add("hidden");
+    }
+    if (inspectorWrapper && !inspectorWrapper.contains(e.target)) {
+      inspectorDropdown?.classList.add("hidden");
+    }
+  });
+}
+
+// ============================================================================
+// THEORY LAB & MOCK PORTFOLIOS INCUBATOR (PAPER TRADING DESK)
+// Researches & tracks 3 distinct market theories from foundational literature
+// ============================================================================
+
+let currentTheoriesData = null;
+let currentTheoryFilter = 'ALL';
+
+async function loadTheoryPortfolios(forceRefresh = false) {
+  const container = document.getElementById("theoryPortfoliosContainer");
+  const leaderboard = document.getElementById("theoryLeaderboardCards");
+  if (!container) return;
+
+  if (!currentTheoriesData && container.children.length === 0) {
+    container.innerHTML = `
+      <div class="p-12 text-center text-slate-400 bg-slate-900/60 themed-card border border-slate-800 rounded-2xl">
+        <i class="fa-solid fa-circle-notch fa-spin text-2xl text-purple-400 mb-3"></i>
+        <div class="text-sm font-semibold text-slate-300">Loading Academic Theories &amp; Live Constituent Valuations...</div>
+        <p class="text-xs text-slate-500 mt-1">Fetching live prices, Piotroski F-Scores, ROCE &amp; Minervini SEPA Trend Templates</p>
+      </div>`;
+  }
+
+  const refreshBtn = document.getElementById("btnRefreshTheories");
+  if (refreshBtn && forceRefresh) {
+    refreshBtn.classList.add("opacity-60", "pointer-events-none");
+    refreshBtn.innerHTML = `<i class="fa-solid fa-rotate fa-spin text-xs"></i><span>Syncing Quotes...</span>`;
+  }
+
+  try {
+    const url = `/api/theory-portfolios?refresh=${forceRefresh ? 'true' : 'false'}`;
+    const res = await fetch(url);
+    if (!res.ok) throw new Error(`HTTP error ${res.status}`);
+    const data = await res.json();
+    currentTheoriesData = data;
+    renderTheoryPortfolios(data);
+  } catch (err) {
+    console.error("Failed to load theory portfolios:", err);
+    if (container && container.children.length === 0) {
+      container.innerHTML = `
+        <div class="p-8 text-center text-red-400 bg-red-950/20 border border-red-800/40 rounded-2xl">
+          <i class="fa-solid fa-triangle-exclamation text-2xl mb-2"></i>
+          <div class="text-sm font-semibold">Unable to fetch theory incubator portfolios</div>
+          <p class="text-xs text-slate-400 mt-1">${escapeHtml(err.message)}</p>
+          <button onclick="loadTheoryPortfolios(true)" class="mt-3 px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-xs text-white rounded-lg border border-slate-700">Retry</button>
+        </div>`;
+    }
+  } finally {
+    if (refreshBtn && forceRefresh) {
+      refreshBtn.classList.remove("opacity-60", "pointer-events-none");
+      refreshBtn.innerHTML = `<i class="fa-solid fa-rotate text-xs"></i><span>Refresh Live Prices</span>`;
+    }
+  }
+}
+
+function renderTheoryPortfolios(data) {
+  if (!data || !data.portfolios) return;
+
+  // 1. Update High-Level Banner Stats
+  const totalValEl = document.getElementById("incubatorTotalValue");
+  const totalPnlEl = document.getElementById("incubatorTotalPnl");
+  if (totalValEl && totalPnlEl) {
+    const totalCurrentVal = data.portfolios.reduce((sum, p) => sum + (p.currentValue || 0), 0);
+    const totalSeedVal = data.portfolios.reduce((sum, p) => sum + (p.initialCapital || 0), 0);
+    const totalPnlAmt = totalCurrentVal - totalSeedVal;
+    const totalPnlPct = totalSeedVal > 0 ? (totalPnlAmt / totalSeedVal) * 100 : 0;
+
+    totalValEl.textContent = formatINR(totalCurrentVal);
+    const sign = totalPnlAmt >= 0 ? '+' : '';
+    const colorClass = totalPnlAmt >= 0 ? 'text-emerald-400' : 'text-rose-400';
+    totalPnlEl.className = `text-[10px] ${colorClass} mt-0.5 font-medium`;
+    totalPnlEl.textContent = `${sign}${formatINR(totalPnlAmt)} (${sign}${totalPnlPct.toFixed(2)}% avg)`;
+  }
+
+  // 2. Render Leaderboard Cards
+  renderTheoryLeaderboard(data.portfolios, data.benchmarkNifty50ReturnPercent);
+
+  // 3. Render Strategy Deep Dives
+  renderTheoryPortfolioCards(data.portfolios, currentTheoryFilter);
+}
+
+function renderTheoryLeaderboard(portfolios, benchmarkReturn) {
+  const container = document.getElementById("theoryLeaderboardCards");
+  if (!container) return;
+
+  const cardsHtml = portfolios.map((p, idx) => {
+    const isPiotroski = p.strategyId === "GRAHAM_PIOTROSKI_VALUE";
+    const isMagic = p.strategyId === "MAGIC_FORMULA";
+    const isSepa = p.strategyId === "SEPA_MOMENTUM";
+
+    const accentColor = isPiotroski ? 'emerald' : (isMagic ? 'cyan' : 'purple');
+    const badgeText = isPiotroski ? 'COFFEE CAN (MUKHERJEA)' : (isMagic ? 'MOTILAL QGLP (AGRAWAL)' : 'STAGE 2 MOMENTUM (O\'NEIL)');
+    const icon = isPiotroski ? 'fa-mug-hot' : (isMagic ? 'fa-chart-line' : 'fa-bolt-lightning');
+
+    const retSign = p.totalReturnPercent >= 0 ? '+' : '';
+    const retClass = p.totalReturnPercent >= 0 ? 'text-emerald-400' : 'text-rose-400';
+    const alphaSign = p.alphaPercent >= 0 ? '+' : '';
+    const alphaClass = p.alphaPercent >= 0 ? 'text-teal-300' : 'text-amber-400';
+
+    return `
+      <div onclick="filterTheoryView('${p.strategyId}')" class="cursor-pointer group relative overflow-hidden bg-slate-900/80 themed-card border border-slate-800 hover:border-${accentColor}-500/50 rounded-2xl p-5 shadow-lg transition transform hover:-translate-y-0.5">
+        <div class="flex items-center justify-between pb-3 border-b border-slate-800/80 themed-border">
+          <div class="flex items-center space-x-2.5">
+            <div class="w-8 h-8 rounded-lg bg-${accentColor}-500/15 border border-${accentColor}-500/30 flex items-center justify-center text-${accentColor}-400 text-xs">
+              <i class="fa-solid ${icon}"></i>
+            </div>
+            <div>
+              <span class="text-[10px] font-mono font-bold text-${accentColor}-400 tracking-wider">${badgeText}</span>
+              <h3 class="text-xs font-bold text-white group-hover:text-${accentColor}-300 transition truncate max-w-[200px]">${escapeHtml(p.category)}</h3>
+            </div>
+          </div>
+          <span class="text-[10px] px-2 py-0.5 rounded-full bg-slate-800 themed-elevated text-slate-300 font-mono border border-slate-700">
+            Day ${p.trackingDays}
+          </span>
+        </div>
+
+        <div class="grid grid-cols-2 gap-3 py-4">
+          <div>
+            <div class="text-[11px] text-slate-400">Mock Valuation</div>
+            <div class="text-lg font-bold font-mono text-white mt-0.5">${formatINR(p.currentValue)}</div>
+            <div class="text-[10px] text-slate-500 font-mono mt-0.5">Seed: ${formatINR(p.initialCapital)}</div>
+          </div>
+          <div class="text-right">
+            <div class="text-[11px] text-slate-400">Total Return</div>
+            <div class="text-lg font-bold font-mono ${retClass} mt-0.5">${retSign}${p.totalReturnPercent.toFixed(2)}%</div>
+            <div class="text-[10px] ${alphaClass} font-mono mt-0.5 font-bold">${alphaSign}${p.alphaPercent.toFixed(2)}% vs Nifty</div>
+          </div>
+        </div>
+
+        <div class="pt-3 border-t border-slate-800/80 themed-border grid grid-cols-3 gap-1 text-center text-[10px]">
+          <div class="p-1.5 rounded bg-slate-950/50 themed-elevated">
+            <div class="text-slate-500">Win Rate</div>
+            <div class="font-mono font-bold text-slate-200 mt-0.5">${p.winRatePercent.toFixed(0)}%</div>
+          </div>
+          <div class="p-1.5 rounded bg-slate-950/50 themed-elevated">
+            <div class="text-slate-500">Max DD</div>
+            <div class="font-mono font-bold text-slate-200 mt-0.5">${p.maxDrawdownPercent.toFixed(1)}%</div>
+          </div>
+          <div class="p-1.5 rounded bg-slate-950/50 themed-elevated">
+            <div class="text-slate-500">Sharpe</div>
+            <div class="font-mono font-bold text-emerald-400 mt-0.5">${p.sharpeRatio.toFixed(2)}</div>
+          </div>
+        </div>
+
+        <div class="mt-3 flex items-center justify-between text-[10px] text-slate-400 group-hover:text-slate-200 transition">
+          <span class="truncate pr-2 italic">${escapeHtml((p.literature?.primaryBook || p.literature?.PrimaryBook || '').split('(')[0])}</span>
+          <i class="fa-solid fa-arrow-right text-[9px] text-${accentColor}-400"></i>
+        </div>
+      </div>`;
+  }).join('');
+
+  container.innerHTML = cardsHtml;
+}
+
+function renderTheoryPortfolioCards(portfolios, filter) {
+  const container = document.getElementById("theoryPortfoliosContainer");
+  if (!container) return;
+
+  const filtered = filter === 'ALL'
+    ? portfolios
+    : portfolios.filter(p => p.strategyId === filter);
+
+  if (filtered.length === 0) {
+    container.innerHTML = `<div class="p-8 text-center text-slate-400">No strategy found matching filter.</div>`;
+    return;
+  }
+
+  container.innerHTML = filtered.map(p => renderSingleTheoryCardHtml(p)).join('');
+}
+
+function renderSingleTheoryCardHtml(p) {
+  const isPiotroski = p.strategyId === "GRAHAM_PIOTROSKI_VALUE";
+  const isMagic = p.strategyId === "MAGIC_FORMULA";
+  const isSepa = p.strategyId === "SEPA_MOMENTUM";
+
+  const accentColor = isPiotroski ? 'emerald' : (isMagic ? 'cyan' : 'purple');
+  const icon = isPiotroski ? 'fa-shield-halved' : (isMagic ? 'fa-wand-magic-sparkles' : 'fa-bolt-lightning');
+
+  const totalRet = p.totalReturnPercent ?? 0;
+  const alphaVal = p.alphaPercent ?? 0;
+  const retSign = totalRet >= 0 ? '+' : '';
+  const retClass = totalRet >= 0 ? 'text-emerald-400' : 'text-rose-400';
+  const alphaSign = alphaVal >= 0 ? '+' : '';
+  const alphaClass = alphaVal >= 0 ? 'text-teal-300' : 'text-amber-400';
+
+  const lit = p.literature || {};
+  const primaryBook = lit.primaryBook || lit.PrimaryBook || '';
+  const authorOrEconomist = lit.authorOrEconomist || lit.AuthorOrEconomist || '';
+  const pubYear = lit.publicationYear || lit.PublicationYear || '';
+  const keyAcademicPaper = lit.keyAcademicPaper || lit.KeyAcademicPaper || '';
+  const journalOrUniversity = lit.journalOrUniversity || lit.JournalOrUniversity || '';
+  const coreTenet = lit.coreTenet || lit.CoreTenet || '';
+  const mathFormula = lit.mathematicalFormula || lit.MathematicalFormula || '';
+  const exitRules = lit.rebalanceAndExitRules || lit.RebalanceAndExitRules || '';
+
+  // Render Constituents Table Rows
+  const constituents = p.constituents || [];
+  const rowsHtml = constituents.map((c, i) => {
+    const ticker = c.ticker || c.Ticker || '';
+    const name = c.name || c.Name || '';
+    const sector = c.sector || c.Sector || '';
+    const entryPrice = c.entryPrice ?? c.EntryPrice ?? 0;
+    const entryDate = (c.entryDate || c.EntryDate || '').split('T')[0];
+    const currentPrice = c.currentPrice ?? c.CurrentPrice ?? 0;
+    const shares = c.shares ?? c.Shares ?? 0;
+    const allocatedCap = c.allocatedCapital ?? c.AllocatedCapital ?? 0;
+    const currentVal = c.currentValue ?? c.CurrentValue ?? 0;
+    const unrealizedPnl = c.unrealizedPnl ?? c.UnrealizedPnl ?? 0;
+    const returnPct = c.returnPercent ?? c.ReturnPercent ?? 0;
+    const weightPct = c.weightPercent ?? c.WeightPercent ?? 0;
+    const metric = c.quantitativeScreenerMetric || c.QuantitativeScreenerMetric || '';
+    const thesis = c.thesisRationale || c.ThesisRationale || '';
+
+    const gainSign = returnPct >= 0 ? '+' : '';
+    const gainClass = returnPct >= 0 ? 'text-emerald-400' : 'text-rose-400';
+    const badgeBg = returnPct >= 0 ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/25' : 'bg-rose-500/10 text-rose-400 border-rose-500/25';
+
+    return `
+      <tr class="hover:bg-slate-800/40 transition">
+        <td class="px-4 py-3 whitespace-nowrap">
+          <div class="flex items-center space-x-2">
+            <span class="font-mono font-bold text-xs text-white">${escapeHtml(ticker)}</span>
+            <span class="px-1.5 py-0.2 rounded text-[9px] font-mono bg-slate-800 themed-elevated text-slate-400 border border-slate-700">${escapeHtml(sector)}</span>
+          </div>
+          <div class="text-[11px] text-slate-400 truncate max-w-[180px]">${escapeHtml(name)}</div>
+        </td>
+        <td class="px-3 py-3 whitespace-nowrap text-right">
+          <div class="font-mono text-xs text-slate-300">${formatINR(entryPrice)}</div>
+          <div class="text-[10px] text-slate-500 font-mono">${entryDate}</div>
+        </td>
+        <td class="px-3 py-3 whitespace-nowrap text-right">
+          <div class="font-mono text-xs font-bold text-white flex items-center justify-end space-x-1">
+            <span>${formatINR(currentPrice)}</span>
+            <span class="w-1.5 h-1.5 rounded-full bg-emerald-400" title="Live Sync Active"></span>
+          </div>
+          <div class="text-[10px] font-mono ${gainClass}">${gainSign}${returnPct.toFixed(2)}%</div>
+        </td>
+        <td class="px-3 py-3 whitespace-nowrap text-right font-mono text-xs text-slate-300">
+          ${shares.toLocaleString('en-IN')}
+        </td>
+        <td class="px-3 py-3 whitespace-nowrap text-right">
+          <div class="font-mono text-xs text-slate-300">${formatINR(allocatedCap)}</div>
+          <div class="text-[10px] text-slate-500 font-mono">${weightPct.toFixed(1)}% wt</div>
+        </td>
+        <td class="px-3 py-3 whitespace-nowrap text-right">
+          <div class="font-mono text-xs font-bold text-white">${formatINR(currentVal)}</div>
+          <span class="inline-block mt-0.5 px-1.5 py-0.2 rounded text-[10px] font-mono border ${badgeBg}">
+            ${gainSign}${formatINR(unrealizedPnl)}
+          </span>
+        </td>
+        <td class="px-4 py-3 text-xs">
+          <div class="font-mono text-[11px] font-bold text-${accentColor}-300">${escapeHtml(metric)}</div>
+          <div class="text-[10px] text-slate-400 mt-0.5">${escapeHtml(thesis)}</div>
+        </td>
+        <td class="px-3 py-3 whitespace-nowrap text-center">
+          <div class="flex items-center justify-center space-x-1.5">
+            <button type="button" onclick="openWhatIfSwapWithPick('${escapeHtml(ticker)}')" class="px-2.5 py-1 bg-teal-500/15 hover:bg-teal-500/25 text-teal-300 border border-teal-500/30 rounded text-[10px] font-semibold transition shadow-xs" title="Simulate replacing one of your holdings with ${escapeHtml(ticker)}">
+              <i class="fa-solid fa-arrows-rotate mr-0.5"></i> Swap
+            </button>
+            <button type="button" onclick="openCreateAlertModal('${escapeHtml(ticker)}', ${currentPrice || entryPrice})" class="px-2 py-1 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded text-[10px] font-semibold transition" title="Set Price Alert">
+              <i class="fa-solid fa-bell text-amber-400"></i>
+            </button>
+          </div>
+        </td>
+      </tr>`;
+  }).join('');
+
+  // Render Milestones Stepper
+  const trackingHistory = p.trackingHistory || [];
+  const milestonesHtml = trackingHistory.map((m, idx) => {
+    const label = m.milestoneLabel || m.MilestoneLabel || '';
+    const val = m.portfolioValue ?? m.PortfolioValue ?? 0;
+    const ret = m.portfolioReturnPercent ?? m.PortfolioReturnPercent ?? 0;
+    const alpha = m.alphaPercent ?? m.AlphaPercent ?? 0;
+
+    const isLive = label.toLowerCase().includes('live') || label.toLowerCase().includes('current');
+    const pnlSign = ret >= 0 ? '+' : '';
+    const pnlClass = ret >= 0 ? 'text-emerald-400' : 'text-rose-400';
+    const borderCol = isLive ? `border-${accentColor}-500/50 bg-${accentColor}-500/10` : 'border-slate-800 bg-slate-950/60';
+
+    return `
+      <div class="p-2.5 rounded-xl border ${borderCol} text-left flex-1 min-w-[120px]">
+        <div class="flex items-center justify-between text-[10px]">
+          <span class="font-semibold ${isLive ? `text-${accentColor}-400 font-bold` : 'text-slate-400'}">${escapeHtml(label)}</span>
+          ${isLive ? '<span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>' : ''}
+        </div>
+        <div class="text-xs font-bold font-mono text-white mt-1">${formatINR(val)}</div>
+        <div class="text-[10px] font-mono ${pnlClass} mt-0.5">${pnlSign}${ret.toFixed(2)}%</div>
+        <div class="text-[9px] text-slate-500 font-mono mt-0.5">Alpha: +${alpha.toFixed(2)}%</div>
+      </div>`;
+  }).join('');
+
+  // Render Journal Notes
+  const journalNotes = p.researchJournalNotes || [];
+  const notesHtml = journalNotes.map(n => `
+    <div class="flex items-start space-x-2 text-xs py-1.5 border-b border-slate-800/60 last:border-0">
+      <i class="fa-solid fa-clock-rotate-left text-slate-500 text-[10px] mt-1"></i>
+      <div class="text-slate-300">${escapeHtml(n)}</div>
+    </div>`).join('');
+
+  return `
+    <div class="bg-slate-900/80 themed-card border border-slate-800 rounded-2xl p-6 backdrop-blur shadow-xl space-y-6">
+      <!-- Strategy Header Banner -->
+      <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-4 pb-4 border-b border-slate-800/80 themed-border">
+        <div class="flex items-start sm:items-center space-x-3.5">
+          <div class="w-12 h-12 rounded-2xl bg-${accentColor}-500/15 border border-${accentColor}-500/35 flex items-center justify-center text-${accentColor}-400 text-lg shadow-md shadow-${accentColor}-500/10 flex-shrink-0">
+            <i class="fa-solid ${icon}"></i>
+          </div>
+          <div>
+            <div class="flex items-center space-x-2 flex-wrap gap-y-1">
+              <span class="px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-${accentColor}-500/15 text-${accentColor}-300 border border-${accentColor}-500/30">
+                ${escapeHtml((p.category || '').toUpperCase())}
+              </span>
+              <span class="text-xs font-bold text-white">${escapeHtml(p.name)}</span>
+            </div>
+            <p class="text-xs text-slate-400 mt-1">${escapeHtml(p.tagline)}</p>
+          </div>
+        </div>
+
+        <div class="flex items-center space-x-3 flex-shrink-0">
+          <div class="text-right">
+            <div class="text-[10px] text-slate-400">Mock Valuation (₹10L Seed)</div>
+            <div class="text-lg font-bold font-mono text-white">${formatINR(p.currentValue)}</div>
+          </div>
+          <div class="p-2.5 rounded-xl bg-slate-950/80 themed-elevated border border-slate-800 text-right">
+            <div class="text-[10px] text-slate-400">Net Return</div>
+            <div class="text-base font-bold font-mono ${retClass}">${retSign}${totalRet.toFixed(2)}%</div>
+            <div class="text-[9px] ${alphaClass} font-mono font-bold">${alphaSign}${alphaVal.toFixed(2)}% Alpha</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Academic Literature & Economists Research Citation Box -->
+      <div class="p-4 rounded-xl bg-slate-950/70 themed-elevated border border-slate-800 space-y-3">
+        <div class="flex items-center justify-between">
+          <div class="flex items-center space-x-2">
+            <i class="fa-solid fa-book-open text-${accentColor}-400 text-xs"></i>
+            <span class="text-xs font-bold text-white uppercase tracking-wider">Academic Foundation &amp; Literature Citations</span>
+          </div>
+          <span class="text-[10px] font-mono text-slate-400">Published Research Verification</span>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs">
+          <div class="space-y-1.5 p-3 rounded-lg bg-slate-900/60 themed-card border border-slate-800/80">
+            <div class="text-[10px] font-semibold text-${accentColor}-400 uppercase">Foundational Book &amp; Economists</div>
+            <div class="text-xs font-bold text-slate-200">${escapeHtml(primaryBook)}</div>
+            <div class="text-[11px] text-slate-400 italic">Author: ${escapeHtml(authorOrEconomist)} (${pubYear})</div>
+          </div>
+          <div class="space-y-1.5 p-3 rounded-lg bg-slate-900/60 themed-card border border-slate-800/80">
+            <div class="text-[10px] font-semibold text-${accentColor}-400 uppercase">Peer-Reviewed Research Paper</div>
+            <div class="text-xs font-bold text-slate-200">"${escapeHtml(keyAcademicPaper)}"</div>
+            <div class="text-[11px] text-slate-400 italic">${escapeHtml(journalOrUniversity)}</div>
+          </div>
+        </div>
+
+        <div class="p-3 rounded-lg bg-slate-900/60 themed-card border border-slate-800/80 space-y-2 text-xs">
+          <div>
+            <span class="font-bold text-slate-200">Core Market Anomaly &amp; Philosophy: </span>
+            <span class="text-slate-400">${escapeHtml(coreTenet)}</span>
+          </div>
+          <div class="pt-2 border-t border-slate-800 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+            <div class="flex items-center space-x-2">
+              <span class="font-mono text-[11px] font-bold text-${accentColor}-400">SCREENER FORMULA:</span>
+              <code class="text-[10px] font-mono bg-slate-950 px-2 py-0.5 rounded text-slate-300 border border-slate-800">${escapeHtml(mathFormula)}</code>
+            </div>
+            <div class="text-[10px] text-amber-300 bg-amber-500/10 px-2 py-0.5 rounded border border-amber-500/20">
+              <i class="fa-solid fa-triangle-exclamation mr-1"></i> Exit Rule: ${escapeHtml((exitRules || '').split('.')[0])}.
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Multi-Month Tracking Trajectory Stepper -->
+      <div>
+        <div class="flex items-center justify-between mb-2">
+          <span class="text-xs font-bold uppercase tracking-wider text-slate-300">
+            <i class="fa-solid fa-chart-line text-${accentColor}-400 mr-1.5"></i> Multi-Month Observation Trajectory (Paper Tracking Checkpoints)
+          </span>
+          <span class="text-[10px] text-slate-500">Benchmark: Nifty 50 (+3.42%)</span>
+        </div>
+        <div class="flex items-center space-x-2 overflow-x-auto pb-1">
+          ${milestonesHtml}
+        </div>
+      </div>
+
+      <!-- Constituents Mock Portfolio Table -->
+      <div>
+        <div class="flex items-center justify-between mb-2">
+          <span class="text-xs font-bold uppercase tracking-wider text-slate-300">
+            <i class="fa-solid fa-list-check text-${accentColor}-400 mr-1.5"></i> Active Mock Constituents (${constituents.length} Positions)
+          </span>
+          <span class="text-[10px] font-mono text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded border border-emerald-500/20">
+            Live Prices Synced
+          </span>
+        </div>
+        <div class="overflow-x-auto rounded-xl border border-slate-800 themed-border shadow-inner">
+          <table class="w-full text-left border-collapse">
+            <thead>
+              <tr class="bg-slate-950/70 themed-elevated border-b border-slate-800 text-[10px] uppercase font-mono tracking-wider text-slate-400">
+                <th class="px-4 py-2.5">Stock / Company</th>
+                <th class="px-3 py-2.5 text-right">Entry (₹)</th>
+                <th class="px-3 py-2.5 text-right">Live CMP (₹)</th>
+                <th class="px-3 py-2.5 text-right">Qty</th>
+                <th class="px-3 py-2.5 text-right">Seed Capital (₹)</th>
+                <th class="px-3 py-2.5 text-right">Mock Value (₹)</th>
+                <th class="px-4 py-2.5">Quantitative Metric &amp; Thesis</th>
+                <th class="px-3 py-2.5 text-center">Action</th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-slate-800/80 themed-border bg-slate-900/40">
+              ${rowsHtml}
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Observation & Paper Trading Journal -->
+      <div class="p-4 rounded-xl bg-slate-950/60 themed-elevated border border-slate-800/80 space-y-3">
+        <div class="flex items-center justify-between">
+          <div class="flex items-center space-x-2">
+            <i class="fa-solid fa-pen-to-square text-${accentColor}-400 text-xs"></i>
+            <span class="text-xs font-bold text-white uppercase tracking-wider">Multi-Month Research Journal &amp; Notes</span>
+          </div>
+          <span class="text-[10px] text-slate-500">${journalNotes.length} Logged Entries</span>
+        </div>
+
+        <div class="space-y-1 max-h-40 overflow-y-auto pr-1">
+          ${notesHtml}
+        </div>
+
+        <div class="pt-2 border-t border-slate-800 flex items-center space-x-2">
+          <input id="noteInput_${p.strategyId}" type="text" placeholder="Log your observation (e.g. Q2 earnings result, volume breakout, stop-loss check)..." class="flex-1 bg-slate-900 themed-card border border-slate-700 rounded-lg px-3 py-1.5 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-${accentColor}-400" />
+          <button onclick="submitTheoryJournalNote('${p.strategyId}')" class="px-3.5 py-1.5 bg-${accentColor}-600/30 hover:bg-${accentColor}-600/40 text-${accentColor}-300 hover:text-white rounded-lg text-xs font-bold border border-${accentColor}-500/40 transition flex items-center space-x-1.5 flex-shrink-0">
+            <i class="fa-solid fa-plus text-[10px]"></i>
+            <span>Log Note</span>
+          </button>
+        </div>
+      </div>
+    </div>`;
+}
+
+function filterTheoryView(filterId) {
+  currentTheoryFilter = filterId;
+
+  // Update button active styling
+  const buttons = [
+    { id: 'theoryFilterAll', key: 'ALL' },
+    { id: 'theoryFilterPiotroski', key: 'GRAHAM_PIOTROSKI_VALUE' },
+    { id: 'theoryFilterMagic', key: 'MAGIC_FORMULA' },
+    { id: 'theoryFilterSepa', key: 'SEPA_MOMENTUM' }
+  ];
+
+  buttons.forEach(b => {
+    const el = document.getElementById(b.id);
+    if (!el) return;
+    if (b.key === filterId) {
+      el.className = 'theory-filter-btn px-3 py-1.5 rounded-md text-xs font-semibold bg-purple-500/20 text-purple-300 border border-purple-500/30 transition';
+    } else {
+      el.className = 'theory-filter-btn px-3 py-1.5 rounded-md text-xs font-semibold text-slate-400 hover:text-white transition';
+    }
+  });
+
+  if (currentTheoriesData) {
+    renderTheoryPortfolioCards(currentTheoriesData.portfolios, filterId);
+  }
+}
+
+async function refreshTheoryPortfolios(userInitiated = false) {
+  await loadTheoryPortfolios(true);
+  if (userInitiated) {
+    showToast("🔬 Live quotes & returns refreshed across all 3 Theory Portfolios!");
+  }
+}
+
+async function submitTheoryJournalNote(strategyId) {
+  const input = document.getElementById(`noteInput_${strategyId}`);
+  if (!input || !input.value.trim()) {
+    showToast("Please enter an observation note.");
+    return;
+  }
+
+  const noteText = input.value.trim();
+  try {
+    const res = await fetch(`/api/theory-portfolios/${strategyId}/notes`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ note: noteText })
+    });
+
+    if (!res.ok) throw new Error("Failed to save note");
+    input.value = "";
+    showToast("📝 Observation logged in Theory Research Journal!");
+    await loadTheoryPortfolios(false);
+  } catch (err) {
+    console.error("Failed to add note:", err);
+    showToast("Error saving journal note.");
+  }
+}
+
+function exportTheoryTrackingData() {
+  if (!currentTheoriesData) {
+    showToast("No theory data to export yet.");
+    return;
+  }
+
+  const exportPayload = {
+    exportedAt: new Date().toISOString(),
+    benchmarkNifty50Return: currentTheoriesData.benchmarkNifty50ReturnPercent,
+    executiveSummary: currentTheoriesData.executiveSummary,
+    portfolios: currentTheoriesData.portfolios
+  };
+
+  const blob = new Blob([JSON.stringify(exportPayload, null, 2)], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `theory_incubator_mock_portfolios_${new Date().toISOString().slice(0, 10)}.json`;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+  showToast("📊 Theory Tracking Report exported successfully!");
+}
+
+window.loadTheoryPortfolios = loadTheoryPortfolios;
+window.renderTheoryPortfolios = renderTheoryPortfolios;
+window.filterTheoryView = filterTheoryView;
+window.refreshTheoryPortfolios = refreshTheoryPortfolios;
+window.submitTheoryJournalNote = submitTheoryJournalNote;
+window.exportTheoryTrackingData = exportTheoryTrackingData;
+
+// ============================================================================
+// REAL PORTFOLIO THEORY HEALTH AUDIT & WHAT-IF SWAP SIMULATOR
+// Evaluates real investor holdings against Graham, Greenblatt & Minervini
+// ============================================================================
+
+let currentAuditData = null;
+let currentAuditFilter = 'TOXIC';
+let activeSwapHolding = null;
+
+async function loadPortfolioTheoryAudit(forceRefresh = false) {
+  if (!currentPortfolioId) {
+    try {
+      const pRes = await fetch('/api/portfolios');
+      if (pRes.ok) {
+        const pList = await pRes.json();
+        if (pList && pList.length > 0) {
+          currentPortfolioId = pList[0].id;
+        }
+      }
+    } catch (e) {
+      console.warn("Could not resolve default portfolio for theory audit:", e);
+    }
+  }
+  if (!currentPortfolioId) return;
+
+  const btn = document.getElementById("btnReauditPortfolio");
+  if (btn && forceRefresh) {
+    btn.classList.add("opacity-60", "pointer-events-none");
+    btn.innerHTML = `<i class="fa-solid fa-arrows-rotate fa-spin text-xs"></i><span>Scanning 100+ Holdings...</span>`;
+  }
+
+  try {
+    const res = await fetch(`/api/theory-portfolios/audit/${currentPortfolioId}`);
+    if (!res.ok) throw new Error(`HTTP error ${res.status}`);
+    const data = await res.json();
+    currentAuditData = data;
+    renderPortfolioTheoryAudit(data);
+  } catch (err) {
+    console.error("Failed to load portfolio theory audit:", err);
+    const box = document.getElementById("auditVerdictText");
+    if (box) box.textContent = "Unable to complete theory audit on active portfolio.";
+  } finally {
+    if (btn && forceRefresh) {
+      btn.classList.remove("opacity-60", "pointer-events-none");
+      btn.innerHTML = `<i class="fa-solid fa-arrows-rotate text-xs"></i><span>Re-Scan My Portfolio</span>`;
+      showToast("⚡ Theory Health Audit complete across your holdings!");
+    }
+  }
+}
+
+function renderPortfolioTheoryAudit(data) {
+  if (!data) return;
+
+  // 1. Update High-Level Scorecard Pills
+  const totalText = document.getElementById("auditTotalHoldingsText");
+  if (totalText) totalText.textContent = data.totalHoldingsCount;
+
+  const champBadge = document.getElementById("auditChampionsBadge");
+  const champVal = document.getElementById("auditChampionsVal");
+  if (champBadge && champVal) {
+    champBadge.textContent = `${data.championsCount} (${data.championsWeightPercent}%)`;
+    champVal.textContent = formatINR(data.championsValue);
+  }
+
+  const nearBadge = document.getElementById("auditNearMissBadge");
+  const nearVal = document.getElementById("auditNearMissVal");
+  if (nearBadge && nearVal) {
+    nearBadge.textContent = `${data.nearMissCount} (${data.nearMissWeightPercent}%)`;
+    nearVal.textContent = formatINR(data.nearMissValue);
+  }
+
+  const toxicBadge = document.getElementById("auditToxicBadge");
+  const toxicVal = document.getElementById("auditToxicVal");
+  if (toxicBadge && toxicVal) {
+    toxicBadge.textContent = `${data.toxicCount} (${data.toxicWeightPercent}%)`;
+    toxicVal.textContent = formatINR(data.toxicValue);
+  }
+
+  const recCap = document.getElementById("auditRecoverableCapital");
+  if (recCap) {
+    recCap.textContent = formatINR(data.capitalLockedInToxicAssets);
+  }
+
+  const verdictText = document.getElementById("auditVerdictText");
+  if (verdictText) {
+    verdictText.textContent = data.executiveVerdict;
+  }
+
+  // Update Button Counts
+  const btnToxic = document.getElementById("auditCountBtnToxic");
+  if (btnToxic) btnToxic.textContent = data.toxicCount;
+
+  const btnChamp = document.getElementById("auditCountBtnChampions");
+  if (btnChamp) btnChamp.textContent = data.championsCount;
+
+  const btnNear = document.getElementById("auditCountBtnNearMiss");
+  if (btnNear) btnNear.textContent = data.nearMissCount;
+
+  const btnAll = document.getElementById("auditCountBtnAll");
+  if (btnAll) btnAll.textContent = data.totalHoldingsCount;
+
+  // Render Table
+  renderPortfolioAuditTable();
+}
+
+function filterAuditTable(filterKey) {
+  currentAuditFilter = filterKey;
+
+  const buttons = [
+    { id: 'auditBtnFilterToxic', key: 'TOXIC' },
+    { id: 'auditBtnFilterChampions', key: 'CHAMPIONS' },
+    { id: 'auditBtnFilterNearMiss', key: 'NEARMISS' },
+    { id: 'auditBtnFilterAll', key: 'ALL' }
+  ];
+
+  buttons.forEach(b => {
+    const el = document.getElementById(b.id);
+    if (!el) return;
+    if (b.key === filterKey) {
+      if (b.key === 'TOXIC') {
+        el.className = 'audit-filter-btn px-3 py-1.5 rounded-md font-bold text-rose-300 bg-rose-500/20 border border-rose-500/30 transition';
+      } else if (b.key === 'CHAMPIONS') {
+        el.className = 'audit-filter-btn px-3 py-1.5 rounded-md font-bold text-emerald-300 bg-emerald-500/20 border border-emerald-500/30 transition';
+      } else if (b.key === 'NEARMISS') {
+        el.className = 'audit-filter-btn px-3 py-1.5 rounded-md font-bold text-amber-300 bg-amber-500/20 border border-amber-500/30 transition';
+      } else {
+        el.className = 'audit-filter-btn px-3 py-1.5 rounded-md font-bold text-cyan-300 bg-cyan-500/20 border border-cyan-500/30 transition';
+      }
+    } else {
+      el.className = 'audit-filter-btn px-3 py-1.5 rounded-md font-medium text-slate-400 hover:text-white transition';
+    }
+  });
+
+  renderPortfolioAuditTable();
+}
+
+function renderPortfolioAuditTable() {
+  const tbody = document.getElementById("portfolioAuditTableBody");
+  if (!tbody || !currentAuditData || !currentAuditData.holdings) return;
+
+  const allHoldings = currentAuditData.holdings;
+  const filtered = allHoldings.filter(h => {
+    if (currentAuditFilter === 'TOXIC') return h.classification === 2;
+    if (currentAuditFilter === 'CHAMPIONS') return h.classification === 0;
+    if (currentAuditFilter === 'NEARMISS') return h.classification === 1;
+    return true;
+  });
+
+  if (filtered.length === 0) {
+    tbody.innerHTML = `
+      <tr>
+        <td colspan="7" class="px-4 py-8 text-center text-slate-400 text-xs">
+          No holdings found matching this filter category.
+        </td>
+      </tr>`;
+    return;
+  }
+
+  tbody.innerHTML = filtered.map(h => {
+    const isToxic = h.classification === 2;
+    const isChampion = h.classification === 0;
+
+    let badgeClass = 'bg-amber-500/15 text-amber-300 border-amber-500/30';
+    let badgeText = '⚠️ Near-Miss Watchlist';
+    let rowHighlight = '';
+
+    if (isChampion) {
+      badgeClass = 'bg-emerald-500/15 text-emerald-300 border-emerald-500/30 font-bold';
+      badgeText = '🏆 Theory Champion';
+    } else if (isToxic) {
+      badgeClass = 'bg-rose-500/20 text-rose-300 border-rose-500/35 font-bold';
+      badgeText = '🚨 Toxic Laggard (Prune)';
+      rowHighlight = 'bg-rose-950/10';
+    }
+
+    const pnlSign = h.unrealizedPnLPercent >= 0 ? '+' : '';
+    const pnlClass = h.unrealizedPnLPercent >= 0 ? 'text-emerald-400' : 'text-rose-400';
+
+    const passedTheoriesHtml = (h.passedTheories && h.passedTheories.length > 0)
+      ? h.passedTheories.map(t => `<span class="inline-block px-1.5 py-0.2 rounded text-[9px] font-mono bg-emerald-500/10 text-emerald-300 border border-emerald-500/20 mr-1 mb-0.5">✓ ${escapeHtml(t.split(' ')[0])}</span>`).join('')
+      : '<span class="inline-block px-1.5 py-0.2 rounded text-[9px] font-mono bg-rose-500/10 text-rose-400 border border-rose-500/20">✗ Fails All 3</span>';
+
+    return `
+      <tr class="hover:bg-slate-800/40 transition ${rowHighlight}">
+        <td class="px-4 py-3 whitespace-nowrap">
+          <div class="flex items-center space-x-2">
+            <span class="font-mono font-bold text-xs text-white">${escapeHtml(h.ticker)}</span>
+            <span class="px-1.5 py-0.2 rounded text-[9px] font-mono bg-slate-800 themed-elevated text-slate-400 border border-slate-700">${escapeHtml(h.sector)}</span>
+          </div>
+          <div class="text-[11px] text-slate-400 truncate max-w-[170px]">${escapeHtml(h.name)}</div>
+        </td>
+        <td class="px-3 py-3 whitespace-nowrap text-right">
+          <div class="font-mono text-xs font-bold text-white">${formatINR(h.marketValue)}</div>
+          <div class="text-[10px] text-slate-500 font-mono">${h.weightPercent.toFixed(1)}% wt</div>
+        </td>
+        <td class="px-3 py-3 whitespace-nowrap text-right">
+          <div class="font-mono text-xs font-bold ${pnlClass}">${pnlSign}${h.unrealizedPnLPercent.toFixed(2)}%</div>
+          <div class="text-[10px] text-slate-500 font-mono">${pnlSign}${formatINR(h.unrealizedPnL)}</div>
+        </td>
+        <td class="px-3 py-3 whitespace-nowrap">
+          <span class="inline-block px-2 py-0.5 rounded text-[10px] border ${badgeClass}">
+            ${badgeText}
+          </span>
+          <div class="text-[10px] text-slate-400 font-mono mt-0.5">ROCE: ${h.rocePercent.toFixed(1)}% | D/E: ${h.debtToEquity.toFixed(2)}</div>
+        </td>
+        <td class="px-3 py-3">
+          <div class="flex flex-wrap max-w-[200px]">
+            ${passedTheoriesHtml}
+          </div>
+        </td>
+        <td class="px-3 py-3 max-w-[260px]">
+          <div class="text-slate-300 text-[11px]">${escapeHtml(h.plainEnglishReason)}</div>
+          <div class="text-[10px] text-amber-300/90 mt-0.5 italic">${escapeHtml(h.recommendedAction)}</div>
+        </td>
+        <td class="px-4 py-3 whitespace-nowrap text-center">
+          <div class="flex items-center justify-center space-x-1.5">
+            ${isToxic ? `
+              <button onclick="openTradeModal('${escapeHtml(h.ticker)}', 'SELL')" class="px-2.5 py-1 bg-rose-600/30 hover:bg-rose-600/50 text-rose-200 border border-rose-500/40 rounded-lg text-[11px] font-bold transition flex items-center space-x-1" title="Sell / Trim this position">
+                <i class="fa-solid fa-scissors text-[10px]"></i>
+                <span>Prune</span>
+              </button>` : ''}
+            <button onclick="openWhatIfSwapModal('${escapeHtml(h.ticker)}')" class="px-2.5 py-1 bg-cyan-600/20 hover:bg-cyan-600/40 text-cyan-300 border border-cyan-500/30 rounded-lg text-[11px] font-semibold transition flex items-center space-x-1" title="Simulate replacing with a Theory Leader">
+              <i class="fa-solid fa-shuffle text-[10px]"></i>
+              <span>Swap</span>
+            </button>
+          </div>
+        </td>
+      </tr>`;
+  }).join('');
+}
+
+// -------------------------------------------------------------
+// Institutional Decision Hub: Tabs (Audit, Correlation, Macro)
+// -------------------------------------------------------------
+let currentTheoryHubTab = 'AUDIT';
+
+function switchTheoryHubTab(tab) {
+  currentTheoryHubTab = tab;
+  const deskAudit = document.getElementById("deskTheoryAudit");
+  const deskCorr = document.getElementById("deskCorrelationMatrix");
+  const deskMacro = document.getElementById("deskMacroStress");
+
+  const btnAudit = document.getElementById("hubTabAudit");
+  const btnCorr = document.getElementById("hubTabCorrelation");
+  const btnMacro = document.getElementById("hubTabMacro");
+
+  const activeAudit = "bg-teal-500/20 text-teal-300 border border-teal-500/30 font-semibold";
+  const activeCorr = "bg-cyan-500/20 text-cyan-300 border border-cyan-500/30 font-semibold";
+  const activeMacro = "bg-amber-500/20 text-amber-300 border border-amber-500/30 font-semibold";
+  const inactive = "text-slate-400 hover:text-white border-transparent";
+
+  if (deskAudit) deskAudit.classList.toggle("hidden", tab !== 'AUDIT');
+  if (deskCorr) deskCorr.classList.toggle("hidden", tab !== 'CORRELATION');
+  if (deskMacro) deskMacro.classList.toggle("hidden", tab !== 'MACRO');
+
+  if (btnAudit) btnAudit.className = `hub-tab-btn px-3 py-1.5 rounded-md text-xs transition ${tab === 'AUDIT' ? activeAudit : inactive}`;
+  if (btnCorr) btnCorr.className = `hub-tab-btn px-3 py-1.5 rounded-md text-xs transition ${tab === 'CORRELATION' ? activeCorr : inactive}`;
+  if (btnMacro) btnMacro.className = `hub-tab-btn px-3 py-1.5 rounded-md text-xs transition ${tab === 'MACRO' ? activeMacro : inactive}`;
+
+  if (tab === 'CORRELATION') {
+    loadCorrelationMatrix();
+  } else if (tab === 'MACRO') {
+    runMacroStressScenario('crude_surge');
+  }
+}
+
+// -------------------------------------------------------------
+// What-If Stock Swap Simulator Modal Functions (Feature 2)
+// -------------------------------------------------------------
+const SWAP_CANDIDATES = {
+  "TITAN": { name: "Titan Company Ltd", sector: "ConsumerDiscretionary", price: 3620.00, roce: 26.5, debt: 0.1, rs: 88, beta: 0.85 },
+  "PIDILITIND": { name: "Pidilite Industries Ltd", sector: "Materials", price: 3280.00, roce: 28.2, debt: 0.0, rs: 86, beta: 0.72 },
+  "ASIANPAINT": { name: "Asian Paints Limited", sector: "ConsumerDiscretionary", price: 2960.00, roce: 29.5, debt: 0.0, rs: 82, beta: 0.78 },
+  "HDFCBANK": { name: "HDFC Bank Limited", sector: "Financials", price: 1740.00, roce: 16.8, debt: 0.0, rs: 84, beta: 0.88 },
+  "TCS": { name: "Tata Consultancy Services", sector: "Technology", price: 3390.00, roce: 54.0, debt: 0.0, rs: 86, beta: 0.75 },
+  "TRENT": { name: "Trent Ltd", sector: "ConsumerDiscretionary", price: 3173.61, roce: 32.5, debt: 0.1, rs: 96, beta: 1.05 },
+  "DIXON": { name: "Dixon Technologies", sector: "Industrials", price: 14250.00, roce: 31.0, debt: 0.15, rs: 91, beta: 1.08 },
+  "KAYNES": { name: "Kaynes Technology India", sector: "Industrials", price: 3626.30, roce: 28.0, debt: 0.2, rs: 88, beta: 1.15 },
+  "POLYCAB": { name: "Polycab India Limited", sector: "Industrials", price: 7150.00, roce: 28.0, debt: 0.05, rs: 92, beta: 0.95 },
+  "BEL": { name: "Bharat Electronics Ltd", sector: "Industrials", price: 335.52, roce: 36.2, debt: 0.0, rs: 92, beta: 0.82 },
+  "MAZDOCK": { name: "Mazagon Dock Shipbuilders", sector: "Industrials", price: 2566.00, roce: 38.0, debt: 0.0, rs: 94, beta: 1.10 },
+  "PREMIERENE": { name: "Premier Energies Ltd", sector: "Utilities", price: 1001.80, roce: 26.5, debt: 0.40, rs: 89, beta: 1.12 },
+  "BSE": { name: "BSE Limited", sector: "Financials", price: 5210.00, roce: 35.0, debt: 0.0, rs: 95, beta: 1.15 },
+  "PERSISTENT": { name: "Persistent Systems", sector: "Technology", price: 5120.00, roce: 31.2, debt: 0.0, rs: 90, beta: 0.92 },
+  "KPITTECH": { name: "KPIT Technologies", sector: "Technology", price: 1640.00, roce: 33.0, debt: 0.0, rs: 87, beta: 1.05 }
+};
+
+function openWhatIfSwapWithPick(pickTicker) {
+  if (currentAuditData && currentAuditData.holdings && currentAuditData.holdings.length > 0) {
+    const laggard = currentAuditData.holdings.find(h => h.category === "ToxicLaggard")
+                 || currentAuditData.holdings.find(h => h.category === "NearMiss")
+                 || currentAuditData.holdings[0];
+    if (laggard) {
+      activeSwapHolding = laggard;
+      const exitTickerEl = document.getElementById("swapExitTicker");
+      const exitDetailsEl = document.getElementById("swapExitDetails");
+      const releasedCapEl = document.getElementById("swapReleasedCapital");
+      if (exitTickerEl) exitTickerEl.textContent = `${laggard.ticker} (${laggard.sector})`;
+      if (exitDetailsEl) exitDetailsEl.textContent = `${laggard.name} • ${laggard.quantity} shares @ CMP ${formatINR(laggard.currentPrice)} (ROCE: ${laggard.rocePercent.toFixed(1)}%, D/E: ${laggard.debtToEquity.toFixed(2)})`;
+      if (releasedCapEl) releasedCapEl.textContent = formatINR(laggard.marketValue);
+    }
+  }
+
+  const select = document.getElementById("swapTargetSelect");
+  if (select && pickTicker) {
+    select.value = pickTicker;
+  }
+  updateSwapSimulationPreview();
+  const modal = document.getElementById("modalWhatIfSwap");
+  if (modal) modal.classList.remove("hidden");
+}
+
+function openWhatIfSwapModal(ticker) {
+  if (!currentAuditData || !currentAuditData.holdings) return;
+  const holding = currentAuditData.holdings.find(h => h.ticker === ticker);
+  if (!holding) return;
+
+  activeSwapHolding = holding;
+
+  const exitTickerEl = document.getElementById("swapExitTicker");
+  const exitDetailsEl = document.getElementById("swapExitDetails");
+  const releasedCapEl = document.getElementById("swapReleasedCapital");
+
+  if (exitTickerEl) exitTickerEl.textContent = `${holding.ticker} (${holding.sector})`;
+  if (exitDetailsEl) exitDetailsEl.textContent = `${holding.name} • ${holding.quantity} shares @ CMP ${formatINR(holding.currentPrice)} (ROCE: ${holding.rocePercent.toFixed(1)}%, D/E: ${holding.debtToEquity.toFixed(2)})`;
+  if (releasedCapEl) releasedCapEl.textContent = formatINR(holding.marketValue);
+
+  updateSwapSimulationPreview();
+
+  const modal = document.getElementById("modalWhatIfSwap");
+  if (modal) modal.classList.remove("hidden");
+}
+
+function closeWhatIfSwapModal() {
+  const modal = document.getElementById("modalWhatIfSwap");
+  if (modal) modal.classList.add("hidden");
+  activeSwapHolding = null;
+}
+
+async function updateSwapSimulationPreview() {
+  if (!activeSwapHolding) return;
+
+  const select = document.getElementById("swapTargetSelect");
+  const targetTicker = select ? select.value : "BEL";
+  const target = SWAP_CANDIDATES[targetTicker] || SWAP_CANDIDATES["BEL"];
+
+  const targetDetailsEl = document.getElementById("swapTargetDetails");
+  const acquiredSharesEl = document.getElementById("swapAcquiredShares");
+
+  const capital = activeSwapHolding.marketValue;
+  const sharesToBuy = Math.floor(capital / target.price);
+  const remainingCash = capital - (sharesToBuy * target.price);
+
+  if (targetDetailsEl) {
+    targetDetailsEl.textContent = `${target.name} • CMP ${formatINR(target.price)} (ROCE: ${target.roce}%, Debt: ${target.debt.toFixed(2)}, RS: ${target.rs})`;
+  }
+  if (acquiredSharesEl) {
+    acquiredSharesEl.textContent = `${sharesToBuy.toLocaleString('en-IN')} shares (~${formatINR(sharesToBuy * target.price)}${remainingCash > 0 ? ` + ${formatINR(remainingCash)} cash` : ''})`;
+  }
+
+  // Attempt backend simulation endpoint
+  const portfolioId = currentPortfolioId || (currentAuditData ? currentAuditData.portfolioId : null);
+  if (portfolioId) {
+    try {
+      const res = await fetch('/api/theory-portfolios/simulate-swap', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          portfolioId: portfolioId,
+          exitTicker: activeSwapHolding.ticker,
+          targetTicker: targetTicker
+        })
+      });
+
+      if (res.ok) {
+        const sim = await res.json();
+        renderSwapSimulationResult(sim);
+        return;
+      }
+    } catch (err) {
+      console.warn("Failed to fetch backend swap simulation, falling back to local calculation:", err);
+    }
+  }
+
+  // Fallback client-side simulation
+  renderLocalSwapSimulation(activeSwapHolding, target);
+}
+
+function renderSwapSimulationResult(sim) {
+  const deltaRoceEl = document.getElementById("swapDeltaRoce");
+  if (deltaRoceEl) {
+    const sign = sim.deltaRoce >= 0 ? '+' : '';
+    deltaRoceEl.textContent = `${sim.beforeWeightedRoce.toFixed(1)}% → ${sim.afterWeightedRoce.toFixed(1)}% (${sign}${sim.deltaRoce.toFixed(2)}%)`;
+    deltaRoceEl.className = sim.deltaRoce >= 0 ? "font-mono font-bold text-emerald-400 mt-1" : "font-mono font-bold text-rose-400 mt-1";
+  }
+
+  const deltaDebtEl = document.getElementById("swapDeltaDebt");
+  if (deltaDebtEl) {
+    const sign = sim.deltaDebtToEquity <= 0 ? '' : '+';
+    deltaDebtEl.textContent = `${sim.beforeWeightedDebtToEquity.toFixed(2)} → ${sim.afterWeightedDebtToEquity.toFixed(2)} (${sign}${sim.deltaDebtToEquity.toFixed(2)})`;
+    deltaDebtEl.className = sim.deltaDebtToEquity <= 0 ? "font-mono font-bold text-teal-300 mt-1" : "font-mono font-bold text-amber-300 mt-1";
+  }
+
+  const deltaBetaEl = document.getElementById("swapDeltaBeta");
+  if (deltaBetaEl) {
+    const sign = sim.deltaBeta <= 0 ? '' : '+';
+    deltaBetaEl.textContent = `${sim.beforeEstimatedBeta.toFixed(2)} → ${sim.afterEstimatedBeta.toFixed(2)} (${sign}${sim.deltaBeta.toFixed(2)})`;
+    deltaBetaEl.className = sim.deltaBeta <= 0 ? "font-mono font-bold text-cyan-400 mt-1" : "font-mono font-bold text-amber-400 mt-1";
+  }
+
+  const deltaRsEl = document.getElementById("swapDeltaRs");
+  if (deltaRsEl) {
+    const sign = sim.deltaRs >= 0 ? '+' : '';
+    deltaRsEl.textContent = `${sim.beforeEstimatedRs.toFixed(0)} → ${sim.afterEstimatedRs.toFixed(0)} (${sign}${sim.deltaRs.toFixed(0)} pts)`;
+    deltaRsEl.className = sim.deltaRs >= 0 ? "font-mono font-bold text-purple-400 mt-1" : "font-mono font-bold text-rose-400 mt-1";
+  }
+
+  const sectorTiltEl = document.getElementById("swapSectorTilt");
+  if (sectorTiltEl) {
+    sectorTiltEl.innerHTML = `<span class="text-rose-400 font-bold">${escapeHtml(sim.exitSector)}</span>: ${sim.exitSectorBeforeWeight.toFixed(1)}% → ${sim.exitSectorAfterWeight.toFixed(1)}% &nbsp;|&nbsp; <span class="text-emerald-400 font-bold">${escapeHtml(sim.targetSector)}</span>: ${sim.targetSectorBeforeWeight.toFixed(1)}% → ${sim.targetSectorAfterWeight.toFixed(1)}%`;
+  }
+
+  const verdictTitleEl = document.getElementById("swapVerdictTitle");
+  const verdictTextEl = document.getElementById("swapVerdictText");
+  const benefitsListEl = document.getElementById("swapBenefitsList");
+
+  if (verdictTitleEl) {
+    verdictTitleEl.textContent = sim.isFavorableSwap ? "Institutional Verdict: Favorable Quant Swap" : "Institutional Verdict: Marginal Trade";
+    verdictTitleEl.className = sim.isFavorableSwap ? "font-bold text-emerald-400 flex items-center" : "font-bold text-amber-400 flex items-center";
+  }
+  if (verdictTextEl) {
+    verdictTextEl.textContent = sim.quantVerdict;
+  }
+  if (benefitsListEl && sim.keyBenefits) {
+    benefitsListEl.innerHTML = sim.keyBenefits.map(b => `<li class="flex items-start space-x-1.5"><i class="fa-solid fa-check text-emerald-400 mt-0.5 text-[10px]"></i><span>${escapeHtml(b)}</span></li>`).join('');
+  }
+}
+
+function renderLocalSwapSimulation(exitHolding, target) {
+  const deltaRoceEl = document.getElementById("swapDeltaRoce");
+  if (deltaRoceEl) {
+    const diff = target.roce - exitHolding.rocePercent;
+    const sign = diff >= 0 ? '+' : '';
+    deltaRoceEl.textContent = `${exitHolding.rocePercent.toFixed(1)}% → ${target.roce.toFixed(1)}% (${sign}${diff.toFixed(1)}%)`;
+    deltaRoceEl.className = diff >= 0 ? "font-mono font-bold text-emerald-400 mt-1" : "font-mono font-bold text-rose-400 mt-1";
+  }
+
+  const deltaDebtEl = document.getElementById("swapDeltaDebt");
+  if (deltaDebtEl) {
+    deltaDebtEl.textContent = `${exitHolding.debtToEquity.toFixed(2)} → ${target.debt.toFixed(2)}`;
+  }
+
+  const deltaBetaEl = document.getElementById("swapDeltaBeta");
+  if (deltaBetaEl) {
+    deltaBetaEl.textContent = `1.05 → ${target.beta.toFixed(2)}`;
+  }
+
+  const deltaRsEl = document.getElementById("swapDeltaRs");
+  if (deltaRsEl) {
+    const diff = target.rs - exitHolding.estimatedRsRating;
+    const sign = diff >= 0 ? '+' : '';
+    deltaRsEl.textContent = `${exitHolding.estimatedRsRating.toFixed(0)} → ${target.rs.toFixed(0)} (${sign}${diff.toFixed(0)} pts)`;
+  }
+
+  const sectorTiltEl = document.getElementById("swapSectorTilt");
+  if (sectorTiltEl) {
+    sectorTiltEl.textContent = `${exitHolding.sector} → ${target.sector}`;
+  }
+
+  const verdictTextEl = document.getElementById("swapVerdictText");
+  if (verdictTextEl) {
+    verdictTextEl.textContent = `Replaces ${exitHolding.ticker} with ${target.name} for superior capital efficiency.`;
+  }
+}
+
+function executeSwapInTradeModal() {
+  if (!activeSwapHolding) return;
+  const holdingTicker = activeSwapHolding.ticker;
+  closeWhatIfSwapModal();
+  openTradeModal(holdingTicker, 'SELL');
+  showToast(`Initiating trade slip to prune ${holdingTicker}. Then buy target theory leader.`);
+}
+
+// -------------------------------------------------------------
+// Full-Time Investor Correlation Matrix Desk (Feature 3)
+// -------------------------------------------------------------
+let currentCorrelationData = null;
+
+async function loadCorrelationMatrix(forceRefresh = false) {
+  const container = document.getElementById("correlationHeatmapContainer");
+  const clustersContainer = document.getElementById("correlationClustersContainer");
+  if (!container) return;
+
+  const portfolioId = currentPortfolioId || (currentAuditData ? currentAuditData.portfolioId : null);
+  if (!portfolioId) {
+    container.innerHTML = `<div class="text-xs text-slate-400 p-4 text-center">Please select an active portfolio to compute the correlation matrix.</div>`;
+    return;
+  }
+
+  if (currentCorrelationData && !forceRefresh) {
+    renderCorrelationMatrix(currentCorrelationData);
+    return;
+  }
+
+  container.innerHTML = `<div class="text-xs text-slate-400 p-6 text-center flex items-center justify-center space-x-2"><i class="fa-solid fa-circle-notch fa-spin text-cyan-400"></i><span>Computing cross-asset return covariance and diversification ratio...</span></div>`;
+
+  try {
+    const res = await fetch(`/api/theory-portfolios/correlation-matrix/${portfolioId}?topN=10`);
+    if (!res.ok) throw new Error("Failed to load correlation matrix");
+    const data = await res.json();
+    currentCorrelationData = data;
+    renderCorrelationMatrix(data);
+  } catch (err) {
+    console.error("Error fetching correlation matrix:", err);
+    container.innerHTML = `<div class="text-xs text-rose-400 p-4 text-center">Error computing correlation matrix: ${escapeHtml(err.message)}</div>`;
+  }
+}
+
+function renderCorrelationMatrix(data) {
+  const divRatioEl = document.getElementById("corrDivRatio");
+  const divRatingEl = document.getElementById("corrDivRating");
+  const clusterCountEl = document.getElementById("corrClusterCount");
+  const commentaryEl = document.getElementById("corrCommentary");
+
+  if (divRatioEl) divRatioEl.textContent = `${data.diversificationRatio.toFixed(2)}x`;
+  if (divRatingEl) {
+    divRatingEl.textContent = data.diversificationRating;
+    divRatingEl.className = data.diversificationRatio >= 1.35
+      ? "text-[10px] text-emerald-400 font-semibold"
+      : data.diversificationRatio >= 1.20
+        ? "text-[10px] text-cyan-400 font-semibold"
+        : "text-[10px] text-rose-400 font-semibold";
+  }
+  if (clusterCountEl) {
+    const count = data.highRiskClusters ? data.highRiskClusters.length : 0;
+    clusterCountEl.textContent = count;
+    clusterCountEl.className = count > 0 ? "text-2xl font-bold font-mono text-amber-400" : "text-2xl font-bold font-mono text-emerald-400";
+  }
+  if (commentaryEl) commentaryEl.textContent = data.institutionalCommentary;
+
+  // Render Heatmap Matrix Table
+  const container = document.getElementById("correlationHeatmapContainer");
+  if (!container || !data.tickers || data.tickers.length === 0) return;
+
+  const n = data.tickers.length;
+  let html = `<table class="w-full text-center text-[11px] font-mono border-collapse"><thead><tr><th class="p-2 text-left text-slate-400 font-sans text-xs">Ticker</th>`;
+
+  for (let j = 0; j < n; j++) {
+    html += `<th class="p-2 text-slate-300 font-bold border-b border-slate-800" title="${escapeHtml(data.names[j])} (${escapeHtml(data.sectors[j])})">${escapeHtml(data.tickers[j])}</th>`;
+  }
+  html += `</tr></thead><tbody>`;
+
+  for (let i = 0; i < n; i++) {
+    html += `<tr class="border-b border-slate-800/60"><td class="p-2 text-left font-bold text-white font-sans flex items-center justify-between border-r border-slate-800"><span title="${escapeHtml(data.names[i])}">${escapeHtml(data.tickers[i])}</span><span class="text-[9px] text-slate-400 font-mono ml-1">${data.weightsPercent[i].toFixed(1)}%</span></td>`;
+
+    for (let j = 0; j < n; j++) {
+      const val = data.matrix[i][j];
+      let cellClass = "p-2 transition ";
+      if (i === j) {
+        cellClass += "bg-slate-800/80 text-slate-400 font-bold";
+      } else if (val >= 0.75) {
+        cellClass += "bg-rose-950/70 text-rose-300 font-bold hover:bg-rose-900/80";
+      } else if (val >= 0.50) {
+        cellClass += "bg-amber-950/60 text-amber-300 font-semibold hover:bg-amber-900/70";
+      } else if (val >= 0.30) {
+        cellClass += "bg-cyan-950/40 text-cyan-300 hover:bg-cyan-900/50";
+      } else {
+        cellClass += "bg-emerald-950/40 text-emerald-300 hover:bg-emerald-900/50";
+      }
+
+      html += `<td class="${cellClass}" title="${escapeHtml(data.tickers[i])} ↔ ${escapeHtml(data.tickers[j])}: ${val.toFixed(2)} correlation">${val.toFixed(2)}</td>`;
+    }
+    html += `</tr>`;
+  }
+  html += `</tbody></table>`;
+  container.innerHTML = html;
+
+  // Render High Risk Clusters
+  const clustersContainer = document.getElementById("correlationClustersContainer");
+  if (clustersContainer) {
+    if (!data.highRiskClusters || data.highRiskClusters.length === 0) {
+      clustersContainer.innerHTML = `<div class="p-4 rounded-xl bg-emerald-950/20 border border-emerald-500/30 text-emerald-300 text-xs flex items-center space-x-2 md:col-span-2"><i class="fa-solid fa-check-circle text-emerald-400"></i><span>No severe cluster risks detected among top positions. Assets exhibit healthy factor dispersion.</span></div>`;
+    } else {
+      clustersContainer.innerHTML = data.highRiskClusters.map(c => `
+        <div class="p-3.5 rounded-xl bg-rose-950/20 border border-rose-500/30 text-xs space-y-1.5">
+          <div class="flex items-center justify-between font-bold">
+            <span class="text-white font-mono flex items-center">
+              <span class="text-rose-400 mr-1">${escapeHtml(c.stockA)}</span> ↔ <span class="text-rose-400 ml-1 mr-2">${escapeHtml(c.stockB)}</span>
+              <span class="text-[10px] px-1.5 py-0.5 rounded bg-rose-500/20 text-rose-300 border border-rose-500/30">Correlation: ${c.correlation.toFixed(2)}</span>
+            </span>
+            <span class="text-[10px] font-mono text-slate-300">₹${formatINR(c.combinedCapital)} (${c.combinedWeightPercent.toFixed(1)}%)</span>
+          </div>
+          <div class="text-[11px] text-slate-300 leading-relaxed">${escapeHtml(c.riskWarning)}</div>
+        </div>
+      `).join('');
+    }
+  }
+}
+
+// -------------------------------------------------------------
+// Supply Chain & Commodity Macro Shock Simulator (Feature 4)
+// -------------------------------------------------------------
+let activeMacroScenario = 'crude_surge';
+
+async function runMacroStressScenario(scenarioKey) {
+  activeMacroScenario = scenarioKey;
+
+  // Update button active states
+  const btnCrude = document.getElementById("macroScenarioBtnCrude");
+  const btnInr = document.getElementById("macroScenarioBtnInr");
+  const btnRate = document.getElementById("macroScenarioBtnRate");
+
+  const activeStyle = "bg-amber-500/20 border border-amber-500/40 text-white font-bold";
+  const inactiveStyle = "bg-slate-950/70 border border-slate-800 text-slate-300 hover:text-white";
+
+  if (btnCrude) btnCrude.className = `macro-scenario-btn p-3.5 rounded-xl text-left transition space-y-1 ${scenarioKey === 'crude_surge' ? activeStyle : inactiveStyle}`;
+  if (btnInr) btnInr.className = `macro-scenario-btn p-3.5 rounded-xl text-left transition space-y-1 ${scenarioKey === 'inr_depreciation' ? activeStyle : inactiveStyle}`;
+  if (btnRate) btnRate.className = `macro-scenario-btn p-3.5 rounded-xl text-left transition space-y-1 ${scenarioKey === 'rbi_rate_hike' ? activeStyle : inactiveStyle}`;
+
+  const portfolioId = currentPortfolioId || (currentAuditData ? currentAuditData.portfolioId : null);
+  if (!portfolioId) return;
+
+  try {
+    const res = await fetch(`/api/theory-portfolios/macro-stress-test/${portfolioId}?scenario=${scenarioKey}`);
+    if (!res.ok) throw new Error("Failed to load macro stress test");
+    const data = await res.json();
+    renderMacroStressResult(data);
+  } catch (err) {
+    console.error("Error simulating macro stress test:", err);
+  }
+}
+
+function renderMacroStressResult(data) {
+  const titleEl = document.getElementById("macroStressTitle");
+  const descEl = document.getElementById("macroStressDesc");
+  const pnlDeltaEl = document.getElementById("macroPnlDelta");
+  const impactPctEl = document.getElementById("macroImpactPct");
+  const defensiveTextEl = document.getElementById("macroDefensiveText");
+  const beneficiariesListEl = document.getElementById("macroBeneficiariesList");
+  const squeezedListEl = document.getElementById("macroSqueezedList");
+
+  if (titleEl) titleEl.textContent = data.scenarioTitle;
+  if (descEl) descEl.textContent = `${data.scenarioDescription} (${data.macroTrigger})`;
+
+  if (pnlDeltaEl) {
+    const sign = data.portfolioEstimatedPnlImpact >= 0 ? '+' : '';
+    pnlDeltaEl.textContent = `${sign}₹${formatINR(Math.abs(data.portfolioEstimatedPnlImpact))}`;
+    pnlDeltaEl.className = data.portfolioEstimatedPnlImpact >= 0 ? "text-lg font-mono font-bold text-emerald-400" : "text-lg font-mono font-bold text-rose-400";
+  }
+
+  if (impactPctEl) {
+    const sign = data.portfolioEstimatedImpactPercent >= 0 ? '+' : '';
+    impactPctEl.textContent = `${sign}${data.portfolioEstimatedImpactPercent.toFixed(2)}%`;
+    impactPctEl.className = data.portfolioEstimatedImpactPercent >= 0 ? "text-lg font-mono font-bold text-emerald-400" : "text-lg font-mono font-bold text-rose-400";
+  }
+
+  if (defensiveTextEl) defensiveTextEl.textContent = data.defensiveActionRecommendation;
+
+  // Render Beneficiaries
+  if (beneficiariesListEl) {
+    if (!data.beneficiaries || data.beneficiaries.length === 0) {
+      beneficiariesListEl.innerHTML = `<div class="text-slate-400 text-[11px] p-2 text-center">No major beneficiaries in this scenario.</div>`;
+    } else {
+      beneficiariesListEl.innerHTML = data.beneficiaries.map(b => `
+        <div class="p-2.5 rounded-lg bg-slate-900 border border-emerald-500/20 flex flex-col sm:flex-row sm:items-center justify-between gap-1 text-[11px]">
+          <div>
+            <div class="font-bold text-white font-mono flex items-center space-x-1.5">
+              <span>${escapeHtml(b.ticker)}</span>
+              <span class="text-[10px] text-slate-400 font-sans font-normal">(${escapeHtml(b.sector)})</span>
+              <span class="text-[10px] px-1.5 py-0.2 rounded bg-emerald-500/20 text-emerald-300 font-bold">+${b.estimatedImpactPercent.toFixed(1)}%</span>
+            </div>
+            <div class="text-slate-400 text-[10px] mt-0.5">${escapeHtml(b.transmissionMechanism)}</div>
+          </div>
+          <div class="text-right flex-shrink-0 font-mono text-emerald-400 font-bold">
+            +₹${formatINR(b.estimatedPnlDelta)}
+          </div>
+        </div>
+      `).join('');
+    }
+  }
+
+  // Render Squeezed Holdings
+  if (squeezedListEl) {
+    if (!data.squeezedHoldings || data.squeezedHoldings.length === 0) {
+      squeezedListEl.innerHTML = `<div class="text-slate-400 text-[11px] p-2 text-center">No severe gross margin squeeze detected.</div>`;
+    } else {
+      squeezedListEl.innerHTML = data.squeezedHoldings.map(s => `
+        <div class="p-2.5 rounded-lg bg-slate-900 border border-rose-500/20 flex flex-col sm:flex-row sm:items-center justify-between gap-1 text-[11px]">
+          <div>
+            <div class="font-bold text-white font-mono flex items-center space-x-1.5">
+              <span>${escapeHtml(s.ticker)}</span>
+              <span class="text-[10px] text-slate-400 font-sans font-normal">(${escapeHtml(s.sector)})</span>
+              <span class="text-[10px] px-1.5 py-0.2 rounded bg-rose-500/20 text-rose-300 font-bold">${s.estimatedImpactPercent.toFixed(1)}%</span>
+            </div>
+            <div class="text-slate-400 text-[10px] mt-0.5">${escapeHtml(s.transmissionMechanism)}</div>
+          </div>
+          <div class="text-right flex-shrink-0 font-mono text-rose-400 font-bold">
+            -₹${formatINR(Math.abs(s.estimatedPnlDelta))}
+          </div>
+        </div>
+      `).join('');
+    }
+  }
+}
+
+window.loadPortfolioTheoryAudit = loadPortfolioTheoryAudit;
+window.renderPortfolioTheoryAudit = renderPortfolioTheoryAudit;
+window.filterAuditTable = filterAuditTable;
+window.renderPortfolioAuditTable = renderPortfolioAuditTable;
+window.openWhatIfSwapModal = openWhatIfSwapModal;
+window.openWhatIfSwapWithPick = openWhatIfSwapWithPick;
+window.closeWhatIfSwapModal = closeWhatIfSwapModal;
+window.updateSwapSimulationPreview = updateSwapSimulationPreview;
+window.executeSwapInTradeModal = executeSwapInTradeModal;
+window.switchTheoryHubTab = switchTheoryHubTab;
+window.loadCorrelationMatrix = loadCorrelationMatrix;
+window.runMacroStressScenario = runMacroStressScenario;
 
 

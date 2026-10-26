@@ -3,18 +3,38 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Indian Markets Portfolio Rebalancer & Advisory Engine</title>
+  <title>MarketCompass - Institutional Stock Market Navigation &amp; Portfolio Intelligence</title>
   <script>
+    window.onerror = function(msg, url, line, col, error) {
+      var d = document.createElement('div');
+      d.id = 'fatalJsError';
+      d.setAttribute('style', 'position:fixed;top:0;left:0;right:0;z-index:99999;background:#b91c1c;color:#fff;padding:16px;font-family:monospace;font-size:14px;font-weight:bold;');
+      d.textContent = 'FATAL JS ERROR: ' + msg + ' at line ' + line + ':' + col;
+      if (document.body) document.body.appendChild(d);
+      else window.addEventListener('DOMContentLoaded', function() { document.body.appendChild(d); });
+    };
+  </script>
+  <script>
+    window.tailwind = window.tailwind || {};
     tailwind.config = {
       darkMode: 'class',
       theme: {
         extend: {
           colors: {
             brand: {
-              50: '#fffbeb',
-              500: '#f59e0b',
-              600: '#d97706',
-              700: '#b45309',
+              50: '#f0fdfa',
+              100: '#ccfbf1',
+              400: '#2dd4bf',
+              500: '#06b6d4',
+              600: '#0891b2',
+              700: '#0e7490',
+            },
+            midnight: {
+              base: '#060c18',
+              card: '#0a1222',
+              elevated: '#0f1b32',
+              border: '#16233d',
+              highlight: '#1e3256'
             }
           }
         }
@@ -25,8 +45,542 @@
   <script src="/lightweight-charts.js"></script>
   <link rel="preconnect" href="https://cdnjs.cloudflare.com">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
-  <style>
-    /* Privacy / Stealth Mode: Blurs sensitive financial amounts and position sizes */
+    <style>
+    :root {
+      --bg-canvas: #070d18;
+      --bg-card: #0d1728;
+      --bg-subtle: #091220;
+      --bg-elevated: #132238;
+      --border-color: #17253d;
+      --border-highlight: #23385e;
+      --text-heading: #ffffff;
+      --text-primary: #e2e8f0;
+      --text-muted: #94a3b8;
+      --input-bg: #091222;
+      --input-border: #1b2d4b;
+      --header-bg: rgba(7, 13, 24, 0.94);
+      --card-shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.35);
+    }
+
+    /* 1. CURRENT DARK THEME (Modern Midnight Navy) */
+    body.theme-dark {
+      --bg-canvas: #070d18;
+      --bg-card: #0d1728;
+      --bg-subtle: #091220;
+      --bg-elevated: #132238;
+      --border-color: #17253d;
+      --border-highlight: #23385e;
+      --text-heading: #ffffff;
+      --text-primary: #e2e8f0;
+      --text-muted: #94a3b8;
+      --input-bg: #091222;
+      --input-border: #1b2d4b;
+      --header-bg: rgba(7, 13, 24, 0.94);
+      --card-shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.35);
+    }
+
+    /* 2. EYE COMFORT THEME (Warm Matte Charcoal & Zinc - Zero Blue-Light, Low Visual Fatigue) */
+    body.theme-eye-comfort {
+      --bg-canvas: #16161a;
+      --bg-card: #202026;
+      --bg-subtle: #19191f;
+      --bg-elevated: #272732;
+      --border-color: #33333f;
+      --border-highlight: #444454;
+      --text-heading: #f4f4f6;
+      --text-primary: #d4d4d8;
+      --text-muted: #a1a1aa;
+      --input-bg: #18181e;
+      --input-border: #33333f;
+      --header-bg: rgba(22, 22, 26, 0.96);
+      --card-shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.35);
+    }
+
+    /* 3. LIGHT THEME (Crisp Institutional Pure White & Slate Ergonomics) */
+    body.theme-light {
+      --bg-canvas: #f8fafc;
+      --bg-card: #ffffff;
+      --bg-subtle: #f1f5f9;
+      --bg-elevated: #ffffff;
+      --border-color: #e2e8f0;
+      --border-highlight: #cbd5e1;
+      --text-heading: #0f172a;
+      --text-primary: #1e293b;
+      --text-muted: #64748b;
+      --input-bg: #ffffff;
+      --input-border: #cbd5e1;
+      --header-bg: rgba(255, 255, 255, 0.96);
+      --card-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.05), 0 1px 2px -1px rgba(0, 0, 0, 0.05);
+    }
+
+    /* Universal Body Backgrounds */
+    body {
+      background-color: var(--bg-canvas) !important;
+      color: var(--text-primary) !important;
+      transition: background-color 0.15s ease, color 0.15s ease;
+    }
+
+    @keyframes flowDash {
+      to {
+        stroke-dashoffset: -24;
+      }
+    }
+    .flow-dash-anim {
+      stroke-dasharray: 6 6;
+      animation: flowDash 1.2s linear infinite;
+    }
+    @keyframes pulseGlowGreen {
+      0%, 100% { box-shadow: 0 0 15px rgba(16, 185, 129, 0.35); border-color: rgba(16, 185, 129, 0.7); }
+      50% { box-shadow: 0 0 32px rgba(16, 185, 129, 0.85); border-color: rgba(52, 211, 153, 1); }
+    }
+    @keyframes pulseGlowRed {
+      0%, 100% { box-shadow: 0 0 15px rgba(244, 63, 94, 0.35); border-color: rgba(244, 63, 94, 0.7); }
+      50% { box-shadow: 0 0 32px rgba(244, 63, 94, 0.85); border-color: rgba(251, 113, 133, 1); }
+    }
+    .shock-glow-beneficiary {
+      animation: pulseGlowGreen 2s infinite ease-in-out;
+    }
+    .shock-glow-squeezed {
+      animation: pulseGlowRed 2s infinite ease-in-out;
+    }
+    body.theme-light,
+    body.theme-light.bg-\[\#060c18\] {
+      background-color: #f8fafc !important;
+      color: #1e293b !important;
+    }
+    body.theme-eye-comfort,
+    body.theme-eye-comfort.bg-\[\#060c18\] {
+      background-color: #16161a !important;
+      color: #d4d4d8 !important;
+    }
+    body.theme-dark {
+      background-color: #070d18 !important;
+      color: #e2e8f0 !important;
+    }
+
+    header {
+      background-color: var(--header-bg) !important;
+      border-color: var(--border-color) !important;
+    }
+
+    /* ==================================================== */
+    /* LIGHT THEME (100% PURGE OF DARK ARTIFACTS & BLOCKS)  */
+    /* ==================================================== */
+
+    /* Header & Navigation in Light Mode */
+    body.theme-light header,
+    body.theme-light header[class*="bg-"] {
+      background-color: rgba(255, 255, 255, 0.96) !important;
+      border-color: #e2e8f0 !important;
+      box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.04) !important;
+    }
+    body.theme-light nav[class*="bg-slate-900"],
+    body.theme-light nav[class*="themed-elevated"] {
+      background-color: #f1f5f9 !important;
+      border-color: #e2e8f0 !important;
+    }
+    body.theme-light .nav-tab:not([class*="bg-teal"]) {
+      color: #64748b !important;
+      background-color: transparent !important;
+    }
+    body.theme-light .nav-tab:not([class*="bg-teal"]):hover {
+      color: #0f172a !important;
+      background-color: #e2e8f0 !important;
+    }
+    body.theme-light #navPortfolioCountBadge {
+      background-color: #ffffff !important;
+      border-color: #cbd5e1 !important;
+      color: #334155 !important;
+    }
+
+    /* Segmented Theme Switcher in Light Mode */
+    body.theme-light div[role="radiogroup"],
+    body.theme-light div[role="radiogroup"][class*="bg-slate-900"] {
+      background-color: #f1f5f9 !important;
+      border-color: #e2e8f0 !important;
+    }
+
+    /* Header Action Buttons & Dropdown */
+    body.theme-light #btnTogglePrivacy,
+    body.theme-light #btnOpenAlertsModal,
+    body.theme-light #btnHeaderMore,
+    body.theme-light button[class*="bg-slate-900"] {
+      background-color: #ffffff !important;
+      border-color: #e2e8f0 !important;
+      color: #475569 !important;
+    }
+    body.theme-light #btnTogglePrivacy:hover,
+    body.theme-light #btnOpenAlertsModal:hover,
+    body.theme-light #btnHeaderMore:hover,
+    body.theme-light button[class*="bg-slate-900"]:hover {
+      background-color: #f8fafc !important;
+      border-color: #cbd5e1 !important;
+      color: #0f172a !important;
+    }
+    body.theme-light #headerMoreDropdown,
+    body.theme-light div[id$="Dropdown"],
+    body.theme-light .dropdown-menu {
+      background-color: #ffffff !important;
+      border-color: #e2e8f0 !important;
+      box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.05) !important;
+    }
+    body.theme-light #headerMoreDropdown button,
+    body.theme-light #headerMoreDropdown a {
+      color: #334155 !important;
+    }
+    body.theme-light #headerMoreDropdown button:hover,
+    body.theme-light #headerMoreDropdown a:hover {
+      background-color: #f1f5f9 !important;
+      color: #0f172a !important;
+    }
+
+    /* Universal Pure White Cards & Containers (All Opacity Variants Matched) */
+    body.theme-light .themed-card,
+    body.theme-light [class*="bg-[#0a1222]"],
+    body.theme-light [class*="bg-[#0d1627]"],
+    body.theme-light [class*="bg-[#0b1220]"],
+    body.theme-light [class*="bg-[#080e1b]"],
+    body.theme-light [class*="bg-[#0a101d]"],
+    body.theme-light [class*="bg-[#050b14]"],
+    body.theme-light [class*="bg-[#090d16]"],
+    body.theme-light [class*="bg-slate-900"],
+    body.theme-light .w-full[class*="bg-[#0a1222]"],
+    body.theme-light .themed-elevated {
+      background-color: #ffffff !important;
+      border-color: #e2e8f0 !important;
+      box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.05), 0 1px 2px -1px rgba(0, 0, 0, 0.05) !important;
+    }
+
+    /* Nested Sub-Wells, Metric Tiles, KPI Cards & Deep Wells */
+    body.theme-light [class*="bg-[#060c18]"],
+    body.theme-light [class*="bg-[#070d18]"],
+    body.theme-light [class*="bg-[#091120]"],
+    body.theme-light [class*="bg-[#0f1b32]"],
+    body.theme-light [class*="bg-[#16233d]"],
+    body.theme-light [class*="bg-slate-950"],
+    body.theme-light [class*="bg-slate-800"],
+    body.theme-light [class*="bg-slate-700"] {
+      background-color: #f8fafc !important;
+      border-color: #e2e8f0 !important;
+    }
+
+    /* Morning Briefing Card in Light Mode */
+    body.theme-light #morningBriefingSection,
+    body.theme-light div[id="morningBriefingSection"] {
+      background-image: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%) !important;
+      border-color: #cbd5e1 !important;
+      box-shadow: 0 4px 16px -2px rgba(0, 0, 0, 0.06) !important;
+    }
+    body.theme-light #morningBriefingSection [class*="bg-[#060c18]"] {
+      background-color: #ffffff !important;
+      border-color: #e2e8f0 !important;
+      box-shadow: 0 1px 2px rgba(0, 0, 0, 0.03) !important;
+    }
+
+    /* All Dark Borders Cleared in Light Mode */
+    body.theme-light [class*="border-[#16233d]"],
+    body.theme-light [class*="border-[#17253d]"],
+    body.theme-light [class*="border-[#1f3256]"],
+    body.theme-light [class*="border-[#23385e]"],
+    body.theme-light [class*="border-slate-800"],
+    body.theme-light [class*="border-slate-700"] {
+      border-color: #e2e8f0 !important;
+    }
+
+    /* All Dark Hovers Cleared in Light Mode */
+    body.theme-light [class*="hover:bg-[#0f1b32]"]:hover,
+    body.theme-light [class*="hover:bg-[#16233d]"]:hover,
+    body.theme-light [class*="hover:bg-slate-800"]:hover,
+    body.theme-light [class*="hover:bg-slate-700"]:hover,
+    body.theme-light [class*="hover:bg-slate-950"]:hover {
+      background-color: #f1f5f9 !important;
+      color: #0f172a !important;
+    }
+
+    /* Form Inputs, Selects, and Textareas in Light Mode */
+    body.theme-light input:not([type="checkbox"]):not([type="radio"]),
+    body.theme-light select,
+    body.theme-light textarea,
+    body.theme-light [class*="bg-[#060c18]"] input,
+    body.theme-light [class*="bg-slate-950"] input {
+      background-color: #ffffff !important;
+      color: #0f172a !important;
+      border-color: #cbd5e1 !important;
+    }
+    body.theme-light input:focus,
+    body.theme-light select:focus,
+    body.theme-light textarea:focus {
+      border-color: #0284c7 !important;
+      box-shadow: 0 0 0 2px rgba(2, 132, 199, 0.15) !important;
+    }
+    body.theme-light input::placeholder,
+    body.theme-light textarea::placeholder {
+      color: #94a3b8 !important;
+    }
+
+    /* High-Contrast Typography */
+    body.theme-light .text-white,
+    body.theme-light h1,
+    body.theme-light h2,
+    body.theme-light h3,
+    body.theme-light h4,
+    body.theme-light h5,
+    body.theme-light strong.text-white,
+    body.theme-light span.text-white,
+    body.theme-light div.text-white {
+      color: #0f172a !important;
+    }
+    body.theme-light .text-slate-100,
+    body.theme-light .text-slate-200,
+    body.theme-light .text-slate-300 {
+      color: #334155 !important;
+    }
+    body.theme-light .text-slate-400,
+    body.theme-light .text-slate-500 {
+      color: #64748b !important;
+    }
+
+    /* Fix Cyan & Teal Text on White */
+    body.theme-light .text-cyan-400,
+    body.theme-light .text-cyan-300,
+    body.theme-light .text-teal-400,
+    body.theme-light .text-teal-300 {
+      color: #0284c7 !important;
+    }
+    body.theme-light [class*="bg-cyan-500/"],
+    body.theme-light [class*="bg-teal-500/"] {
+      background-color: #f0f9ff !important;
+      color: #0284c7 !important;
+      border-color: #bae6fd !important;
+    }
+
+    /* Fix Emerald & Gains: Deep Forest Green (#047857) on Soft Mint (#ecfdf5) */
+    body.theme-light .text-emerald-400,
+    body.theme-light .text-emerald-300 {
+      color: #047857 !important;
+    }
+    body.theme-light [class*="bg-emerald-500/"],
+    body.theme-light [class*="bg-emerald-950/"] {
+      background-color: #ecfdf5 !important;
+      color: #047857 !important;
+      border-color: #a7f3d0 !important;
+    }
+
+    /* Fix Rose & Losses: Deep Crimson (#b91c1c) on Soft Rose (#fef2f2) */
+    body.theme-light .text-rose-400,
+    body.theme-light .text-rose-300 {
+      color: #b91c1c !important;
+    }
+    body.theme-light [class*="bg-rose-500/"],
+    body.theme-light [class*="bg-rose-950/"] {
+      background-color: #fef2f2 !important;
+      color: #b91c1c !important;
+      border-color: #fecaca !important;
+    }
+
+    /* Fix Amber & Warnings: Warm Saddle (#92400e) on Soft Honey (#fffbeb) */
+    body.theme-light .text-amber-400,
+    body.theme-light .text-amber-300 {
+      color: #92400e !important;
+    }
+    body.theme-light [class*="bg-amber-500/"],
+    body.theme-light [class*="bg-amber-950/"] {
+      background-color: #fffbeb !important;
+      color: #92400e !important;
+      border-color: #fde68a !important;
+    }
+
+    /* Fix Indigo & Market Cap Badges */
+    body.theme-light .text-indigo-400,
+    body.theme-light .text-indigo-300 {
+      color: #4338ca !important;
+    }
+    body.theme-light [class*="bg-indigo-500/"],
+    body.theme-light [class*="bg-indigo-950/"] {
+      background-color: #eef2ff !important;
+      color: #4338ca !important;
+      border-color: #c7d2fe !important;
+    }
+
+    /* Table in Light Mode: Crisp White & Subtle Alternating Zebra */
+    body.theme-light thead,
+    body.theme-light thead tr,
+    body.theme-light thead th,
+    body.theme-light thead th[class*="bg-"] {
+      background-color: #f1f5f9 !important;
+      color: #475569 !important;
+      border-color: #cbd5e1 !important;
+      font-weight: 700 !important;
+    }
+    body.theme-light thead th:hover {
+      background-color: #e2e8f0 !important;
+      color: #0f172a !important;
+    }
+    body.theme-light tbody tr {
+      border-color: #f1f5f9 !important;
+      background-color: #ffffff !important;
+    }
+    body.theme-light tbody tr:nth-child(even) {
+      background-color: #fafbfc !important;
+    }
+    body.theme-light tbody tr:hover {
+      background-color: #f1f5f9 !important;
+    }
+    body.theme-light tbody tr .group:hover .group-hover\:text-cyan-300 {
+      color: #0284c7 !important;
+    }
+    body.theme-light tbody tr span[class*="bg-[#060c18]"] {
+      background-color: #f1f5f9 !important;
+      color: #334155 !important;
+      border-color: #cbd5e1 !important;
+    }
+
+    /* Donut Chart Legend & Centers in Light Mode */
+    body.theme-light #allocSectorCenterName { color: #0284c7 !important; }
+    body.theme-light #allocMcapCenterName { color: #4338ca !important; }
+    body.theme-light #allocSectorCenterPct,
+    body.theme-light #allocMcapCenterPct { color: #0f172a !important; }
+    body.theme-light #allocSectorCenterLabel,
+    body.theme-light #allocMcapCenterLabel,
+    body.theme-light #allocSectorCenterVal,
+    body.theme-light #allocMcapCenterVal { color: #64748b !important; }
+    body.theme-light #legendSectorPie > div,
+    body.theme-light #legendMarketCapPie > div {
+      background-color: #ffffff !important;
+      border-color: #e2e8f0 !important;
+    }
+    body.theme-light #legendSectorPie > div:hover,
+    body.theme-light #legendMarketCapPie > div:hover {
+      background-color: #f8fafc !important;
+      border-color: #cbd5e1 !important;
+    }
+    body.theme-light #legendSectorPie > div span.text-white,
+    body.theme-light #legendMarketCapPie > div span.text-white { color: #0f172a !important; }
+    body.theme-light #legendSectorPie > div span.text-slate-400,
+    body.theme-light #legendMarketCapPie > div span.text-slate-400 { color: #64748b !important; }
+
+    /* Modals & Dialogs in Light Mode */
+    body.theme-light .fixed.inset-0,
+    body.theme-light div[id$="Modal"].fixed.inset-0 {
+      background-color: rgba(15, 23, 42, 0.45) !important;
+      backdrop-filter: blur(4px) !important;
+    }
+    body.theme-light .fixed.inset-0 > div:not([class*="pointer-events-none"]) {
+      background-color: #ffffff !important;
+      border-color: #e2e8f0 !important;
+      color: #0f172a !important;
+      box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.15) !important;
+    }
+    body.theme-light .fixed.inset-0 [class*="bg-slate-950"],
+    body.theme-light .fixed.inset-0 [class*="bg-[#060c18]"],
+    body.theme-light .fixed.inset-0 [class*="border-b"],
+    body.theme-light .fixed.inset-0 [class*="border-t"] {
+      background-color: #f8fafc !important;
+      border-color: #e2e8f0 !important;
+    }
+    body.theme-light .fixed.inset-0 button.bg-slate-800,
+    body.theme-light .fixed.inset-0 button[class*="bg-slate-800"] {
+      background-color: #f1f5f9 !important;
+      border-color: #cbd5e1 !important;
+      color: #475569 !important;
+    }
+    body.theme-light .fixed.inset-0 button.bg-slate-800:hover,
+    body.theme-light .fixed.inset-0 button[class*="bg-slate-800"]:hover {
+      background-color: #e2e8f0 !important;
+      color: #0f172a !important;
+    }
+
+    /* Soften Intense Dark Shadows in Light Mode */
+    body.theme-light [class*="shadow-cyan"],
+    body.theme-light [class*="shadow-emerald"],
+    body.theme-light [class*="supply-glow"] {
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06) !important;
+    }
+
+    /* ==================================================== */
+    /* EYE COMFORT THEME (Warm Matte Charcoal & Zinc)       */
+    /* ==================================================== */
+    body.theme-eye-comfort .themed-card,
+    body.theme-eye-comfort [class*="bg-[#0a1222]"],
+    body.theme-eye-comfort [class*="bg-[#0d1627]"],
+    body.theme-eye-comfort [class*="bg-[#0b1220]"],
+    body.theme-eye-comfort [class*="bg-[#080e1b]"],
+    body.theme-eye-comfort [class*="bg-[#0a101d]"],
+    body.theme-eye-comfort [class*="bg-[#050b14]"],
+    body.theme-eye-comfort [class*="bg-[#090d16]"],
+    body.theme-eye-comfort [class*="bg-slate-900"],
+    body.theme-eye-comfort .themed-elevated {
+      background-color: #202026 !important;
+      border-color: #33333f !important;
+      box-shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.35);
+    }
+    body.theme-eye-comfort [class*="bg-[#060c18]"],
+    body.theme-eye-comfort [class*="bg-[#070d18]"],
+    body.theme-eye-comfort [class*="bg-[#091120]"],
+    body.theme-eye-comfort [class*="bg-[#0f1b32]"],
+    body.theme-eye-comfort [class*="bg-[#16233d]"],
+    body.theme-eye-comfort [class*="bg-slate-950"],
+    body.theme-eye-comfort [class*="bg-slate-800"],
+    body.theme-eye-comfort [class*="bg-slate-700"] {
+      background-color: #19191f !important;
+      border-color: #2b2b35 !important;
+    }
+    body.theme-eye-comfort [class*="border-[#16233d]"],
+    body.theme-eye-comfort [class*="border-[#17253d]"],
+    body.theme-eye-comfort [class*="border-slate-800"],
+    body.theme-eye-comfort [class*="border-slate-700"] {
+      border-color: #33333f !important;
+    }
+    body.theme-eye-comfort .text-white,
+    body.theme-eye-comfort h1,
+    body.theme-eye-comfort h2,
+    body.theme-eye-comfort h3,
+    body.theme-eye-comfort h4,
+    body.theme-eye-comfort h5 {
+      color: #f4f4f6 !important;
+    }
+    body.theme-eye-comfort .text-slate-100,
+    body.theme-eye-comfort .text-slate-200,
+    body.theme-eye-comfort .text-slate-300 {
+      color: #d4d4d8 !important;
+    }
+    body.theme-eye-comfort .text-slate-400,
+    body.theme-eye-comfort .text-slate-500 {
+      color: #a1a1aa !important;
+    }
+    body.theme-eye-comfort [class*="hover:bg-[#0f1b32]"]:hover,
+    body.theme-eye-comfort [class*="hover:bg-[#16233d]"]:hover,
+    body.theme-eye-comfort [class*="hover:bg-slate-800"]:hover {
+      background-color: #272731 !important;
+    }
+    body.theme-eye-comfort thead,
+    body.theme-eye-comfort thead th {
+      background-color: #19191f !important;
+      color: #a1a1aa !important;
+      border-color: #33333f !important;
+    }
+    body.theme-eye-comfort tbody tr {
+      border-color: #2b2b35 !important;
+      background-color: #202026 !important;
+    }
+    body.theme-eye-comfort tbody tr:nth-child(even) {
+      background-color: #1d1d23 !important;
+    }
+    body.theme-eye-comfort tbody tr:hover {
+      background-color: #272731 !important;
+    }
+    body.theme-eye-comfort input:not([type="checkbox"]):not([type="radio"]),
+    body.theme-eye-comfort select,
+    body.theme-eye-comfort textarea {
+      background-color: #18181e !important;
+      color: #f4f4f6 !important;
+      border-color: #33333f !important;
+    }
+
+    /* Common Ergonomics & Scrollbars */
+    .font-mono, td, [id^="stat"], .kpi-number, [id*="Price"], [id*="PnL"] {
+      font-variant-numeric: tabular-nums;
+    }
     body.privacy-mode .privacy-mask {
       filter: blur(8px) grayscale(100%) !important;
       user-select: none !important;
@@ -36,82 +590,175 @@
     }
     body.privacy-mode #statPnLBadge {
       filter: blur(6px) grayscale(100%) !important;
-      background-color: rgb(30 41 59 / 0.8) !important;
+      background-color: rgb(15 27 50 / 0.8) !important;
       color: rgb(148 163 184) !important;
-      border-color: rgb(51 65 85 / 0.6) !important;
+      border-color: rgb(30 50 86 / 0.6) !important;
     }
-    /* Calm, unobtrusive scrollbars */
     ::-webkit-scrollbar {
       width: 6px;
       height: 6px;
     }
     ::-webkit-scrollbar-track {
-      background: #090d16;
+      background: var(--bg-canvas);
     }
     ::-webkit-scrollbar-thumb {
-      background: #1e293b;
+      background: var(--border-color);
       border-radius: 9999px;
     }
     ::-webkit-scrollbar-thumb:hover {
-      background: #334155;
+      background: var(--border-highlight);
+    }
+  
+    /* Autocomplete Search Suggestions Styling */
+    .search-suggestion-item {
+      padding: 0.625rem 0.875rem;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      transition: background-color 0.15s ease;
+    }
+    .search-suggestion-item:hover,
+    .search-suggestion-item.active {
+      background-color: #132238;
+    }
+    body.theme-light #holdingsSearchSuggestions,
+    body.theme-light #inspectorTickerSuggestions {
+      background-color: #ffffff !important;
+      border-color: #e2e8f0 !important;
+      box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.05) !important;
+    }
+    body.theme-light .search-suggestion-item:hover,
+    body.theme-light .search-suggestion-item.active {
+      background-color: #f1f5f9 !important;
+    }
+    body.theme-light .search-suggestion-item span.text-white {
+      color: #0f172a !important;
+    }
+    body.theme-light .search-suggestion-item span.text-slate-400 {
+      color: #64748b !important;
+    }
+    body.theme-eye-comfort #holdingsSearchSuggestions,
+    body.theme-eye-comfort #inspectorTickerSuggestions {
+      background-color: #202026 !important;
+      border-color: #33333f !important;
+    }
+    body.theme-eye-comfort .search-suggestion-item:hover,
+    body.theme-eye-comfort .search-suggestion-item.active {
+      background-color: #272731 !important;
     }
   </style>
 </head>
-<body class="bg-[#090d16] text-slate-100 min-h-screen selection:bg-teal-500/20 selection:text-teal-200">
+<body class="text-slate-100 min-h-screen selection:bg-cyan-500/20 selection:text-cyan-200">
   <!-- Top Navigation -->
-  <header class="border-b border-slate-800 bg-slate-950/90 backdrop-blur sticky top-0 z-50">
-    <div class="w-full max-w-[1720px] mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
-      <div class="flex items-center space-x-3">
-        <div class="w-9 h-9 rounded-xl bg-gradient-to-tr from-teal-500/20 to-emerald-500/20 border border-teal-500/30 flex items-center justify-center text-teal-400 shadow-sm">
-          <i class="fa-solid fa-indian-rupee-sign text-sm"></i>
+  <!-- Streamlined High-Performance Header -->
+  <header class="border-b border-slate-800/80 themed-border bg-[#070d18]/95 backdrop-blur-md sticky top-0 z-50">
+    <div class="w-full max-w-[1720px] mx-auto px-4 sm:px-6 lg:px-8 h-14 flex items-center justify-between gap-4">
+      
+      <!-- Brand & Live Pulse -->
+      <div class="flex items-center space-x-2.5 flex-shrink-0">
+        <div class="w-8 h-8 rounded-lg bg-teal-500/15 border border-teal-500/30 flex items-center justify-center text-teal-400 font-bold text-sm shadow-xs">
+          <i class="fa-solid fa-compass"></i>
         </div>
-        <div>
-          <h1 class="text-base font-bold tracking-tight text-white flex items-center">
-            Portfolio Rebalancer
-            <span id="liveStatusBadge" class="ml-2.5 inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-medium bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
-              <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 mr-1.5"></span>
-              NSE Live
-            </span>
-          </h1>
-          <p class="text-xs text-slate-400">Systematic Asset Allocation & Wealth Diagnostics</p>
+        <div class="flex items-center space-x-2">
+          <span class="text-sm font-bold tracking-tight text-white flex items-center space-x-1.5">
+            <span>MarketCompass</span>
+            <span class="text-[9px] px-1.5 py-0.2 rounded font-mono font-bold bg-cyan-500/15 text-cyan-300 border border-cyan-500/30">NAVIGATOR</span>
+          </span>
+          <span id="liveStatusBadge" class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-mono font-medium bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+            <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 mr-1.5 animate-pulse"></span>
+            NSE Live
+          </span>
         </div>
       </div>
 
-      <!-- SPA Primary Navigation Tabs (Portfolio / Manage / Discover) -->
-      <nav class="hidden md:flex items-center space-x-1 bg-slate-900/80 p-1 rounded-xl border border-slate-800/60 shadow-inner">
-        <button id="navTabPortfolio" onclick="navigateTo('portfolio')" class="nav-tab px-3.5 py-1.5 rounded-lg text-xs font-semibold flex items-center space-x-2 transition bg-teal-500/15 text-teal-300 border border-teal-500/30 shadow-sm">
-          <i class="fa-solid fa-briefcase"></i>
-          <span>My Portfolio</span>
-          <span id="navPortfolioCountBadge" class="ml-1 px-1.5 py-0.5 text-[10px] bg-slate-800 text-slate-300 rounded-full font-mono">--</span>
+      <!-- Centered Modern Navigation Pills -->
+      <nav class="hidden md:flex items-center p-1 rounded-xl bg-slate-900/60 themed-elevated border border-slate-800/80 space-x-1 shadow-inner">
+        <button id="navTabPortfolio" onclick="navigateTo('portfolio')" class="nav-tab px-3.5 py-1 rounded-lg text-xs font-semibold flex items-center space-x-1.5 transition bg-teal-500/15 text-teal-300 border border-teal-500/30 shadow-xs">
+          <i class="fa-solid fa-briefcase text-[11px]"></i>
+          <span>Portfolio</span>
+          <span id="navPortfolioCountBadge" class="ml-1 px-1.5 py-0.2 text-[10px] bg-slate-950/80 themed-card text-slate-300 rounded-full font-mono border border-slate-800">--</span>
         </button>
-        <button id="navTabManage" onclick="navigateTo('manage')" class="nav-tab px-3.5 py-1.5 rounded-lg text-xs font-semibold flex items-center space-x-2 transition text-slate-400 hover:text-slate-200 hover:bg-slate-800/40 border border-transparent">
-          <i class="fa-solid fa-sliders"></i>
-          <span>Manage & Rebalance</span>
+        <button id="navTabManage" onclick="navigateTo('manage')" class="nav-tab px-3.5 py-1 rounded-lg text-xs font-semibold flex items-center space-x-1.5 transition text-slate-400 hover:text-slate-200 hover:bg-slate-800/50 border border-transparent">
+          <i class="fa-solid fa-cloud-arrow-up text-[11px]"></i>
+          <span>Sync &amp; Trades</span>
         </button>
-        <button id="navTabDiscover" onclick="navigateTo('discover')" class="nav-tab px-3.5 py-1.5 rounded-lg text-xs font-semibold flex items-center space-x-2 transition text-slate-400 hover:text-slate-200 hover:bg-slate-800/40 border border-transparent">
-          <i class="fa-solid fa-compass"></i>
-          <span>Discover Stocks</span>
+        <button id="navTabDiscover" onclick="navigateTo('discover')" class="nav-tab px-3.5 py-1 rounded-lg text-xs font-semibold flex items-center space-x-1.5 transition text-slate-400 hover:text-slate-200 hover:bg-slate-800/50 border border-transparent">
+          <i class="fa-solid fa-compass text-[11px]"></i>
+          <span>Discover</span>
+        </button>
+        <button id="navTabTheories" onclick="navigateTo('theories')" class="nav-tab px-3.5 py-1 rounded-lg text-xs font-semibold flex items-center space-x-1.5 transition text-slate-400 hover:text-slate-200 hover:bg-slate-800/50 border border-transparent">
+          <i class="fa-solid fa-graduation-cap text-[11px]"></i>
+          <span>Theory Lab</span>
+          <span class="ml-1 px-1.5 py-0.2 text-[9px] bg-purple-500/20 text-purple-300 rounded font-mono border border-purple-500/30">MOCK</span>
         </button>
       </nav>
 
-      <div class="flex items-center space-x-2">
-        <!-- Privacy Eye Toggle Button -->
-        <button id="btnTogglePrivacy" class="text-xs bg-slate-900/80 hover:bg-slate-800 text-slate-300 hover:text-white border border-slate-700/60 px-3 py-1.5 rounded-lg flex items-center space-x-1.5 transition font-medium shadow-sm" title="Toggle Privacy Mode (Hide financial values for safe screenshots)">
-          <i id="privacyEyeIcon" class="fa-solid fa-eye text-teal-400"></i>
-          <span id="privacyBtnText" class="hidden sm:inline">Privacy Mode</span>
+      <!-- Right Utility Actions Cluster -->
+      <div class="flex items-center space-x-2 flex-shrink-0">
+        <!-- 3-Way Segmented Theme Switcher (Dark / Eye Comfort / Light) -->
+        <div class="inline-flex p-0.5 rounded-xl bg-slate-900/80 themed-elevated border border-slate-800/80 text-xs font-medium" role="radiogroup" aria-label="Theme Selection">
+          <button id="themeBtnDark" onclick="applyAppTheme('dark')" class="theme-opt-btn px-2.5 py-1 rounded-lg text-[11px] font-medium flex items-center space-x-1 text-teal-300 bg-teal-500/15 border border-teal-500/30 transition" title="Current Dark Theme (Modern Midnight)">
+            <i class="fa-solid fa-moon text-[10px]"></i>
+            <span class="hidden xl:inline">Dark</span>
+          </button>
+          <button id="themeBtnEyeComfort" onclick="applyAppTheme('eye-comfort')" class="theme-opt-btn px-2.5 py-1 rounded-lg text-[11px] font-medium flex items-center space-x-1 text-slate-400 hover:text-slate-200 transition" title="Eye Comfort Theme (Warm Matte Charcoal - Low Blue-Light)">
+            <i class="fa-solid fa-mug-hot text-[10px]"></i>
+            <span class="hidden xl:inline">Eye Comfort</span>
+          </button>
+          <button id="themeBtnLight" onclick="applyAppTheme('light')" class="theme-opt-btn px-2.5 py-1 rounded-lg text-[11px] font-medium flex items-center space-x-1 text-slate-400 hover:text-slate-200 transition" title="Light Theme (Clean White Canvas)">
+            <i class="fa-solid fa-sun text-[10px]"></i>
+            <span class="hidden xl:inline">Light</span>
+          </button>
+        </div>
+
+        <div class="h-4 w-px bg-slate-800 hidden sm:block"></div>
+
+        <!-- Privacy Eye Toggle -->
+        <button id="btnTogglePrivacy" class="p-2 sm:px-2.5 sm:py-1 rounded-lg bg-slate-900/80 themed-card hover:bg-slate-800/80 border border-slate-800 text-xs font-medium text-slate-300 hover:text-white flex items-center space-x-1.5 transition" title="Toggle Privacy Mode (Mask financial balances)">
+          <i id="privacyEyeIcon" class="fa-solid fa-eye text-teal-400 text-xs"></i>
+          <span id="privacyBtnText" class="hidden lg:inline text-xs">Privacy</span>
         </button>
+
+        <!-- 9-5 Work Hours Focus Shield Toggle -->
+        
+
         <!-- Price Alerts Surveillance Center -->
-        <button id="btnOpenAlertsModal" onclick="openAlertsModal()" class="text-xs bg-slate-900/80 hover:bg-slate-800 text-slate-300 hover:text-white border border-slate-700/60 px-3 py-1.5 rounded-lg flex items-center space-x-1.5 transition font-medium shadow-sm" title="Stock Price Alerts & Market Surveillance">
-          <i class="fa-solid fa-bell text-amber-400"></i>
-          <span class="hidden sm:inline">Price Alerts</span>
-          <span id="headerAlertsCountBadge" class="hidden px-1.5 py-0.2 rounded-full text-[10px] font-mono font-bold bg-amber-500/20 text-amber-300 border border-amber-500/30">0</span>
+        <button id="btnOpenAlertsModal" onclick="openAlertsModal()" class="p-2 sm:px-2.5 sm:py-1 rounded-lg bg-slate-900/80 themed-card hover:bg-slate-800/80 border border-slate-800 text-xs font-medium text-slate-300 hover:text-white flex items-center space-x-1.5 transition relative" title="Stock Price Alerts">
+          <i class="fa-solid fa-bell text-amber-400 text-xs"></i>
+          <span class="hidden lg:inline text-xs">Alerts</span>
+          <span id="headerAlertsCountBadge" class="hidden px-1.5 py-0.2 rounded-full text-[9px] font-mono font-bold bg-amber-500/20 text-amber-300 border border-amber-500/30">0</span>
         </button>
+
+        <!-- More Options Dropdown Menu (⋮) -->
+        <div class="relative">
+          <button id="btnHeaderMore" onclick="toggleHeaderMoreDropdown()" class="p-2 rounded-lg bg-slate-900/80 themed-card hover:bg-slate-800/80 border border-slate-800 text-slate-300 hover:text-white transition" title="More Options">
+            <i class="fa-solid fa-ellipsis-vertical text-xs"></i>
+          </button>
+          <div id="headerMoreDropdownMenu" class="hidden absolute right-0 top-9 mt-1 w-52 bg-slate-900 themed-card border border-slate-800 rounded-xl shadow-2xl p-1.5 z-50 space-y-1 text-xs">
+            <button onclick="openWhyDifferentModal(); toggleHeaderMoreDropdown()" class="w-full text-left px-2.5 py-2 rounded-lg hover:bg-slate-800/80 text-slate-300 hover:text-teal-300 flex items-center space-x-2 transition">
+              <i class="fa-solid fa-bolt text-amber-400 text-xs w-4"></i>
+              <span class="font-medium">Why We're Different</span>
+            </button>
+            <button onclick="handleSyncLiveQuotes(); toggleHeaderMoreDropdown()" class="w-full text-left px-2.5 py-2 rounded-lg hover:bg-slate-800/80 text-slate-300 hover:text-teal-300 flex items-center space-x-2 transition">
+              <i class="fa-solid fa-rotate text-teal-400 text-xs w-4"></i>
+              <span class="font-medium">Refresh Live Quotes</span>
+            </button>
+            <button onclick="navigateTo('theories'); toggleHeaderMoreDropdown()" class="w-full text-left px-2.5 py-2 rounded-lg hover:bg-slate-800/80 text-slate-300 hover:text-purple-300 flex items-center space-x-2 transition">
+              <i class="fa-solid fa-graduation-cap text-purple-400 text-xs w-4"></i>
+              <span class="font-medium">Theory Lab &amp; Mock Portfolios</span>
+            </button>
+            <a href="/openapi/v1.json" target="_blank" onclick="toggleHeaderMoreDropdown()" class="w-full text-left px-2.5 py-2 rounded-lg hover:bg-slate-800/80 text-slate-300 hover:text-teal-300 flex items-center space-x-2 transition">
+              <i class="fa-solid fa-code text-cyan-400 text-xs w-4"></i>
+              <span class="font-medium">OpenAPI Specification</span>
+            </a>
+          </div>
+        </div>
+
+        <!-- Hidden hooks required by existing JS bindings -->
+        <button id="btnOpenWhyDifferent" onclick="openWhyDifferentModal()" class="hidden"></button>
         <button id="btnOpenResearch" class="hidden">Quant Research</button>
-        <button id="btnRefreshDiagnostics" class="text-xs bg-slate-900/80 hover:bg-slate-800 text-slate-300 hover:text-white border border-slate-700/60 px-3 py-1.5 rounded-lg flex items-center space-x-1.5 transition">
-          <i class="fa-solid fa-stethoscope text-teal-400"></i>
-          <span class="hidden sm:inline">Health Check</span>
-        </button>
-        <a href="/openapi/v1.json" target="_blank" class="text-xs text-slate-400 hover:text-slate-200 transition px-2 py-1">OpenAPI</a>
+        <button id="btnRefreshDiagnostics" class="hidden"></button>
       </div>
     </div>
   </header>
@@ -125,15 +772,229 @@
     <!-- Executive Cockpit, Live Holdings & Health Diagnostics    -->
     <!-- ======================================================== -->
     <div id="viewPortfolio" class="view-panel space-y-6">
+
+      <!-- ======================================================== -->
+      <!-- 9-5 WORK HOURS FOCUS SHIELD & CAREER-WEALTH HARMONY      -->
+      <!-- Behavioral Psychology Defense for Corporate Professionals-->
+      <!-- ======================================================== -->
+      <div id="workHoursShieldBanner" class="p-5 rounded-2xl bg-gradient-to-r from-[#0b172a] via-[#09152b] to-[#0d1f3d] border border-cyan-500/40 shadow-2xl backdrop-blur-md space-y-4 transition-all duration-300">
+        <!-- Top Bar: Shield Header & Mode Status -->
+        <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-3 pb-3 border-b border-cyan-500/20">
+          <div class="flex items-center space-x-3">
+            <div class="w-10 h-10 rounded-xl bg-cyan-500/20 border border-cyan-500/40 flex items-center justify-center text-cyan-400 text-lg shadow-md">
+              <i class="fa-solid fa-briefcase"></i>
+            </div>
+            <div>
+              <div class="flex items-center space-x-2">
+                <h2 id="shieldHeading" class="text-base font-bold text-white tracking-tight">9-5 Work Hours Focus Shield Active</h2>
+                <span id="shieldStatusBadge" class="px-2.5 py-0.5 rounded-full text-xs font-mono font-bold bg-cyan-500/20 text-cyan-300 border border-cyan-500/30">
+                  Market Hours (09:15 - 15:30 IST)
+                </span>
+              </div>
+              <p id="shieldSubheading" class="text-xs text-slate-300 mt-0.5">
+                Emotional anxiety filter active. Intraday price flashing suppressed to safeguard your deep work and professional career focus.
+              </p>
+            </div>
+          </div>
+
+          <div class="flex items-center space-x-3">
+            <div id="shieldMacroWeather" class="hidden sm:flex items-center space-x-2 text-xs bg-[#060c18] px-3 py-1.5 rounded-xl border border-[#16233d]">
+              <span class="text-slate-500 font-mono text-[10px]">PULSE:</span>
+              <span class="text-white font-mono font-bold">Nifty 24,820</span>
+              <span class="text-emerald-400 font-mono text-[10px] font-bold">Calm (VIX 13.8)</span>
+            </div>
+            <button onclick="toggleWorkShield(false)" class="text-xs bg-[#060c18] hover:bg-[#0f1b32] text-slate-300 hover:text-white border border-[#16233d] px-3 py-1.5 rounded-lg flex items-center space-x-1.5 transition">
+              <i class="fa-solid fa-power-off text-rose-400"></i>
+              <span>Deactivate Shield</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- 3 Behavioral Reassurance Pillars -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-3.5 pt-1">
+          <!-- Pillar 1: Action Verdict -->
+          <div class="p-3.5 rounded-xl bg-[#060c18]/80 border border-[#16233d] space-y-1.5 flex flex-col justify-between">
+            <div>
+              <div class="flex items-center justify-between text-xs font-bold text-white mb-1.5">
+                <span class="flex items-center"><i class="fa-solid fa-circle-check text-emerald-400 mr-2"></i> Today's Action Status</span>
+                <span id="shieldActionPill" class="text-[10px] font-mono px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-300 font-bold">0 ACTIONS NEEDED</span>
+              </div>
+              <p id="shieldActionDetail" class="text-xs text-slate-300 leading-relaxed">
+                No trades or rebalancing required today. Your portfolio is built with high-ROCE compounding businesses that generate cashflow regardless of intraday screen blips.
+              </p>
+            </div>
+            <div class="text-[11px] text-cyan-400 font-medium pt-2 border-t border-[#16233d] flex items-center justify-between">
+              <span>Guidance:</span>
+              <span class="font-bold">Focus 100% on your career today &rarr;</span>
+            </div>
+          </div>
+
+          <!-- Pillar 2: Career-Wealth Salary Runway Cushion -->
+          <div class="p-3.5 rounded-xl bg-[#060c18]/80 border border-[#16233d] space-y-1.5 flex flex-col justify-between">
+            <div>
+              <div class="flex items-center justify-between text-xs font-bold text-white mb-1.5">
+                <span class="flex items-center"><i class="fa-solid fa-umbrella text-cyan-400 mr-2"></i> Career-Wealth Cushion</span>
+                <span id="salaryCushionMultiplier" class="text-[10px] font-mono px-2 py-0.5 rounded bg-cyan-500/20 text-cyan-300 font-bold">4.8x Coverage</span>
+              </div>
+              <p id="salaryCushionText" class="text-xs text-slate-300 leading-relaxed">
+                Your salaried income provides fresh recurring capital every month. Any temporary intraday market pullback is cushioned multiple times over by incoming monthly savings.
+              </p>
+            </div>
+            <div class="text-[11px] text-slate-400 pt-2 border-t border-[#16233d] flex items-center justify-between">
+              <span>Salary advantage:</span>
+              <span class="text-emerald-400 font-mono font-bold">Pullbacks = Cheaper SIP Units</span>
+            </div>
+          </div>
+
+          <!-- Pillar 3: Kahneman System 1 vs 2 Reminder -->
+          <div class="p-3.5 rounded-xl bg-[#060c18]/80 border border-[#16233d] space-y-1.5 flex flex-col justify-between">
+            <div>
+              <div class="flex items-center justify-between text-xs font-bold text-white mb-1.5">
+                <span class="flex items-center"><i class="fa-solid fa-eye-slash text-amber-400 mr-2"></i> Screen Addiction Defense</span>
+                <span class="text-[10px] font-mono px-2 py-0.5 rounded bg-amber-500/20 text-amber-300 font-bold">Myopic Shield</span>
+              </div>
+              <p class="text-xs text-slate-300 leading-relaxed">
+                Checking stock prices 10 times a day during meetings increases emotional loss aversion by <strong>300%</strong> without altering the company's real annual profits.
+              </p>
+            </div>
+            <div class="text-[11px] text-slate-400 pt-2 border-t border-[#16233d] flex items-center justify-between">
+              <span>Next check-in:</span>
+              <span id="shieldNextCheckin" class="text-cyan-300 font-mono font-bold">Post 3:30 PM IST (Evening Calm)</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ======================================================== -->
+      <!-- PILLAR C & A: 1-CLICK MORNING BRIEFING & MARKET REGIME   -->
+      <!-- Institutional Conviction Cockpit & Loss-Shield Banner    -->
+      <!-- ======================================================== -->
+      <div id="morningBriefingSection" class="p-5 rounded-2xl bg-gradient-to-r from-[#0d1627] via-[#0a1222] to-[#0d1627] border border-cyan-500/30 shadow-2xl backdrop-blur-md space-y-4">
+        <!-- Top Bar: Greeting & Market Weather Vane -->
+        <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-3 pb-3 border-b border-[#16233d]">
+          <div class="flex items-center space-x-3">
+            <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-cyan-500/20 to-blue-500/20 border border-cyan-500/40 flex items-center justify-center text-cyan-400 shadow-md">
+              <i class="fa-solid fa-sun text-lg"></i>
+            </div>
+            <div>
+              <div class="flex items-center space-x-2">
+                <h2 id="briefingGreeting" class="text-base font-bold text-white tracking-tight">Good Morning, Investor</h2>
+                <span id="briefingActionPill" class="px-2.5 py-0.5 rounded-full text-xs font-mono font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
+                  All Clear: Hold & Let Compound
+                </span>
+                <button onclick="openWhyDifferentModal()" class="px-2 py-0.5 rounded-full text-[11px] font-mono font-bold bg-cyan-500/15 text-cyan-300 border border-cyan-500/30 hover:bg-cyan-500/25 transition hidden sm:inline-flex items-center space-x-1" title="See what makes this 60-second briefing fundamentally different from broker apps">
+                  <i class="fa-solid fa-sparkles text-[9px] text-amber-400"></i>
+                  <span>Why This App?</span>
+                </button>
+              </div>
+              <p id="briefingMarketPulse" class="text-xs text-slate-400 mt-0.5">
+                Nifty 50 is in a selective bull market at 24,820 (+0.35%). Volatility is calm (India VIX 13.8).
+              </p>
+            </div>
+          </div>
+
+          <!-- Market Regime Weather Indicators (Pillar A) -->
+          <div class="flex flex-wrap items-center gap-2 text-xs">
+            <!-- Nifty 50 Trend Tile -->
+            <div class="px-3 py-1.5 rounded-xl bg-[#060c18] border border-[#16233d] flex items-center space-x-2">
+              <span class="text-slate-500 font-mono text-[10px]">NIFTY 50:</span>
+              <span id="regimeNiftyPrice" class="font-bold text-white font-mono">24,820</span>
+              <span id="regimeNiftyChange" class="text-[10px] text-emerald-400 font-bold font-mono">+0.35%</span>
+            </div>
+            <!-- Market Breadth Tile -->
+            <div class="px-3 py-1.5 rounded-xl bg-[#060c18] border border-[#16233d] flex items-center space-x-2" title="Percentage of Nifty 500 stocks above 50-day moving average">
+              <span class="text-slate-500 font-mono text-[10px]">BREADTH:</span>
+              <span id="regimeBreadth" class="font-bold text-cyan-400 font-mono">64.5%</span>
+              <span class="text-[9px] text-slate-400">>50 DMA</span>
+            </div>
+            <!-- India VIX Volatility Tile -->
+            <div class="px-3 py-1.5 rounded-xl bg-[#060c18] border border-[#16233d] flex items-center space-x-2" title="India VIX: <16 is Calm, >20 is High Fear">
+              <span class="text-slate-500 font-mono text-[10px]">INDIA VIX:</span>
+              <span id="regimeVix" class="font-bold text-emerald-400 font-mono">13.8</span>
+              <span class="text-[9px] text-emerald-400">Calm</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Pillar A: Loss-Protection Guardrail Banner -->
+        <div id="briefingPolicyBanner" class="p-3 rounded-xl bg-[#060c18] border border-cyan-500/20 text-xs flex items-start space-x-2.5">
+          <i class="fa-solid fa-shield-halved text-cyan-400 text-sm mt-0.5 flex-shrink-0"></i>
+          <div>
+            <strong class="text-white text-xs block">Market Regime Loss-Protection Rule:</strong>
+            <p id="briefingPolicyText" class="text-slate-300 text-[11px] leading-relaxed mt-0.5">
+              CONVICTION HOLD: Market primary trend is UP. Temporary stock pullbacks of 5-12% are healthy consolidation or sector rotation. NEVER book losses on high-ROCE compounders.
+            </p>
+          </div>
+        </div>
+
+        <!-- Action Items & Conviction Swaps Grid (Pillar B & C) -->
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-3.5 pt-1">
+          <!-- Column 1: Executive Action Bullets (Plain English) -->
+          <div class="p-3.5 rounded-xl bg-[#060c18] border border-[#16233d] space-y-2 flex flex-col justify-between">
+            <div>
+              <div class="flex items-center justify-between text-xs font-bold text-white mb-2">
+                <span class="flex items-center"><i class="fa-solid fa-list-check text-cyan-400 mr-2"></i> Today's Focus</span>
+                <span id="briefingSoundRatio" class="text-[10px] font-mono px-2 py-0.5 rounded bg-emerald-500/15 text-emerald-300">
+                  Loading...
+                </span>
+              </div>
+              <ul id="briefingBulletList" class="space-y-1.5 text-[11px] text-slate-300">
+                <li class="flex items-start space-x-1.5">
+                  <span class="text-emerald-400 font-bold">&bull;</span>
+                  <span>Loading morning intelligence...</span>
+                </li>
+              </ul>
+            </div>
+            <div class="pt-2 border-t border-[#16233d] text-[10px] text-slate-500 flex items-center justify-between">
+              <span>Time required today:</span>
+              <strong class="text-cyan-300 font-mono">&lt; 2 Minutes</strong>
+            </div>
+          </div>
+
+          <!-- Column 2: Stocks to Hold with High Conviction (Dormant Giants in Red) -->
+          <div class="p-3.5 rounded-xl bg-[#060c18] border border-[#16233d] space-y-2 flex flex-col justify-between">
+            <div>
+              <div class="flex items-center justify-between text-xs font-bold text-white mb-2">
+                <span class="flex items-center"><i class="fa-solid fa-anchor text-amber-400 mr-2"></i> In Red: Do NOT Sell (Sound Core)</span>
+                <span class="text-[10px] font-mono text-amber-400">Temporary Beta</span>
+              </div>
+              <div id="briefingHoldList" class="space-y-1.5 text-[11px]">
+                <div class="text-slate-500 italic text-[11px]">Evaluating position health...</div>
+              </div>
+            </div>
+            <div class="pt-2 border-t border-[#16233d] text-[10px] text-slate-500">
+              Down due to broader market consolidation, NOT fundamental decay.
+            </div>
+          </div>
+
+          <!-- Column 3: The Broken Theses / High-Conviction Swaps (Opportunity Cost Matrix) -->
+          <div class="p-3.5 rounded-xl bg-[#060c18] border border-[#16233d] space-y-2 flex flex-col justify-between">
+            <div>
+              <div class="flex items-center justify-between text-xs font-bold text-white mb-2">
+                <span class="flex items-center"><i class="fa-solid fa-repeat text-rose-400 mr-2"></i> Broken Theses (Smart Swaps)</span>
+                <span class="text-[10px] font-mono text-rose-400">Opportunity Drag</span>
+              </div>
+              <div id="briefingSwapList" class="space-y-1.5 text-[11px]">
+                <div class="text-slate-500 italic text-[11px]">Auditing underperformers...</div>
+              </div>
+            </div>
+            <div class="pt-2 border-t border-[#16233d] text-[10px] text-slate-500 flex items-center justify-between">
+              <span>Goal:</span>
+              <strong class="text-slate-300">Recover lost capital 2-3x faster</strong>
+            </div>
+          </div>
+        </div>
+      </div>
+
       <!-- Top Executive Cockpit: Portfolio Selector + 5 KPI Cards -->
-    <div class="bg-slate-900/70 border border-slate-800 rounded-2xl p-5 backdrop-blur">
-      <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-4 mb-4 pb-4 border-b border-slate-800/80">
+    <div class="bg-[#0a1222]/90 border border-[#16233d] rounded-2xl p-5 backdrop-blur-md shadow-xl shadow-cyan-950/20">
+      <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-4 mb-4 pb-4 border-b border-[#16233d]">
         <div class="flex items-center space-x-4">
           <div class="flex items-center space-x-2">
-            <i class="fa-solid fa-wallet text-teal-400 text-lg"></i>
+            <i class="fa-solid fa-wallet text-cyan-400 text-lg"></i>
             <span class="text-sm font-semibold text-white">Active Portfolio:</span>
           </div>
-          <select id="portfolioSelect" class="bg-slate-950 border border-slate-700 rounded-lg text-sm px-3.5 py-1.5 text-slate-200 focus:outline-none focus:ring-2 focus:ring-teal-500/30 focus:border-teal-500/50 min-w-[260px]">
+          <select id="portfolioSelect" class="bg-[#060c18] border border-[#16233d] rounded-lg text-sm px-3.5 py-1.5 text-slate-200 focus:outline-none focus:ring-2 focus:ring-cyan-500/30 focus:border-cyan-500/50 min-w-[260px]">
             <option value="">Loading portfolios...</option>
           </select>
         </div>
@@ -141,45 +1002,46 @@
         <div class="flex flex-wrap items-center gap-3">
           <!-- Quick Add / Create Bar -->
           <div class="flex items-center space-x-2">
-            <input id="newPortfolioName" type="text" placeholder="New portfolio name..." class="bg-slate-950 border border-slate-700 rounded-lg px-3 py-1.5 text-xs text-slate-200 placeholder-slate-500 focus:outline-none focus:ring-1 focus:ring-teal-500/30 focus:border-teal-500/50 w-44" />
-            <button id="btnCreatePortfolio" class="bg-slate-800 hover:bg-slate-700 text-teal-400 text-xs font-semibold px-3 py-1.5 rounded-lg border border-slate-700 transition">
+            <input id="newPortfolioName" type="text" placeholder="New portfolio name..." class="bg-[#060c18] border border-[#16233d] rounded-lg px-3 py-1.5 text-xs text-slate-200 placeholder-slate-500 focus:outline-none focus:ring-1 focus:ring-cyan-500/30 focus:border-cyan-500/50 w-44" />
+            <button id="btnCreatePortfolio" class="bg-[#0f1b32] hover:bg-[#16233d] text-cyan-400 text-xs font-semibold px-3 py-1.5 rounded-lg border border-[#16233d] transition">
               + New Portfolio
             </button>
           </div>
 
-          <button id="btnToggleAddHolding" class="bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-medium px-3 py-1.5 rounded-lg border border-slate-700 transition flex items-center space-x-1.5">
-            <i class="fa-solid fa-plus text-teal-400"></i>
+          <button id="btnToggleAddHolding" class="bg-[#0f1b32] hover:bg-[#16233d] text-slate-200 text-xs font-medium px-3 py-1.5 rounded-lg border border-[#16233d] transition flex items-center space-x-1.5">
+            <i class="fa-solid fa-plus text-cyan-400"></i>
             <span>Add Stock Position</span>
           </button>
 
           <!-- Trade Logger Button -->
-          <button id="btnOpenTradeModal" onclick="openTradeModal()" class="bg-teal-600 hover:bg-teal-500 text-slate-950 text-xs font-bold px-3 py-1.5 rounded-lg border border-teal-500/40 transition flex items-center space-x-1.5 shadow-sm">
+          <button id="btnOpenTradeModal" onclick="openTradeModal()" class="bg-cyan-600 hover:bg-cyan-500 text-slate-950 text-xs font-bold px-3 py-1.5 rounded-lg border border-cyan-500/40 transition flex items-center space-x-1.5 shadow-sm">
             <i class="fa-solid fa-bolt"></i>
             <span>Log Trade</span>
           </button>
 
-          <!-- Angel One Sync Button -->
-          <button id="btnOpenAngelSync" onclick="openAngelOneModal()" class="bg-gradient-to-r from-cyan-600 to-teal-600 hover:from-cyan-500 hover:to-teal-500 text-white text-xs font-bold px-3 py-1.5 rounded-lg border border-cyan-500/50 transition flex items-center space-x-1.5 shadow-sm">
-            <i class="fa-solid fa-link"></i>
-            <span>Angel One Sync</span>
+          <!-- Multi-Broker Import Button (Zerodha + Angel One) -->
+          <button id="btnOpenBrokerSync" onclick="openBrokerImportModal()" class="bg-gradient-to-r from-blue-600 via-cyan-600 to-teal-600 hover:from-blue-500 hover:to-teal-500 text-white text-xs font-bold px-3 py-1.5 rounded-lg border border-cyan-500/50 transition flex items-center space-x-1.5 shadow-sm" title="Import Zerodha (.csv/.xlsx) or Angel One (.xlsx)">
+            <i class="fa-solid fa-file-import"></i>
+            <span>Import Broker</span>
+            <span class="text-[9px] px-1 py-0.2 rounded bg-black/30 text-cyan-200 font-mono font-normal">Zerodha &bull; Angel</span>
           </button>
         </div>
       </div>
 
-      <!-- 5 Metric Cards -->
-      <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4">
+      <!-- 6 Metric Cards -->
+      <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3.5">
         <!-- Current Market Value -->
-        <div class="p-4 bg-slate-950/70 rounded-xl border border-slate-800/80">
+        <div class="p-4 bg-[#060c18]/90 rounded-xl border border-[#16233d] shadow-sm">
           <div class="flex items-center justify-between text-xs text-slate-400 font-medium">
             <span>Current Value</span>
-            <span class="text-[10px] text-emerald-400 font-mono">CMP</span>
+            <span class="text-[10px] text-cyan-400 font-mono">CMP</span>
           </div>
           <div id="statTotalValue" class="text-2xl font-bold text-white mt-1 privacy-mask">&#8377;0</div>
           <div class="text-[11px] text-slate-500 mt-0.5">Live market valuation</div>
         </div>
 
         <!-- Total Invested Capital -->
-        <div class="p-4 bg-slate-950/70 rounded-xl border border-slate-800/80">
+        <div class="p-4 bg-[#060c18]/90 rounded-xl border border-[#16233d] shadow-sm">
           <div class="flex items-center justify-between text-xs text-slate-400 font-medium">
             <span>Total Invested</span>
             <span class="text-[10px] text-slate-400 font-mono">Cost</span>
@@ -188,8 +1050,18 @@
           <div class="text-[11px] text-slate-500 mt-0.5">Purchase cost basis</div>
         </div>
 
+        <!-- Day's Profit / Loss -->
+        <div class="p-4 bg-[#060c18]/90 rounded-xl border border-[#16233d] shadow-sm">
+          <div class="flex items-center justify-between text-xs text-slate-400 font-medium">
+            <span>Day's P&L</span>
+            <span id="statDayPnLBadge" class="text-[10px] font-bold px-1.5 py-0.2 rounded bg-emerald-500/20 text-emerald-400 privacy-mask">TODAY</span>
+          </div>
+          <div id="statDayPnL" class="text-2xl font-bold text-emerald-400 mt-1 privacy-mask">&#8377;0 (0.00%)</div>
+          <div class="text-[11px] text-slate-500 mt-0.5">Today's net move</div>
+        </div>
+
         <!-- Total Unrealized P&L -->
-        <div class="p-4 bg-slate-950/70 rounded-xl border border-slate-800/80">
+        <div class="p-4 bg-[#060c18]/90 rounded-xl border border-[#16233d] shadow-sm">
           <div class="flex items-center justify-between text-xs text-slate-400 font-medium">
             <span>Unrealized P&L</span>
             <span id="statPnLBadge" class="text-[10px] font-bold px-1.5 py-0.2 rounded bg-emerald-500/20 text-emerald-400 privacy-mask">NET GAIN</span>
@@ -199,46 +1071,46 @@
         </div>
 
         <!-- Positions Count -->
-        <div class="p-4 bg-slate-950/70 rounded-xl border border-slate-800/80">
+        <div class="p-4 bg-[#060c18]/90 rounded-xl border border-[#16233d] shadow-sm">
           <div class="text-xs text-slate-400 font-medium">Active Holdings</div>
           <div id="statHoldingsCount" class="text-2xl font-bold text-white mt-1">0</div>
           <div class="text-[11px] text-slate-500 mt-0.5">Diversified equities</div>
         </div>
 
         <!-- Health Score -->
-        <div class="p-4 bg-slate-950/70 rounded-xl border border-slate-800/80">
+        <div class="p-4 bg-[#060c18]/90 rounded-xl border border-[#16233d] shadow-sm">
           <div class="flex items-center justify-between text-xs text-slate-400 font-medium">
             <span>Portfolio Health</span>
             <span id="statHealthRating" class="text-[10px] font-bold text-emerald-400 truncate">Evaluating...</span>
           </div>
-          <div id="statHealthScore" class="text-2xl font-bold text-teal-400 mt-1">0 / 100</div>
+          <div id="statHealthScore" class="text-2xl font-bold text-cyan-400 mt-1">0 / 100</div>
           <div class="text-[11px] text-slate-500 mt-0.5">Risk & constraint checks</div>
         </div>
       </div>
 
       <!-- Collapsible Add Position Form -->
-      <div id="addPositionPanel" class="hidden mt-4 pt-4 border-t border-slate-800">
+      <div id="addPositionPanel" class="hidden mt-4 pt-4 border-t border-[#16233d]">
         <div class="flex items-center justify-between mb-3">
           <h4 class="text-xs font-semibold text-slate-300 uppercase tracking-wider flex items-center">
-            <i class="fa-solid fa-cart-plus text-teal-400 mr-2"></i> Add / Update Equity Position
+            <i class="fa-solid fa-cart-plus text-cyan-400 mr-2"></i> Add / Update Equity Position
           </h4>
           <span class="text-xs text-slate-500">Updates existing position if ticker already exists</span>
         </div>
         <div class="grid grid-cols-1 sm:grid-cols-4 gap-3">
           <div>
             <label class="block text-xs font-medium text-slate-400 mb-1">NSE Symbol</label>
-            <input id="inputTicker" type="text" placeholder="e.g. RELIANCE, TCS" class="w-full uppercase bg-slate-950 border border-slate-700 rounded-lg px-3 py-2 text-sm text-slate-200 focus:outline-none focus:ring-2 focus:ring-teal-500/30 focus:border-teal-500/50" />
+            <input id="inputTicker" type="text" placeholder="e.g. RELIANCE, TCS" class="w-full uppercase bg-[#060c18] border border-[#16233d] rounded-lg px-3 py-2 text-sm text-slate-200 focus:outline-none focus:ring-2 focus:ring-cyan-500/30 focus:border-cyan-500/50" />
           </div>
           <div>
             <label class="block text-xs font-medium text-slate-400 mb-1">Shares (Quantity)</label>
-            <input id="inputQuantity" type="number" step="any" min="1" placeholder="50" class="w-full bg-slate-950 border border-slate-700 rounded-lg px-3 py-2 text-sm text-slate-200 focus:outline-none focus:ring-2 focus:ring-teal-500/30 focus:border-teal-500/50" />
+            <input id="inputQuantity" type="number" step="1" min="1" placeholder="50" class="w-full bg-[#060c18] border border-[#16233d] rounded-lg px-3 py-2 text-sm text-slate-200 focus:outline-none focus:ring-2 focus:ring-cyan-500/30 focus:border-cyan-500/50" />
           </div>
           <div>
             <label class="block text-xs font-medium text-slate-400 mb-1">Buy Price (&#8377;) <span class="text-slate-500 text-[10px]">(Optional)</span></label>
-            <input id="inputBuyPrice" type="number" step="any" min="0" placeholder="e.g. 1150.00" class="w-full bg-slate-950 border border-slate-700 rounded-lg px-3 py-2 text-sm text-slate-200 focus:outline-none focus:ring-2 focus:ring-teal-500/30 focus:border-teal-500/50" />
+            <input id="inputBuyPrice" type="number" step="any" min="0" placeholder="e.g. 1150.00" class="w-full bg-[#060c18] border border-[#16233d] rounded-lg px-3 py-2 text-sm text-slate-200 focus:outline-none focus:ring-2 focus:ring-cyan-500/30 focus:border-cyan-500/50" />
           </div>
           <div class="flex items-end">
-            <button id="btnAddHolding" class="w-full bg-teal-600 hover:bg-teal-500 text-slate-950 font-bold py-2 rounded-lg text-sm transition">
+            <button id="btnAddHolding" class="w-full bg-cyan-600 hover:bg-cyan-500 text-slate-950 font-bold py-2 rounded-lg text-sm transition">
               Save Position
             </button>
           </div>
@@ -246,16 +1118,107 @@
       </div>
     </div>
 
+      <!-- ======================================================== -->
+      <!-- DUAL ALLOCATION PIE CHARTS: SECTOR & MARKET CAP DECK     -->
+      <!-- Interactive SVG Donut/Pie Charts with Hover & Filtering  -->
+      <!-- ======================================================== -->
+      <div id="allocationDeckSection" class="bg-[#0a1222]/90 border border-[#16233d] rounded-2xl p-6 backdrop-blur-md shadow-xl space-y-4">
+        <!-- Section Header -->
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-[#16233d]">
+          <div class="flex items-center space-x-3">
+            <div class="w-9 h-9 rounded-xl bg-gradient-to-tr from-cyan-500/15 to-blue-500/15 border border-cyan-500/30 flex items-center justify-center text-cyan-400">
+              <i class="fa-solid fa-chart-pie text-base"></i>
+            </div>
+            <div>
+              <h3 class="text-base font-bold text-white flex items-center">
+                Portfolio Allocation Breakdown
+                <span class="ml-2.5 px-2 py-0.5 rounded-full text-[10px] font-mono font-bold bg-cyan-500/15 text-cyan-400 border border-cyan-500/25">Live Distribution</span>
+              </h3>
+              <p class="text-xs text-slate-400">Visual equity exposure across Sectors and AMFI Market Capitalizations &bull; Click any category to filter holdings below</p>
+            </div>
+          </div>
+          <div class="flex items-center space-x-3 text-xs">
+            <div class="px-3 py-1.5 rounded-xl bg-[#060c18] border border-[#16233d]">
+              <span class="text-slate-400 text-xs">Portfolio Value: </span>
+              <strong id="allocTotalValuation" class="text-white font-mono font-bold ml-1 privacy-mask">&#8377;0</strong>
+            </div>
+          </div>
+        </div>
+
+        <!-- 2 Column Allocation Charts Grid -->
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-5">
+
+          <!-- Chart 1: Sector Allocation Donut/Pie -->
+          <div class="p-4 bg-[#060c18]/90 rounded-xl border border-[#16233d] flex flex-col justify-between">
+            <div class="flex items-center justify-between mb-3 pb-2 border-b border-[#16233d]">
+              <div class="flex items-center space-x-2">
+                <i class="fa-solid fa-shapes text-cyan-400 text-xs"></i>
+                <span class="text-xs font-bold uppercase tracking-wider text-slate-200">Sector Allocation</span>
+              </div>
+              <span id="allocSectorCount" class="text-[11px] font-mono text-cyan-400 font-semibold">0 Sectors</span>
+            </div>
+
+            <div class="flex flex-col sm:flex-row items-center justify-center gap-5 py-2">
+              <!-- SVG Donut Chart with Dynamic Center Readout -->
+              <div class="relative w-44 h-44 flex-shrink-0 flex items-center justify-center">
+                <svg id="svgSectorPie" class="w-full h-full transform -rotate-90" viewBox="0 0 160 160"></svg>
+                <div class="absolute inset-0 flex flex-col items-center justify-center pointer-events-none text-center px-2">
+                  <span id="allocSectorCenterLabel" class="text-[10px] text-slate-400 uppercase tracking-wider font-semibold">Top Sector</span>
+                  <span id="allocSectorCenterName" class="text-xs font-bold text-cyan-300 max-w-[100px] truncate">--</span>
+                  <span id="allocSectorCenterPct" class="text-sm font-extrabold text-white font-mono">0%</span>
+                  <span id="allocSectorCenterVal" class="text-[10px] text-slate-400 font-mono privacy-mask">&#8377;0</span>
+                </div>
+              </div>
+
+              <!-- Interactive Sector Legend Pills -->
+              <div id="legendSectorPie" class="flex-1 w-full max-h-52 overflow-y-auto space-y-1.5 pr-1">
+                <div class="text-slate-500 text-xs italic py-4 text-center">Loading sector distribution...</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Chart 2: Market Cap Allocation Donut/Pie -->
+          <div class="p-4 bg-[#060c18]/90 rounded-xl border border-[#16233d] flex flex-col justify-between">
+            <div class="flex items-center justify-between mb-3 pb-2 border-b border-[#16233d]">
+              <div class="flex items-center space-x-2">
+                <i class="fa-solid fa-layer-group text-indigo-400 text-xs"></i>
+                <span class="text-xs font-bold uppercase tracking-wider text-slate-200">Market Cap Allocation (AMFI)</span>
+              </div>
+              <span id="allocMcapHeadline" class="text-[11px] font-mono text-indigo-400 font-semibold">AMFI Classification</span>
+            </div>
+
+            <div class="flex flex-col sm:flex-row items-center justify-center gap-5 py-2">
+              <!-- SVG Donut Chart with Dynamic Center Readout -->
+              <div class="relative w-44 h-44 flex-shrink-0 flex items-center justify-center">
+                <svg id="svgMarketCapPie" class="w-full h-full transform -rotate-90" viewBox="0 0 160 160"></svg>
+                <div class="absolute inset-0 flex flex-col items-center justify-center pointer-events-none text-center px-2">
+                  <span id="allocMcapCenterLabel" class="text-[10px] text-slate-400 uppercase tracking-wider font-semibold">Dominant</span>
+                  <span id="allocMcapCenterName" class="text-xs font-bold text-indigo-300 max-w-[100px] truncate">--</span>
+                  <span id="allocMcapCenterPct" class="text-sm font-extrabold text-white font-mono">0%</span>
+                  <span id="allocMcapCenterVal" class="text-[10px] text-slate-400 font-mono privacy-mask">&#8377;0</span>
+                </div>
+              </div>
+
+              <!-- Interactive Market Cap Legend Pills -->
+              <div id="legendMarketCapPie" class="flex-1 w-full space-y-2">
+                <div class="text-slate-500 text-xs italic py-4 text-center">Loading market cap distribution...</div>
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
       <!-- FULL-WIDTH HERO: Portfolio Holdings Table (Side-by-side Buy Price, CMP, P&L) -->
-    <div class="w-full bg-slate-900/70 border border-slate-800 rounded-2xl p-6 backdrop-blur space-y-4">
+    <div class="w-full bg-[#0a1222]/90 border border-[#16233d] rounded-2xl p-6 backdrop-blur-md space-y-4 shadow-xl">
       <!-- Toolbar Header -->
-      <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-4 pb-3 border-b border-slate-800">
+      <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-4 pb-3 border-b border-[#16233d]">
         <div>
           <div class="flex items-center space-x-3">
             <h2 class="text-lg font-bold text-white flex items-center">
-              <i class="fa-solid fa-table-list text-teal-400 mr-2.5"></i> Current Portfolio Holdings
+              <i class="fa-solid fa-table-list text-cyan-400 mr-2.5"></i> Current Portfolio Holdings
             </h2>
-            <span id="holdingsSubtext" class="px-2.5 py-0.5 rounded-full text-xs font-medium bg-slate-800 text-slate-300 border border-slate-700">0 positions</span>
+            <span id="holdingsSubtext" class="px-2.5 py-0.5 rounded-full text-xs font-medium bg-[#060c18] text-slate-300 border border-[#16233d]">0 positions</span>
             <span id="lastSyncTime" class="text-xs text-slate-500 hidden sm:inline">Prices live</span>
           </div>
           <p class="text-xs text-slate-400 mt-0.5">Real-time side-by-side comparison of your Avg Purchase Price against Live NSE Market Price (CMP) & Unrealized Gains/Losses</p>
@@ -263,22 +1226,26 @@
 
         <!-- Filter & Action Controls -->
         <div class="flex flex-wrap items-center gap-2.5">
-          <!-- Search -->
-          <div class="relative">
-            <input id="holdingsSearch" type="text" placeholder="Search stock or sector..." class="bg-slate-950 border border-slate-700 rounded-lg pl-8 pr-3 py-1.5 text-xs text-slate-200 placeholder-slate-500 focus:outline-none focus:ring-1 focus:ring-teal-500/30 focus:border-teal-500/50 w-44 sm:w-56" />
+          <!-- Search with Instant 1st-Word Recommendations Dropdown -->
+          <div class="relative" id="holdingsSearchWrapper">
+            <input id="holdingsSearch" type="text" autocomplete="off" placeholder="Search stock or sector..." class="bg-[#060c18] border border-[#16233d] rounded-lg pl-8 pr-3 py-1.5 text-xs text-slate-200 placeholder-slate-500 focus:outline-none focus:ring-1 focus:ring-cyan-500/30 focus:border-cyan-500/50 w-44 sm:w-56" />
             <i class="fa-solid fa-magnifying-glass absolute left-2.5 top-2.5 text-xs text-slate-500"></i>
+            <!-- Autocomplete Suggestions Dropdown -->
+            <div id="holdingsSearchSuggestions" class="hidden absolute left-0 top-full mt-1.5 w-72 sm:w-88 bg-[#0d1728] border border-[#17253d] rounded-xl shadow-2xl z-50 overflow-hidden divide-y divide-[#17253d]/50 max-h-80 overflow-y-auto backdrop-blur-md"></div>
           </div>
 
           <!-- Sector Filter -->
-          <select id="holdingsSectorFilter" class="bg-slate-950 border border-slate-700 rounded-lg px-2.5 py-1.5 text-xs text-slate-300 focus:outline-none focus:ring-1 focus:ring-teal-500/30 focus:border-teal-500/50">
+          <select id="holdingsSectorFilter" class="bg-[#060c18] border border-[#16233d] rounded-lg px-2.5 py-1.5 text-xs text-slate-300 focus:outline-none focus:ring-1 focus:ring-cyan-500/30 focus:border-cyan-500/50">
             <option value="">All Sectors</option>
           </select>
 
-          <!-- P&L Filter -->
-          <select id="holdingsPnLFilter" class="bg-slate-950 border border-slate-700 rounded-lg px-2.5 py-1.5 text-xs text-slate-300 focus:outline-none focus:ring-1 focus:ring-teal-500/30 focus:border-teal-500/50">
-            <option value="ALL">All P&L Status</option>
-            <option value="PROFIT">🟢 In Profit (Gainers)</option>
-            <option value="LOSS">🔴 In Loss (Losers)</option>
+          <!-- P&L & Behavioral Noise vs Decay Filter -->
+          <select id="holdingsPnLFilter" class="bg-[#060c18] border border-[#16233d] rounded-lg px-2.5 py-1.5 text-xs text-slate-300 focus:outline-none focus:ring-1 focus:ring-cyan-500/30 focus:border-cyan-500/50">
+            <option value="ALL">All Stocks (100%)</option>
+            <option value="NOISE">🟢 Market Noise (Hold Quality Dips)</option>
+            <option value="DECAY">🔴 Business Decay (Structural Traps)</option>
+            <option value="PROFIT">📈 In Profit (Compounders)</option>
+            <option value="LOSS">📉 All Positions in Loss</option>
           </select>
 
           <!-- Sync Live Quotes Button -->
@@ -288,7 +1255,7 @@
           </button>
 
           <!-- Scan Portfolio Swings Button -->
-          <button id="btnScanPortfolioSwings" onclick="openPortfolioSwingRadarModal()" class="bg-gradient-to-r from-amber-600 to-orange-500 hover:from-amber-500 hover:to-orange-400 text-slate-950 font-bold text-xs px-3.5 py-1.5 rounded-lg flex items-center space-x-1.5 transition shadow-sm">
+          <button id="btnScanPortfolioSwings" onclick="openPortfolioSwingRadarModal()" class="bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 text-white font-bold text-xs px-3.5 py-1.5 rounded-lg flex items-center space-x-1.5 transition shadow-sm shadow-cyan-900/30">
             <i class="fa-solid fa-crosshairs"></i>
             <span>Scan 1–2M Swings</span>
           </button>
@@ -296,76 +1263,110 @@
       </div>
 
       <!-- 8-Hour Staleness Auto-Sync Alert Notification Banner -->
-      <div id="staleSyncAlertBanner" class="hidden flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-teal-500/10 border border-teal-500/30 rounded-xl px-4 py-2.5 text-xs text-teal-200">
+      <div id="staleSyncAlertBanner" class="hidden flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-cyan-950/40 border border-cyan-500/30 rounded-xl px-4 py-2.5 text-xs text-cyan-200">
         <div class="flex items-center space-x-2.5">
-          <i class="fa-solid fa-clock-rotate-left text-teal-400 text-base"></i>
+          <i class="fa-solid fa-clock-rotate-left text-cyan-400 text-base"></i>
           <div>
             <span class="font-bold text-white">Portfolio is 8+ hours old.</span>
-            <span id="staleSyncAlertDetail" class="text-teal-200/90 ml-1">Live positions may be outdated. Sync with Angel One or refresh market CMP.</span>
+            <span id="staleSyncAlertDetail" class="text-cyan-200/90 ml-1">Live positions may be outdated. Sync with Zerodha / Angel One or refresh market CMP.</span>
           </div>
         </div>
         <div class="flex items-center space-x-2">
-          <button onclick="openAngelOneModal()" class="px-3 py-1.5 rounded-lg bg-cyan-600 hover:bg-cyan-500 text-white font-bold text-xs transition flex items-center space-x-1 shadow-sm">
-            <i class="fa-solid fa-link text-[10px]"></i>
-            <span>Sync Angel One</span>
+          <button onclick="openBrokerImportModal()" class="px-3 py-1.5 rounded-lg bg-cyan-600 hover:bg-cyan-500 text-white font-bold text-xs transition flex items-center space-x-1 shadow-sm">
+            <i class="fa-solid fa-file-import text-[10px]"></i>
+            <span>Import / Sync Broker</span>
           </button>
-          <button onclick="handleSyncLiveQuotes()" class="px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 font-semibold text-xs transition border border-slate-700 flex items-center space-x-1">
+          <button onclick="handleSyncLiveQuotes()" class="px-3 py-1.5 rounded-lg bg-[#0f1b32] hover:bg-[#16233d] text-slate-200 font-semibold text-xs transition border border-[#16233d] flex items-center space-x-1">
             <i class="fa-solid fa-arrows-rotate text-[10px]"></i>
             <span>Refresh CMP</span>
           </button>
         </div>
       </div>
 
+      <!-- Indian Market Theory Portfolio Alignment Card -->
+      <div id="theoryAlignmentCard" class="p-4 rounded-xl bg-gradient-to-r from-purple-950/30 via-slate-900/60 to-cyan-950/30 border border-purple-500/30 themed-elevated flex flex-col md:flex-row md:items-center justify-between gap-4 shadow-sm">
+        <div class="flex items-center space-x-3">
+          <div class="w-9 h-9 rounded-xl bg-purple-500/15 border border-purple-500/30 flex items-center justify-center text-purple-300 text-sm">
+            <i class="fa-solid fa-graduation-cap"></i>
+          </div>
+          <div>
+            <div class="flex items-center space-x-2">
+              <span class="text-xs font-bold text-white tracking-wide uppercase">Indian Market Theories Alignment</span>
+              <span class="px-1.5 py-0.2 rounded text-[9px] font-mono bg-purple-500/20 text-purple-300 border border-purple-500/30 font-bold">NSE ALIGNED</span>
+            </div>
+            <p id="theoryAlignmentSummaryText" class="text-[11.5px] text-slate-300 mt-0.5">
+              Auditing your holdings against <strong>Coffee Can Compounding</strong>, <strong>Motilal QGLP</strong>, and <strong>Indian Stage 2 Momentum</strong>.
+            </p>
+          </div>
+        </div>
+
+        <div class="flex items-center space-x-2 flex-shrink-0">
+          <button onclick="navigateTo('theories')" class="px-3 py-1.5 rounded-lg bg-purple-600/20 hover:bg-purple-600/30 text-purple-300 border border-purple-500/40 text-xs font-bold transition flex items-center space-x-1.5 shadow-sm">
+            <i class="fa-solid fa-graduation-cap text-[10px]"></i>
+            <span>Explore Theory Lab</span>
+          </button>
+          <button onclick="openWhatIfSwapModal()" class="px-3 py-1.5 rounded-lg bg-teal-500/20 hover:bg-teal-500/30 text-teal-300 border border-teal-500/40 text-xs font-bold transition flex items-center space-x-1.5 shadow-sm">
+            <i class="fa-solid fa-arrows-rotate text-[10px]"></i>
+            <span>Simulate What-If Swap</span>
+          </button>
+        </div>
+      </div>
+
       <!-- Diagnostic Quick Filter Active Banner -->
-      <div id="diagnosticActiveFilterBanner" class="hidden flex items-center justify-between bg-teal-500/10 border border-teal-500/25 rounded-xl px-4 py-2 text-xs text-teal-300">
+      <div id="diagnosticActiveFilterBanner" class="hidden flex items-center justify-between bg-cyan-950/40 border border-cyan-500/30 rounded-xl px-4 py-2 text-xs text-cyan-300">
         <div class="flex items-center space-x-2">
-          <i class="fa-solid fa-filter text-teal-400"></i>
+          <i class="fa-solid fa-filter text-cyan-400"></i>
           <span id="diagnosticFilterLabel" class="font-semibold">Filtered View</span>
         </div>
-        <button onclick="clearDiagnosticFilter()" class="hover:text-white underline text-xs font-semibold px-2.5 py-1 bg-teal-500/15 rounded-lg transition">
+        <button onclick="clearDiagnosticFilter()" class="hover:text-white underline text-xs font-semibold px-2.5 py-1 bg-cyan-500/15 rounded-lg transition">
           Clear Filter (Show All Stocks)
         </button>
       </div>
 
       <!-- Full-Width Responsive Table with Continuous Smooth Scroll -->
-      <div id="holdingsScrollContainer" class="overflow-x-auto overflow-y-auto max-h-[660px] rounded-xl border border-slate-800 shadow-inner">
+      <div id="holdingsScrollContainer" class="overflow-x-auto overflow-y-auto max-h-[660px] rounded-xl border border-[#16233d] shadow-inner">
         <table class="w-full text-left text-sm text-slate-300 min-w-[1100px]">
-          <thead class="text-xs uppercase bg-slate-900 text-slate-400 border-b border-slate-800 sticky top-0 z-20 shadow-md">
+          <thead class="text-xs uppercase bg-[#091120]/95 backdrop-blur text-cyan-300/80 border-b border-[#16233d] sticky top-0 z-20 shadow-md">
             <tr>
-              <th class="py-3.5 px-4 cursor-pointer select-none hover:text-white bg-slate-900" onclick="sortHoldings('ticker')">
+              <th class="py-3.5 px-4 cursor-pointer select-none hover:text-white bg-[#091120]" onclick="sortHoldings('ticker')">
                 NSE Symbol & Company <i class="fa-solid fa-sort text-[10px] ml-1"></i>
               </th>
-              <th class="py-3.5 px-3 cursor-pointer select-none hover:text-white bg-slate-900" onclick="sortHoldings('sector')">
+              <th class="py-3.5 px-3 cursor-pointer select-none hover:text-white bg-[#091120]" onclick="sortHoldings('sector')">
                 Sector <i class="fa-solid fa-sort text-[10px] ml-1"></i>
               </th>
-              <th class="py-3.5 px-3 text-right cursor-pointer select-none hover:text-white bg-slate-900" onclick="sortHoldings('quantity')">
+              <th class="py-3.5 px-3 text-right cursor-pointer select-none hover:text-white bg-[#091120]" onclick="sortHoldings('quantity')">
                 Shares <i class="fa-solid fa-sort text-[10px] ml-1"></i>
               </th>
-              <th class="py-3.5 px-4 text-right cursor-pointer select-none hover:text-white bg-slate-900" onclick="sortHoldings('buyPrice')">
+              <th class="py-3.5 px-4 text-right cursor-pointer select-none hover:text-white bg-[#091120]" onclick="sortHoldings('buyPrice')">
                 Avg Buy Price (&#8377;) <i class="fa-solid fa-sort text-[10px] ml-1"></i>
               </th>
-              <th class="py-3.5 px-4 text-right cursor-pointer select-none hover:text-white bg-slate-900" onclick="sortHoldings('price')">
+              <th class="py-3.5 px-4 text-right cursor-pointer select-none hover:text-white bg-[#091120]" onclick="sortHoldings('price')">
                 Live CMP (&#8377;) <i class="fa-solid fa-sort text-[10px] ml-1"></i>
               </th>
-              <th class="py-3.5 px-4 text-right cursor-pointer select-none hover:text-white bg-slate-900" onclick="sortHoldings('unrealizedPnL')">
+              <th class="py-3.5 px-4 text-right cursor-pointer select-none hover:text-white bg-[#091120]" onclick="sortHoldings('dayPnL')">
+                Day's P&L (&#8377; / %) <i class="fa-solid fa-sort text-[10px] ml-1"></i>
+              </th>
+              <th class="py-3.5 px-4 text-right cursor-pointer select-none hover:text-white bg-[#091120]" onclick="sortHoldings('unrealizedPnL')">
                 Unrealized P&L (&#8377; / %) <i class="fa-solid fa-sort text-[10px] ml-1"></i>
               </th>
-              <th class="py-3.5 px-4 text-right cursor-pointer select-none hover:text-white bg-slate-900" onclick="sortHoldings('investedValue')">
+              <th class="py-3.5 px-4 text-right cursor-pointer select-none hover:text-white bg-[#091120]" onclick="sortHoldings('investedValue')">
                 Total Invested <i class="fa-solid fa-sort text-[10px] ml-1"></i>
               </th>
-              <th class="py-3.5 px-4 text-right cursor-pointer select-none hover:text-white bg-slate-900" onclick="sortHoldings('marketValue')">
+              <th class="py-3.5 px-4 text-right cursor-pointer select-none hover:text-white bg-[#091120]" onclick="sortHoldings('marketValue')">
                 Current Value <i class="fa-solid fa-sort text-[10px] ml-1"></i>
               </th>
-              <th class="py-3.5 px-3 text-right cursor-pointer select-none hover:text-white bg-slate-900" onclick="sortHoldings('weightPercent')">
+              <th class="py-3.5 px-3 text-right cursor-pointer select-none hover:text-white bg-[#091120]" onclick="sortHoldings('weightPercent')">
                 Weight <i class="fa-solid fa-sort text-[10px] ml-1"></i>
               </th>
-              <th class="py-3.5 px-3 text-center bg-slate-900">Score / Advisory</th>
-              <th class="py-3.5 px-3 text-center bg-slate-900">Action</th>
+              <th class="py-3.5 px-3 text-center bg-[#091120]">Score / Advisory</th>
+              <th class="py-3.5 px-3 text-center bg-[#091120]">Action</th>
             </tr>
           </thead>
-          <tbody id="holdingsTableBody" class="divide-y divide-slate-800/60 bg-slate-900/30">
+          <tbody id="holdingsTableBody" class="divide-y divide-[#16233d]/60 bg-[#0a1222]/40">
             <tr>
-              <td colspan="11" class="py-8 text-center text-slate-500 italic">No holdings loaded.</td>
+              <td colspan="12" class="py-12 text-center text-slate-400 font-medium">
+                <i class="fa-solid fa-circle-notch fa-spin text-teal-400 mr-2"></i>Loading portfolio holdings and real-time market data...
+              </td>
             </tr>
           </tbody>
         </table>
@@ -718,10 +1719,10 @@
             </div>
             <div>
               <h2 class="text-base sm:text-lg font-bold text-white tracking-tight flex items-center">
-                Portfolio Management & Rebalancing Desk
-                <span class="ml-2.5 px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-teal-500/15 text-teal-400 border border-teal-500/25">Execution Hub</span>
+                Broker Sync &amp; In-App Trade Desk
+                <span class="ml-2.5 px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-teal-500/15 text-teal-400 border border-teal-500/25">Operations Hub</span>
               </h2>
-              <p class="text-xs text-slate-400">Broker Data Synchronization &bull; In-App Trade Execution &bull; Sector Target Rebalancing</p>
+              <p class="text-xs text-slate-400">Angel One Auto-Sync &bull; Holdings Excel Import &bull; Fast In-App Trade Logging</p>
             </div>
           </div>
           <div class="flex items-center space-x-2">
@@ -734,45 +1735,37 @@
 
         <!-- 2-Card Operations Hub: Angel One Sync + In-App Trade Logger Desk -->
         <div class="grid grid-cols-1 lg:grid-cols-2 gap-5 mt-5">
-          <!-- Card 1: Angel One Broker Hub -->
+          <!-- Card 1: Multi-Broker Hub (Zerodha + Angel One) -->
           <div class="bg-slate-950/60 border border-slate-800 rounded-xl p-5 flex flex-col justify-between space-y-4">
             <div>
               <div class="flex items-center justify-between pb-3 border-b border-slate-800/70">
                 <div class="flex items-center space-x-2.5">
                   <div class="w-8 h-8 rounded-lg bg-cyan-500/10 border border-cyan-500/20 flex items-center justify-center text-cyan-400">
-                    <i class="fa-solid fa-file-excel text-sm"></i>
+                    <i class="fa-solid fa-building-columns text-sm"></i>
                   </div>
                   <div>
-                    <h3 class="text-sm font-bold text-white">Angel One Sync & Holdings Import</h3>
-                    <p class="text-[11px] text-slate-400">100% Free &bull; Auto-detect downloads or upload .xlsx</p>
+                    <h3 class="text-sm font-bold text-white">Multi-Broker Import &amp; Sync</h3>
+                    <p class="text-[11px] text-slate-400">Zerodha (Kite/Console) &bull; Angel One (Demat/SmartAPI)</p>
                   </div>
                 </div>
-                
+                <div class="flex items-center space-x-1.5">
+                  <span class="text-[9px] px-1.5 py-0.5 rounded font-bold bg-blue-500/15 text-blue-300 border border-blue-500/30">Zerodha</span>
+                  <span class="text-[9px] px-1.5 py-0.5 rounded font-bold bg-teal-500/15 text-teal-300 border border-teal-500/30">Angel One</span>
+                </div>
               </div>
 
               <div class="mt-4 space-y-2.5">
-                <!-- Optional Password for Protected Excel -->
-                <div class="relative">
-                  <input type="password" id="manageExcelPassword" placeholder="Excel Password / PAN in CAPS (Optional)" class="w-full bg-slate-900 border border-slate-700/80 rounded-xl px-3 py-2 pr-9 text-xs text-teal-300 font-mono focus:outline-none focus:ring-1 focus:ring-teal-500 uppercase tracking-wider" oninput="saveExcelPassword(this.value)" />
-                  <button type="button" onclick="togglePasswordVisibility('manageExcelPassword', this)" class="absolute right-3 top-1/2 -translate-y-1/2 text-slate-500 hover:text-slate-300 text-xs px-1">
-                    <i class="fa-solid fa-eye"></i>
-                  </button>
-                </div>
-
-                <button type="button" onclick="detectAndImportAngelExcel()" class="w-full bg-gradient-to-r from-cyan-600 to-teal-600 hover:from-cyan-500 hover:to-teal-500 text-white font-bold py-2.5 px-4 rounded-xl text-xs transition flex items-center justify-center space-x-2 shadow-lg shadow-cyan-900/20">
-                  <i class="fa-solid fa-bolt text-teal-300"></i>
-                  <span>1-Click Auto-Detect Angel One Excel from Downloads</span>
+                <button type="button" onclick="openBrokerImportModal()" class="w-full bg-gradient-to-r from-blue-600 via-cyan-600 to-teal-600 hover:from-blue-500 hover:to-teal-500 text-white font-bold py-2.5 px-4 rounded-xl text-xs transition flex items-center justify-center space-x-2 shadow-lg shadow-cyan-900/20">
+                  <i class="fa-solid fa-file-import text-white"></i>
+                  <span>Launch Broker Import Wizard (Merge or Keep Separate)</span>
                 </button>
 
                 <div class="flex items-center space-x-2">
-                  <label class="flex-1 cursor-pointer bg-slate-900 hover:bg-slate-800/80 border border-slate-700/80 hover:border-cyan-500/50 rounded-xl py-2 px-3 text-center transition">
-                    <input type="file" id="manageExcelFileInput" accept=".xlsx" class="hidden" onchange="handleExcelUpload(event)">
-                    <span class="text-xs text-slate-300 flex items-center justify-center space-x-2">
-                      <i class="fa-solid fa-cloud-arrow-up text-cyan-400"></i>
-                      <span>Upload Angel One Excel File</span>
-                    </span>
-                  </label>
-                  <button type="button" onclick="openAngelOneModal()" class="bg-slate-900 hover:bg-slate-800 border border-slate-700 rounded-xl py-2 px-3 text-xs text-slate-300 hover:text-white transition" title="SmartAPI / API Key Settings">
+                  <button type="button" onclick="detectAndImportAngelExcel()" class="flex-1 bg-slate-900 hover:bg-slate-800/80 border border-slate-700/80 rounded-xl py-2 px-3 text-center text-xs text-slate-300 hover:text-white transition flex items-center justify-center space-x-1.5">
+                    <i class="fa-solid fa-wand-magic-sparkles text-amber-400"></i>
+                    <span>Auto-Detect Downloads Excel</span>
+                  </button>
+                  <button type="button" onclick="openBrokerImportModal()" class="bg-slate-900 hover:bg-slate-800 border border-slate-700 rounded-xl py-2 px-3 text-xs text-slate-300 hover:text-white transition" title="SmartAPI / Multi-Broker Settings">
                     <i class="fa-solid fa-gear text-slate-400"></i>
                   </button>
                 </div>
@@ -780,7 +1773,7 @@
             </div>
 
             <p class="text-[11px] text-slate-500 italic">
-              Auto-reads columns: Symbol/ISIN, Quantity, Buy Price (Avg Cost), and CMP directly into your active portfolio.
+              Auto-merges positions with volume-weighted average buy prices or isolates them into separate broker portfolios.
             </p>
           </div>
 
@@ -822,85 +1815,6 @@
           </div>
         </div>
       </div>
-
-      <!-- Left (7 cols): Target Sector Allocations & Rebalance Engine -->
-      <div class="w-full bg-slate-900/80 border border-slate-800 rounded-2xl p-6 backdrop-blur flex flex-col justify-between shadow-xl">
-        <div>
-          <div class="flex flex-wrap items-center justify-between gap-3 mb-2 pb-3 border-b border-slate-800/80">
-            <div class="flex items-center space-x-3">
-              <div class="w-9 h-9 rounded-xl bg-gradient-to-tr from-teal-500/15 to-emerald-500/15 border border-teal-500/25 flex items-center justify-center shadow-md">
-                <i class="fa-solid fa-sliders text-teal-400 text-sm"></i>
-              </div>
-              <div>
-                <h3 class="text-base font-bold text-white flex items-center">
-                  Target Sector Allocations & Rebalancer
-                </h3>
-                <p class="text-xs text-slate-400">Model portfolio sector weights &bull; Buy/Sell execution ticket engine</p>
-              </div>
-            </div>
-            <div id="targetSumBadge" class="text-xs font-mono font-bold px-3 py-1 rounded-lg bg-slate-800 text-slate-300 border border-slate-700 shadow-inner">
-              Total: 0.0%
-            </div>
-          </div>
-
-          <!-- Quick Presets Toolbar -->
-          <div class="flex flex-wrap items-center justify-between gap-2 my-3 p-2 bg-slate-950/60 rounded-xl border border-slate-800/60 text-xs">
-            <span class="text-slate-400 text-[11px] font-medium flex items-center">
-              <i class="fa-solid fa-wand-magic-sparkles text-teal-400 mr-1.5"></i> Presets:
-            </span>
-            <div class="flex flex-wrap gap-1.5">
-              <button type="button" onclick="applySectorPreset('EQUAL')" class="px-2.5 py-1 rounded bg-slate-900 hover:bg-slate-800 text-slate-300 hover:text-white border border-slate-700 text-[11px] font-medium transition">
-                Equal (9.1%)
-              </button>
-              <button type="button" onclick="applySectorPreset('GROWTH')" class="px-2.5 py-1 rounded bg-slate-900 hover:bg-slate-800 text-teal-300 hover:text-teal-200 border border-teal-500/25 text-[11px] font-medium transition">
-                Growth Focus
-              </button>
-              <button type="button" onclick="applySectorPreset('DEFENSIVE')" class="px-2.5 py-1 rounded bg-slate-900 hover:bg-slate-800 text-cyan-300 hover:text-cyan-200 border border-cyan-500/30 text-[11px] font-medium transition">
-                Defensive
-              </button>
-              <button type="button" onclick="applySectorPreset('RESET')" class="px-2.5 py-1 rounded bg-slate-900 hover:bg-slate-800 text-rose-300 hover:text-rose-200 border border-rose-500/30 text-[11px] font-medium transition">
-                Reset (0%)
-              </button>
-            </div>
-          </div>
-
-          <!-- Dynamic Sector Inputs Grid -->
-          <div id="sectorTargetsContainer" class="grid grid-cols-1 sm:grid-cols-2 gap-2.5 max-h-[290px] overflow-y-auto pr-1">
-            <!-- Dynamic Sector inputs -->
-          </div>
-        </div>
-
-        <button id="btnRunRebalance" class="w-full mt-4 bg-gradient-to-r from-teal-600 to-emerald-600 hover:from-teal-500 hover:to-emerald-500 text-slate-950 font-bold py-3 rounded-xl text-sm transition shadow-lg shadow-teal-500/10 flex items-center justify-center space-x-2">
-          <i class="fa-solid fa-arrows-rotate"></i>
-          <span>Calculate Sector Rebalance Orders</span>
-        </button>
-      </div>
-
-      <!-- Rebalance Recommendations Section -->
-    <div id="rebalanceResultSection" class="hidden bg-slate-900/90 border border-teal-500/30 rounded-2xl p-6 backdrop-blur shadow-2xl">
-      <div class="flex items-center justify-between mb-4 border-b border-slate-800 pb-3">
-        <div>
-          <h3 class="text-lg font-bold text-white flex items-center">
-            <i class="fa-solid fa-bolt text-teal-400 mr-2"></i> Rebalance Orders & Sector Drift
-          </h3>
-          <p class="text-xs text-slate-400">Target Scaling Algorithm (All Values in INR &#8377;)</p>
-        </div>
-        <button id="btnCloseRecommendations" class="text-slate-400 hover:text-slate-200 text-xs px-2.5 py-1 bg-slate-800 rounded">
-          <i class="fa-solid fa-times mr-1"></i> Close
-        </button>
-      </div>
-
-      <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <div>
-          <h4 class="text-xs font-semibold uppercase tracking-wider text-slate-400 mb-2.5">Suggested Market Trades</h4>
-          <div id="tradesContainer" class="space-y-2"></div>
-        </div>
-        <div>
-          <h4 class="text-xs font-semibold uppercase tracking-wider text-slate-400 mb-2.5">Sector Drift Breakdown</h4>
-          <div id="driftsContainer" class="space-y-2.5"></div>
-        </div>
-      </div>
-    </div>
     </div>
 
     <!-- ======================================================== -->
@@ -928,28 +1842,28 @@
               <i class="fa-solid fa-briefcase text-slate-400"></i>
               <span>My Portfolio</span>
             </button>
-            <button onclick="navigateTo('manage')" class="text-xs bg-slate-800 hover:bg-slate-700 text-teal-400 px-3 py-1.5 rounded-lg border border-slate-700 transition flex items-center space-x-1.5">
-              <i class="fa-solid fa-sliders"></i>
-              <span>Rebalance Desk</span>
+            <button onclick="navigateTo('manage')" class="text-xs bg-slate-800 hover:bg-slate-700 text-cyan-400 px-3 py-1.5 rounded-lg border border-slate-700 transition flex items-center space-x-1.5">
+              <i class="fa-solid fa-cloud-arrow-up"></i>
+              <span>Broker Sync & Trades</span>
             </button>
           </div>
         </div>
       </div>
 
       <!-- SECTION GROUP TIER 2: Full-Width Multi-Factor Institutional Stock Scorecard Desk -->
-    <div class="w-full bg-slate-900/80 border border-slate-800 rounded-2xl p-6 backdrop-blur space-y-4 shadow-xl">
+    <div class="w-full bg-[#0a1222]/90 border border-[#16233d] rounded-2xl p-6 backdrop-blur-md space-y-4 shadow-xl">
       <!-- Cockpit Header & Quick Conviction Bar -->
-      <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-4 pb-4 border-b border-slate-800">
+      <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-4 pb-4 border-b border-[#16233d]">
         <div class="flex items-center space-x-3">
-          <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-teal-500/15 to-emerald-500/15 border border-teal-500/30 flex items-center justify-center shadow-lg shadow-teal-500/10">
-            <i class="fa-solid fa-chart-line text-teal-400 text-lg"></i>
+          <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-cyan-500/20 to-blue-500/20 border border-cyan-500/40 flex items-center justify-center shadow-lg shadow-cyan-500/10">
+            <i class="fa-solid fa-chart-line text-cyan-400 text-lg"></i>
           </div>
           <div>
             <div class="flex items-center space-x-2">
               <h2 class="text-base sm:text-lg font-bold text-white tracking-tight">
                 Multi-Factor Institutional Stock Scorecard
               </h2>
-              <span class="px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-teal-500/15 text-teal-400 border border-teal-500/25">
+              <span class="px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-cyan-500/15 text-cyan-300 border border-cyan-500/30">
                 5-PILLAR ALPHA MODEL
               </span>
             </div>
@@ -961,11 +1875,13 @@
 
         <!-- Search Bar with Instant Enter trigger -->
         <div class="flex items-center space-x-2 w-full lg:w-auto">
-          <div class="relative flex-1 lg:w-72">
-            <input id="inspectorTicker" type="text" placeholder="Search NSE ticker (e.g. KPITTECH, TRENT)..." class="uppercase w-full bg-slate-950 border border-slate-700 rounded-xl pl-9 pr-3 py-2 text-xs text-slate-200 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-teal-500/30 focus:border-teal-500/50" />
+          <div class="relative flex-1 lg:w-72" id="inspectorSearchWrapper">
+            <input id="inspectorTicker" type="text" autocomplete="off" placeholder="Search NSE ticker (e.g. KPITTECH, TRENT)..." class="uppercase w-full bg-[#060c18] border border-[#16233d] rounded-xl pl-9 pr-3 py-2 text-xs text-slate-200 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-cyan-500/30 focus:border-cyan-500/50" />
             <i class="fa-solid fa-magnifying-glass absolute left-3 top-2.5 text-xs text-slate-500"></i>
+            <!-- Autocomplete Suggestions Dropdown -->
+            <div id="inspectorTickerSuggestions" class="hidden absolute left-0 top-full mt-1.5 w-full sm:w-88 bg-[#0d1728] border border-[#17253d] rounded-xl shadow-2xl z-50 overflow-hidden divide-y divide-[#17253d]/50 max-h-80 overflow-y-auto backdrop-blur-md"></div>
           </div>
-          <button id="btnInspectStock" class="bg-gradient-to-r from-amber-600 to-orange-500 hover:from-amber-500 hover:to-orange-400 text-slate-950 font-bold px-4 py-2 rounded-xl text-xs transition shadow-md flex items-center space-x-1.5 whitespace-nowrap">
+          <button id="btnInspectStock" class="bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 text-white font-bold px-4 py-2 rounded-xl text-xs transition shadow-md flex items-center space-x-1.5 whitespace-nowrap">
             <i class="fa-solid fa-microscope"></i>
             <span>Evaluate</span>
           </button>
@@ -975,20 +1891,20 @@
       <!-- Quick-Pick Conviction Ticker Pills -->
       <div class="flex flex-wrap items-center gap-1.5 py-1 text-xs">
         <span class="text-slate-400 text-[11px] font-medium mr-1 flex items-center">
-          <i class="fa-solid fa-fire text-teal-400 mr-1"></i> Quick Inspect:
+          <i class="fa-solid fa-fire text-cyan-400 mr-1"></i> Quick Inspect:
         </span>
-        <button type="button" onclick="quickInspectTicker('KPITTECH')" class="px-2.5 py-1 rounded-lg bg-slate-950 hover:bg-slate-800 text-slate-300 hover:text-teal-400 border border-slate-800 text-[11px] font-mono font-semibold transition">KPITTECH</button>
-        <button type="button" onclick="quickInspectTicker('TRENT')" class="px-2.5 py-1 rounded-lg bg-slate-950 hover:bg-slate-800 text-slate-300 hover:text-teal-400 border border-slate-800 text-[11px] font-mono font-semibold transition">TRENT</button>
-        <button type="button" onclick="quickInspectTicker('BEL')" class="px-2.5 py-1 rounded-lg bg-slate-950 hover:bg-slate-800 text-slate-300 hover:text-teal-400 border border-slate-800 text-[11px] font-mono font-semibold transition">BEL</button>
-        <button type="button" onclick="quickInspectTicker('RELIANCE')" class="px-2.5 py-1 rounded-lg bg-slate-950 hover:bg-slate-800 text-slate-300 hover:text-teal-400 border border-slate-800 text-[11px] font-mono font-semibold transition">RELIANCE</button>
-        <button type="button" onclick="quickInspectTicker('SUZLON')" class="px-2.5 py-1 rounded-lg bg-slate-950 hover:bg-slate-800 text-slate-300 hover:text-teal-400 border border-slate-800 text-[11px] font-mono font-semibold transition">SUZLON</button>
-        <button type="button" onclick="quickInspectTicker('HDFCBANK')" class="px-2.5 py-1 rounded-lg bg-slate-950 hover:bg-slate-800 text-slate-300 hover:text-teal-400 border border-slate-800 text-[11px] font-mono font-semibold transition">HDFCBANK</button>
-        <button type="button" onclick="quickInspectTicker('TATAMOTORS')" class="px-2.5 py-1 rounded-lg bg-slate-950 hover:bg-slate-800 text-slate-300 hover:text-teal-400 border border-slate-800 text-[11px] font-mono font-semibold transition">TATAMOTORS</button>
-        <button type="button" onclick="quickInspectTicker('TATAPOWER')" class="px-2.5 py-1 rounded-lg bg-slate-950 hover:bg-slate-800 text-slate-300 hover:text-teal-400 border border-slate-800 text-[11px] font-mono font-semibold transition">TATAPOWER</button>
+        <button type="button" onclick="quickInspectTicker('KPITTECH')" class="px-2.5 py-1 rounded-lg bg-[#060c18] hover:bg-[#0f1b32] text-slate-300 hover:text-cyan-300 border border-[#16233d] text-[11px] font-mono font-semibold transition">KPITTECH</button>
+        <button type="button" onclick="quickInspectTicker('TRENT')" class="px-2.5 py-1 rounded-lg bg-[#060c18] hover:bg-[#0f1b32] text-slate-300 hover:text-cyan-300 border border-[#16233d] text-[11px] font-mono font-semibold transition">TRENT</button>
+        <button type="button" onclick="quickInspectTicker('BEL')" class="px-2.5 py-1 rounded-lg bg-[#060c18] hover:bg-[#0f1b32] text-slate-300 hover:text-cyan-300 border border-[#16233d] text-[11px] font-mono font-semibold transition">BEL</button>
+        <button type="button" onclick="quickInspectTicker('RELIANCE')" class="px-2.5 py-1 rounded-lg bg-[#060c18] hover:bg-[#0f1b32] text-slate-300 hover:text-cyan-300 border border-[#16233d] text-[11px] font-mono font-semibold transition">RELIANCE</button>
+        <button type="button" onclick="quickInspectTicker('SUZLON')" class="px-2.5 py-1 rounded-lg bg-[#060c18] hover:bg-[#0f1b32] text-slate-300 hover:text-cyan-300 border border-[#16233d] text-[11px] font-mono font-semibold transition">SUZLON</button>
+        <button type="button" onclick="quickInspectTicker('HDFCBANK')" class="px-2.5 py-1 rounded-lg bg-[#060c18] hover:bg-[#0f1b32] text-slate-300 hover:text-cyan-300 border border-[#16233d] text-[11px] font-mono font-semibold transition">HDFCBANK</button>
+        <button type="button" onclick="quickInspectTicker('TATAMOTORS')" class="px-2.5 py-1 rounded-lg bg-[#060c18] hover:bg-[#0f1b32] text-slate-300 hover:text-cyan-300 border border-[#16233d] text-[11px] font-mono font-semibold transition">TATAMOTORS</button>
+        <button type="button" onclick="quickInspectTicker('TATAPOWER')" class="px-2.5 py-1 rounded-lg bg-[#060c18] hover:bg-[#0f1b32] text-slate-300 hover:text-cyan-300 border border-[#16233d] text-[11px] font-mono font-semibold transition">TATAPOWER</button>
       </div>
 
       <!-- Scorecard Result Container -->
-      <div id="stockInspectorResult" class="p-5 bg-slate-950/80 rounded-xl border border-slate-800 space-y-4 text-xs shadow-inner">
+      <div id="stockInspectorResult" class="p-5 bg-[#060c18]/90 rounded-xl border border-[#16233d] space-y-4 text-xs shadow-inner">
         <!-- Default State: 5-Pillar Architecture Overview -->
         <div class="py-4 space-y-4">
           <div class="text-center max-w-2xl mx-auto space-y-1">
@@ -998,35 +1914,35 @@
             </p>
           </div>
           <div class="grid grid-cols-1 sm:grid-cols-5 gap-3 pt-2">
-            <div class="p-3 bg-slate-900/60 rounded-xl border border-slate-800/80 text-center space-y-1">
+            <div class="p-3 bg-[#0a1222] rounded-xl border border-[#16233d] text-center space-y-1">
               <div class="w-8 h-8 rounded-lg bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 flex items-center justify-center mx-auto text-xs">
                 <i class="fa-solid fa-award"></i>
               </div>
               <div class="font-bold text-slate-200 text-xs">1. Quality & ROCE</div>
               <div class="text-[10px] text-slate-500">Capital return &gt;15%, balance sheet strength</div>
             </div>
-            <div class="p-3 bg-slate-900/60 rounded-xl border border-slate-800/80 text-center space-y-1">
-              <div class="w-8 h-8 rounded-lg bg-teal-500/10 border border-teal-500/25 text-teal-400 flex items-center justify-center mx-auto text-xs">
+            <div class="p-3 bg-[#0a1222] rounded-xl border border-[#16233d] text-center space-y-1">
+              <div class="w-8 h-8 rounded-lg bg-cyan-500/10 border border-cyan-500/25 text-cyan-400 flex items-center justify-center mx-auto text-xs">
                 <i class="fa-solid fa-scale-balanced"></i>
               </div>
               <div class="font-bold text-slate-200 text-xs">2. Valuation & PEG</div>
               <div class="text-[10px] text-slate-500">Sector median relative P/E &amp; PEG growth</div>
             </div>
-            <div class="p-3 bg-slate-900/60 rounded-xl border border-slate-800/80 text-center space-y-1">
-              <div class="w-8 h-8 rounded-lg bg-cyan-500/10 border border-cyan-500/30 text-cyan-400 flex items-center justify-center mx-auto text-xs">
+            <div class="p-3 bg-[#0a1222] rounded-xl border border-[#16233d] text-center space-y-1">
+              <div class="w-8 h-8 rounded-lg bg-blue-500/10 border border-blue-500/30 text-blue-400 flex items-center justify-center mx-auto text-xs">
                 <i class="fa-solid fa-arrows-spin"></i>
               </div>
               <div class="font-bold text-slate-200 text-xs">3. Sector Cycle</div>
               <div class="text-[10px] text-slate-500">Secular capex expansion vs consolidation</div>
             </div>
-            <div class="p-3 bg-slate-900/60 rounded-xl border border-slate-800/80 text-center space-y-1">
+            <div class="p-3 bg-[#0a1222] rounded-xl border border-[#16233d] text-center space-y-1">
               <div class="w-8 h-8 rounded-lg bg-purple-500/10 border border-purple-500/30 text-purple-400 flex items-center justify-center mx-auto text-xs">
                 <i class="fa-solid fa-user-shield"></i>
               </div>
               <div class="font-bold text-slate-200 text-xs">4. Governance &amp; FII</div>
               <div class="text-[10px] text-slate-500">Zero pledge audit &amp; institutional float</div>
             </div>
-            <div class="p-3 bg-slate-900/60 rounded-xl border border-slate-800/80 text-center space-y-1">
+            <div class="p-3 bg-[#0a1222] rounded-xl border border-[#16233d] text-center space-y-1">
               <div class="w-8 h-8 rounded-lg bg-orange-500/10 border border-orange-500/30 text-orange-400 flex items-center justify-center mx-auto text-xs">
                 <i class="fa-solid fa-landmark-flag"></i>
               </div>
@@ -1042,9 +1958,9 @@
       <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-stretch">
         <div class="lg:col-span-12">
           <!-- Right (5 cols): Upcoming Results & Macro Policy Events Card -->
-      <div class="w-full bg-slate-900/80 border border-slate-800 rounded-2xl p-6 backdrop-blur flex flex-col justify-between shadow-xl">
+      <div class="w-full bg-[#0a1222]/90 border border-[#16233d] rounded-2xl p-6 backdrop-blur flex flex-col justify-between shadow-xl">
         <div>
-          <div class="flex items-center justify-between pb-3 mb-3 border-b border-slate-800/80">
+          <div class="flex items-center justify-between pb-3 mb-3 border-b border-[#16233d]">
             <div class="flex items-center space-x-3">
               <div class="w-9 h-9 rounded-xl bg-gradient-to-tr from-cyan-500/20 to-blue-500/20 border border-cyan-500/30 flex items-center justify-center shadow-md">
                 <i class="fa-solid fa-calendar-day text-cyan-400 text-sm"></i>
@@ -1067,27 +1983,27 @@
           </div>
         </div>
 
-        <div class="mt-4 pt-3 border-t border-slate-800 text-[11px] text-slate-500 flex items-center justify-between">
+        <div class="mt-4 pt-3 border-t border-[#16233d] text-[11px] text-slate-500 flex items-center justify-between">
           <span class="flex items-center"><i class="fa-solid fa-circle-info text-slate-400 mr-1.5"></i> Tracks all active portfolio holdings</span>
-          <span class="text-teal-400/80 font-mono text-[10px]">NSE & BSE Filings</span>
+          <span class="text-cyan-400/80 font-mono text-[10px]">NSE & BSE Filings</span>
         </div>
       </div>
         </div>
       </div>
 
       <!-- INSTITUTIONAL 1-2 MONTH SWING RADAR DESK (5% - 15%+ TARGET) -->
-      <div class="w-full bg-slate-900/80 border border-teal-500/30 rounded-2xl p-6 backdrop-blur space-y-4 shadow-xl">
-        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-slate-800">
+      <div class="w-full bg-[#0a1222]/90 border border-cyan-500/30 rounded-2xl p-6 backdrop-blur space-y-4 shadow-xl">
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-[#16233d]">
           <div class="flex items-center space-x-3">
-            <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-amber-500/20 to-teal-500/20 border border-teal-500/40 flex items-center justify-center shadow-lg shadow-teal-500/10">
-              <i class="fa-solid fa-bolt text-teal-400 text-lg"></i>
+            <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-cyan-500/20 to-blue-500/20 border border-cyan-500/40 flex items-center justify-center shadow-lg shadow-cyan-500/10">
+              <i class="fa-solid fa-bolt text-cyan-400 text-lg"></i>
             </div>
             <div>
               <div class="flex items-center space-x-2">
                 <h3 class="text-base sm:text-lg font-bold text-white tracking-tight">
                   Institutional 1–2 Month Swing Trading Radar
                 </h3>
-                <span class="px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-amber-500/15 text-amber-300 border border-amber-500/30">
+                <span class="px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-cyan-500/15 text-cyan-300 border border-cyan-500/30">
                   TARGET: +5% TO +15%+
                 </span>
               </div>
@@ -1097,7 +2013,7 @@
             </div>
           </div>
           <div class="flex items-center space-x-2">
-            <button onclick="loadSwingRadarFeed()" class="text-xs bg-teal-500/15 hover:bg-teal-500/25 text-teal-300 border border-teal-500/30 px-3 py-1.5 rounded-lg transition flex items-center space-x-1.5 font-semibold">
+            <button onclick="loadSwingRadarFeed()" class="text-xs bg-cyan-500/15 hover:bg-cyan-500/25 text-cyan-300 border border-cyan-500/30 px-3 py-1.5 rounded-lg transition flex items-center space-x-1.5 font-semibold">
               <i id="iconRefreshSwing" class="fa-solid fa-arrows-rotate"></i>
               <span>Refresh Radar</span>
             </button>
@@ -1145,8 +2061,583 @@
     </div>
 
     <!-- ======================================================== -->
+    <!-- VIEW 4: THEORY LAB & MOCK INCUBATOR (#/theories)          -->
+    <!-- ======================================================== -->
+    <div id="viewTheories" class="view-panel space-y-6 hidden">
+      <!-- Theory Incubator Header Banner -->
+      <div class="bg-slate-900/80 themed-card border border-slate-800 rounded-2xl p-6 backdrop-blur shadow-xl">
+        <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-4 pb-4 border-b border-slate-800/80 themed-border">
+          <div class="flex items-center space-x-3.5">
+            <div class="w-12 h-12 rounded-2xl bg-gradient-to-tr from-purple-500/20 to-indigo-500/20 border border-purple-500/35 flex items-center justify-center shadow-lg shadow-purple-500/10">
+              <i class="fa-solid fa-graduation-cap text-purple-400 text-xl"></i>
+            </div>
+            <div>
+              <div class="flex items-center space-x-2.5 flex-wrap gap-y-1">
+                <h2 class="text-base sm:text-xl font-bold text-white tracking-tight">
+                  Academic Theory Incubator &amp; Mock Portfolios
+                </h2>
+                <span class="px-2.5 py-0.5 rounded text-[10px] font-mono font-bold bg-purple-500/15 text-purple-300 border border-purple-500/30">
+                  FORWARD PAPER-TESTING
+                </span>
+                <span class="px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-emerald-500/15 text-emerald-400 border border-emerald-500/30">
+                  ZERO CAPITAL AT RISK
+                </span>
+              </div>
+              <p class="text-xs text-slate-400 mt-1 max-w-4xl">
+                Real-time tracking of 3 celebrated investment theories from foundational market literature, academic journals &amp; Nobel laureate economists. Tracking virtual &#8377;10,00,000 mock seed capital per methodology across Indian equities over the next few months to observe real returns before committing real capital.
+              </p>
+            </div>
+          </div>
+          <div class="flex items-center space-x-2 flex-wrap gap-y-2">
+            <button onclick="refreshTheoryPortfolios(true)" id="btnRefreshTheories" class="text-xs bg-purple-600/20 hover:bg-purple-600/30 text-purple-300 hover:text-white px-3.5 py-2 rounded-xl border border-purple-500/40 transition flex items-center space-x-1.5 shadow-sm">
+              <i class="fa-solid fa-rotate text-xs"></i>
+              <span>Refresh Live Prices</span>
+            </button>
+            <button onclick="exportTheoryTrackingData()" class="text-xs bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white px-3.5 py-2 rounded-xl border border-slate-700 transition flex items-center space-x-1.5 shadow-sm">
+              <i class="fa-solid fa-download text-xs text-slate-400"></i>
+              <span>Export Report</span>
+            </button>
+            <button onclick="navigateTo('portfolio')" class="text-xs bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white px-3.5 py-2 rounded-xl border border-slate-700 transition flex items-center space-x-1.5 shadow-sm">
+              <i class="fa-solid fa-briefcase text-xs text-teal-400"></i>
+              <span>My Portfolio</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Incubator Summary Highlights Bar -->
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-3 pt-4 text-xs">
+          <div class="p-3 rounded-xl bg-slate-950/60 themed-elevated border border-slate-800/80">
+            <div class="text-[11px] text-slate-400">Total Virtual Seed Capital</div>
+            <div class="text-base font-bold font-mono text-white mt-0.5">&#8377;30,00,000</div>
+            <div class="text-[10px] text-purple-400 mt-0.5">&#8377;10 Lakhs &times; 3 Theories</div>
+          </div>
+          <div class="p-3 rounded-xl bg-slate-950/60 themed-elevated border border-slate-800/80">
+            <div class="text-[11px] text-slate-400">Total Mock Valuation</div>
+            <div id="incubatorTotalValue" class="text-base font-bold font-mono text-emerald-400 mt-0.5">&#8377;33,05,510</div>
+            <div id="incubatorTotalPnl" class="text-[10px] text-emerald-400 mt-0.5">+&#8377;3,05,510 (+10.18% avg)</div>
+          </div>
+          <div class="p-3 rounded-xl bg-slate-950/60 themed-elevated border border-slate-800/80">
+            <div class="text-[11px] text-slate-400">Nifty 50 Control Benchmark</div>
+            <div class="text-base font-bold font-mono text-slate-200 mt-0.5">+3.42%</div>
+            <div class="text-[10px] text-slate-400 mt-0.5">Aug 2026 Inception Baseline</div>
+          </div>
+          <div class="p-3 rounded-xl bg-slate-950/60 themed-elevated border border-slate-800/80">
+            <div class="text-[11px] text-slate-400">Observation Phase</div>
+            <div class="text-base font-bold text-amber-400 mt-0.5 flex items-center space-x-1.5">
+              <span class="w-2 h-2 rounded-full bg-amber-400 animate-pulse"></span>
+              <span>Month 2 Active</span>
+            </div>
+            <div class="text-[10px] text-slate-400 mt-0.5">Decision gate in Month 6</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ========================================================================= -->
+      <!-- INSTITUTIONAL DECISION HUB: TABS (AUDIT, CORRELATION, MACRO SHOCK)         -->
+      <!-- ========================================================================= -->
+      <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-2 rounded-xl bg-slate-900/60 themed-elevated border border-slate-800/80">
+        <div class="inline-flex p-1 rounded-lg bg-slate-950/60 themed-card border border-slate-800/80 space-x-1 flex-wrap gap-y-1">
+          <button id="hubTabAudit" onclick="switchTheoryHubTab('AUDIT')" class="hub-tab-btn px-3 py-1.5 rounded-md text-xs font-semibold bg-teal-500/20 text-teal-300 border border-teal-500/30 transition">
+            <i class="fa-solid fa-clipboard-check mr-1 text-teal-400"></i> 1. Portfolio Health &amp; Pruning Audit
+          </button>
+          <button id="hubTabCorrelation" onclick="switchTheoryHubTab('CORRELATION')" class="hub-tab-btn px-3 py-1.5 rounded-md text-xs font-semibold text-slate-400 hover:text-white transition">
+            <i class="fa-solid fa-network-wired mr-1 text-cyan-400"></i> 2. Full-Time Investor Correlation Matrix
+          </button>
+          <button id="hubTabMacro" onclick="switchTheoryHubTab('MACRO')" class="hub-tab-btn px-3 py-1.5 rounded-md text-xs font-semibold text-slate-400 hover:text-white transition">
+            <i class="fa-solid fa-bolt-lightning mr-1 text-amber-400"></i> 3. Supply Chain Macro Stress-Tester
+          </button>
+        </div>
+        <div class="text-[11px] text-slate-400 px-3 flex items-center space-x-2">
+          <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+          <span>Institutional Quant Engine Active</span>
+        </div>
+      </div>
+
+      <!-- DESK 1: Portfolio Theory Health Audit (Feature 1 & 2) -->
+      <div id="deskTheoryAudit" class="space-y-5">
+      <!-- ========================================================================= -->
+      <!-- ACTIONABLE DECISION DESK: AUDIT MY PORTFOLIO AGAINST THE 3 THEORIES      -->
+      <!-- ========================================================================= -->
+      <div id="portfolioTheoryAuditSection" class="bg-slate-900/90 themed-card border border-teal-500/30 rounded-2xl p-6 shadow-xl space-y-5">
+        <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-4 pb-4 border-b border-slate-800/80 themed-border">
+          <div class="flex items-start sm:items-center space-x-3.5">
+            <div class="w-11 h-11 rounded-xl bg-gradient-to-tr from-teal-500/20 to-cyan-500/20 border border-teal-500/35 flex items-center justify-center text-teal-400 text-lg shadow-md shadow-teal-500/10 flex-shrink-0">
+              <i class="fa-solid fa-microchip"></i>
+            </div>
+            <div>
+              <div class="flex items-center space-x-2.5 flex-wrap gap-y-1">
+                <h3 class="text-base sm:text-lg font-bold text-white tracking-tight">
+                  Audit My Portfolio Against The 3 Theories
+                </h3>
+                <span class="px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-teal-500/15 text-teal-300 border border-teal-500/30">
+                  REAL CAPITAL DECISION ENGINE
+                </span>
+                <span class="px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-amber-500/15 text-amber-300 border border-amber-500/30">
+                  ACTIONABLE PRUNING &amp; SWAPS
+                </span>
+              </div>
+              <p class="text-xs text-slate-400 mt-1 max-w-3xl">
+                Scans all <span id="auditTotalHoldingsText" class="font-bold text-slate-200">--</span> active positions in your portfolio against Graham's Solvency Shield, Greenblatt's Magic Formula, and Minervini's Momentum. Identifies your true compounders and flags capital-drag laggards to prune.
+              </p>
+            </div>
+          </div>
+          <div class="flex items-center space-x-2 flex-shrink-0">
+            <button onclick="loadPortfolioTheoryAudit(true)" id="btnReauditPortfolio" class="px-3.5 py-2 bg-gradient-to-r from-teal-600 to-cyan-600 hover:from-teal-500 hover:to-cyan-500 text-slate-950 font-bold rounded-xl text-xs shadow-md transition flex items-center space-x-1.5">
+              <i class="fa-solid fa-arrows-rotate text-xs"></i>
+              <span>Re-Scan My Portfolio</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Audit Summary Scorecard Pills -->
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-3 text-xs">
+          <!-- Champions Pill -->
+          <div onclick="filterAuditTable('CHAMPIONS')" class="cursor-pointer group p-3.5 rounded-xl bg-slate-950/70 themed-elevated border border-emerald-500/30 hover:border-emerald-400 transition">
+            <div class="flex items-center justify-between text-[11px] text-slate-400">
+              <span class="flex items-center"><i class="fa-solid fa-trophy text-emerald-400 mr-1.5"></i> Theory Champions</span>
+              <span id="auditChampionsBadge" class="font-mono text-emerald-400 font-bold">--</span>
+            </div>
+            <div id="auditChampionsVal" class="text-base font-bold font-mono text-white mt-1">&#8377;--</div>
+            <div id="auditChampionsSub" class="text-[10px] text-emerald-400 font-mono mt-0.5">Core Compounders (Hold)</div>
+          </div>
+
+          <!-- Near Miss Pill -->
+          <div onclick="filterAuditTable('NEARMISS')" class="cursor-pointer group p-3.5 rounded-xl bg-slate-950/70 themed-elevated border border-amber-500/30 hover:border-amber-400 transition">
+            <div class="flex items-center justify-between text-[11px] text-slate-400">
+              <span class="flex items-center"><i class="fa-solid fa-eye text-amber-400 mr-1.5"></i> Near-Miss Watchlist</span>
+              <span id="auditNearMissBadge" class="font-mono text-amber-400 font-bold">--</span>
+            </div>
+            <div id="auditNearMissVal" class="text-base font-bold font-mono text-white mt-1">&#8377;--</div>
+            <div id="auditNearMissSub" class="text-[10px] text-amber-400 font-mono mt-0.5">Watch for Breakouts</div>
+          </div>
+
+          <!-- Toxic Laggards Pill -->
+          <div onclick="filterAuditTable('TOXIC')" class="cursor-pointer group p-3.5 rounded-xl bg-rose-950/20 themed-elevated border border-rose-500/40 hover:border-rose-400 transition shadow-inner">
+            <div class="flex items-center justify-between text-[11px] text-slate-400">
+              <span class="flex items-center font-bold text-rose-400"><i class="fa-solid fa-triangle-exclamation mr-1.5"></i> Toxic Laggards</span>
+              <span id="auditToxicBadge" class="font-mono bg-rose-500/20 text-rose-300 px-1.5 py-0.2 rounded border border-rose-500/30 font-bold">--</span>
+            </div>
+            <div id="auditToxicVal" class="text-base font-bold font-mono text-rose-400 mt-1">&#8377;--</div>
+            <div id="auditToxicSub" class="text-[10px] text-rose-300 font-mono mt-0.5 font-bold">Actionable Pruning List</div>
+          </div>
+
+          <!-- Recoverable Capital Pill -->
+          <div class="p-3.5 rounded-xl bg-slate-950/70 themed-elevated border border-cyan-500/30">
+            <div class="text-[11px] text-slate-400 flex items-center justify-between">
+              <span>Capital to Free Up</span>
+              <i class="fa-solid fa-hand-holding-dollar text-cyan-400"></i>
+            </div>
+            <div id="auditRecoverableCapital" class="text-base font-bold font-mono text-cyan-300 mt-1">&#8377;--</div>
+            <div class="text-[10px] text-slate-400 mt-0.5">Reinvest into Strategy Picks</div>
+          </div>
+        </div>
+
+        <!-- Executive Verdict Banner -->
+        <div id="auditVerdictBox" class="p-3.5 rounded-xl bg-slate-950/60 themed-elevated border border-slate-800 text-xs text-slate-300 flex items-start space-x-2.5">
+          <i class="fa-solid fa-circle-info text-cyan-400 text-sm mt-0.5 flex-shrink-0"></i>
+          <span id="auditVerdictText">Loading portfolio theory health audit...</span>
+        </div>
+
+        <!-- Filter Buttons for Audit Table -->
+        <div class="flex items-center justify-between flex-wrap gap-2 pt-1">
+          <div class="inline-flex p-1 rounded-lg bg-slate-950/70 themed-card border border-slate-800/80 space-x-1 text-xs">
+            <button id="auditBtnFilterToxic" onclick="filterAuditTable('TOXIC')" class="audit-filter-btn px-3 py-1.5 rounded-md font-bold text-rose-300 bg-rose-500/20 border border-rose-500/30 transition">
+              <i class="fa-solid fa-scissors mr-1"></i> Toxic Pruning List (<span id="auditCountBtnToxic">0</span>)
+            </button>
+            <button id="auditBtnFilterChampions" onclick="filterAuditTable('CHAMPIONS')" class="audit-filter-btn px-3 py-1.5 rounded-md font-medium text-slate-400 hover:text-white transition">
+              <i class="fa-solid fa-trophy mr-1 text-emerald-400"></i> Champions (<span id="auditCountBtnChampions">0</span>)
+            </button>
+            <button id="auditBtnFilterNearMiss" onclick="filterAuditTable('NEARMISS')" class="audit-filter-btn px-3 py-1.5 rounded-md font-medium text-slate-400 hover:text-white transition">
+              <i class="fa-solid fa-eye mr-1 text-amber-400"></i> Near-Miss (<span id="auditCountBtnNearMiss">0</span>)
+            </button>
+            <button id="auditBtnFilterAll" onclick="filterAuditTable('ALL')" class="audit-filter-btn px-3 py-1.5 rounded-md font-medium text-slate-400 hover:text-white transition">
+              All Audited (<span id="auditCountBtnAll">0</span>)
+            </button>
+          </div>
+          <div class="text-[11px] text-slate-400 flex items-center space-x-1">
+            <i class="fa-solid fa-bolt text-amber-400"></i>
+            <span>Click <b>Prune / Sell</b> to execute or <b>Simulate Swap</b> to model replacement</span>
+          </div>
+        </div>
+
+        <!-- Audit Table Container -->
+        <div class="overflow-x-auto rounded-xl border border-slate-800 themed-border shadow-inner max-h-[480px]">
+          <table class="w-full text-left border-collapse text-xs">
+            <thead class="sticky top-0 z-10 bg-slate-950 themed-elevated">
+              <tr class="border-b border-slate-800 text-[10px] uppercase font-mono tracking-wider text-slate-400">
+                <th class="px-4 py-3">Holding / Sector</th>
+                <th class="px-3 py-3 text-right">Mkt Value (₹)</th>
+                <th class="px-3 py-3 text-right">P&amp;L (%)</th>
+                <th class="px-3 py-3">Audit Classification</th>
+                <th class="px-3 py-3">Theory Match / Fail</th>
+                <th class="px-3 py-3">Plain-English Diagnostic</th>
+                <th class="px-4 py-3 text-center">Action / Swap</th>
+              </tr>
+            </thead>
+            <tbody id="portfolioAuditTableBody" class="divide-y divide-slate-800/80 themed-border bg-slate-900/40">
+              <!-- Dynamically populated -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+      </div>
+
+      <!-- DESK 2: Full-Time Investor Correlation Matrix & Cluster Stress (Feature 3) -->
+      <div id="deskCorrelationMatrix" class="hidden space-y-5">
+        <div class="bg-slate-900/90 themed-card border border-cyan-500/30 rounded-2xl p-6 shadow-xl space-y-5">
+          <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-4 pb-4 border-b border-slate-800/80 themed-border">
+            <div class="flex items-start sm:items-center space-x-3.5">
+              <div class="w-11 h-11 rounded-xl bg-gradient-to-tr from-cyan-500/20 to-blue-500/20 border border-cyan-500/35 flex items-center justify-center text-cyan-400 text-lg shadow-md flex-shrink-0">
+                <i class="fa-solid fa-network-wired"></i>
+              </div>
+              <div>
+                <div class="flex items-center space-x-2.5 flex-wrap gap-y-1">
+                  <h3 class="text-base sm:text-lg font-bold text-white tracking-tight">
+                    Cross-Asset Correlation Matrix &amp; Cluster Stress Desk
+                  </h3>
+                  <span class="px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-cyan-500/15 text-cyan-300 border border-cyan-500/30">
+                    FULL-TIME INVESTOR RISK DESK
+                  </span>
+                </div>
+                <p class="text-xs text-slate-400 mt-1 max-w-3xl">
+                  Calculates cross-holding return covariance and factor co-movement across your core portfolio assets. Detects hidden cluster concentration where multiple stocks move in lockstep during market drawdowns.
+                </p>
+              </div>
+            </div>
+            <div class="flex items-center space-x-2 flex-shrink-0">
+              <button onclick="loadCorrelationMatrix(true)" class="px-3.5 py-2 bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 text-slate-950 font-bold rounded-xl text-xs shadow-md transition flex items-center space-x-1.5">
+                <i class="fa-solid fa-arrows-rotate text-xs"></i>
+                <span>Re-Compute Matrix</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- Diversification Ratio & Factor Resilience KPI -->
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-3 text-xs">
+            <div class="p-4 rounded-xl bg-slate-950/70 border border-cyan-500/30 space-y-1">
+              <div class="text-[11px] text-slate-400 flex items-center justify-between">
+                <span>Diversification Ratio (DR)</span>
+                <i class="fa-solid fa-shield text-cyan-400"></i>
+              </div>
+              <div id="corrDivRatio" class="text-2xl font-bold font-mono text-cyan-300">--</div>
+              <div id="corrDivRating" class="text-[10px] text-slate-400 font-semibold">Calculating...</div>
+            </div>
+
+            <div class="p-4 rounded-xl bg-slate-950/70 border border-amber-500/30 space-y-1">
+              <div class="text-[11px] text-slate-400 flex items-center justify-between">
+                <span>High-Risk Correlated Clusters</span>
+                <i class="fa-solid fa-triangle-exclamation text-amber-400"></i>
+              </div>
+              <div id="corrClusterCount" class="text-2xl font-bold font-mono text-amber-400">--</div>
+              <div class="text-[10px] text-slate-400">Pairs with correlation &gt; 0.70</div>
+            </div>
+
+            <div class="p-4 rounded-xl bg-slate-950/70 border border-slate-800 space-y-1">
+              <div class="text-[11px] text-slate-400 flex items-center justify-between">
+                <span>Institutional Risk Insight</span>
+                <i class="fa-solid fa-brain text-purple-400"></i>
+              </div>
+              <div id="corrCommentary" class="text-xs text-slate-300 line-clamp-2 leading-relaxed">Loading matrix...</div>
+            </div>
+          </div>
+
+          <!-- Correlation Heatmap -->
+          <div class="space-y-2">
+            <div class="flex items-center justify-between text-xs">
+              <span class="font-bold text-white uppercase tracking-wider text-[11px]"><i class="fa-solid fa-table-cells mr-1.5 text-cyan-400"></i> Pairwise Correlation Heatmap (Top Holdings)</span>
+              <div class="flex items-center space-x-3 text-[10px] font-mono">
+                <span class="flex items-center"><span class="w-2.5 h-2.5 rounded-full bg-rose-500/80 mr-1"></span> &gt;0.75 High Co-movement</span>
+                <span class="flex items-center"><span class="w-2.5 h-2.5 rounded-full bg-amber-500/80 mr-1"></span> 0.50-0.75 Moderate</span>
+                <span class="flex items-center"><span class="w-2.5 h-2.5 rounded-full bg-emerald-500/80 mr-1"></span> &lt;0.50 Low / Non-Correlated</span>
+              </div>
+            </div>
+            <div id="correlationHeatmapContainer" class="overflow-x-auto rounded-xl border border-slate-800/80 bg-slate-950/60 p-3">
+              <!-- Rendered dynamically -->
+            </div>
+          </div>
+
+          <!-- High Risk Cluster Alerts -->
+          <div class="space-y-2">
+            <div class="text-xs font-bold text-white uppercase tracking-wider text-[11px] flex items-center">
+              <i class="fa-solid fa-radiation mr-1.5 text-rose-400"></i> Systemic Cluster Risk Warnings
+            </div>
+            <div id="correlationClustersContainer" class="grid grid-cols-1 md:grid-cols-2 gap-3">
+              <!-- Rendered dynamically -->
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- DESK 3: Supply Chain & Commodity Macro Shock Simulator (Feature 4) -->
+      <div id="deskMacroStress" class="hidden space-y-5">
+        <div class="bg-slate-900/90 themed-card border border-amber-500/30 rounded-2xl p-6 shadow-xl space-y-5">
+          <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-4 pb-4 border-b border-slate-800/80 themed-border">
+            <div class="flex items-start sm:items-center space-x-3.5">
+              <div class="w-11 h-11 rounded-xl bg-gradient-to-tr from-amber-500/20 to-orange-500/20 border border-amber-500/35 flex items-center justify-center text-amber-400 text-lg shadow-md flex-shrink-0">
+                <i class="fa-solid fa-bolt-lightning"></i>
+              </div>
+              <div>
+                <div class="flex items-center space-x-2.5 flex-wrap gap-y-1">
+                  <h3 class="text-base sm:text-lg font-bold text-white tracking-tight">
+                    Supply Chain &amp; Commodity Macro Shock Simulator
+                  </h3>
+                  <span class="px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-amber-500/15 text-amber-300 border border-amber-500/30">
+                    MACRO FACTOR SENSITIVITY
+                  </span>
+                </div>
+                <p class="text-xs text-slate-400 mt-1 max-w-3xl">
+                  Stress-tests your active portfolio against exogenous macroeconomic shocks. Maps input-output cost structures (petrochemicals, semiconductor import dependencies, FX exposure, interest rate burdens) to simulate real P&amp;L transmission.
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <!-- Scenario Selector Buttons -->
+          <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+            <button id="macroScenarioBtnCrude" onclick="runMacroStressScenario('crude_surge')" class="macro-scenario-btn p-3.5 rounded-xl text-left bg-amber-500/20 border border-amber-500/40 text-white transition space-y-1 hover:border-amber-400">
+              <div class="flex items-center justify-between">
+                <span class="text-xs font-bold flex items-center"><i class="fa-solid fa-oil-well text-amber-400 mr-1.5"></i> Global Crude Spike</span>
+                <span class="text-[10px] font-mono text-amber-300 font-bold">+15% to $90/bbl</span>
+              </div>
+              <p class="text-[11px] text-slate-300">Hormuz supply bottlenecks; crude surges, testing input costs.</p>
+            </button>
+
+            <button id="macroScenarioBtnInr" onclick="runMacroStressScenario('inr_depreciation')" class="macro-scenario-btn p-3.5 rounded-xl text-left bg-slate-950/70 border border-slate-800 text-slate-300 transition space-y-1 hover:text-white hover:border-slate-700">
+              <div class="flex items-center justify-between">
+                <span class="text-xs font-bold flex items-center"><i class="fa-solid fa-money-bill-transfer text-cyan-400 mr-1.5"></i> Rupee Devaluation</span>
+                <span class="text-[10px] font-mono text-cyan-300 font-bold">+3.0% USD/INR</span>
+              </div>
+              <p class="text-[11px] text-slate-400">USD strengthens to ₹86.50; tests exporters vs component importers.</p>
+            </button>
+
+            <button id="macroScenarioBtnRate" onclick="runMacroStressScenario('rbi_rate_hike')" class="macro-scenario-btn p-3.5 rounded-xl text-left bg-slate-950/70 border border-slate-800 text-slate-300 transition space-y-1 hover:text-white hover:border-slate-700">
+              <div class="flex items-center justify-between">
+                <span class="text-xs font-bold flex items-center"><i class="fa-solid fa-building-columns text-emerald-400 mr-1.5"></i> RBI Repo Rate Hike</span>
+                <span class="text-[10px] font-mono text-emerald-300 font-bold">+25 bps</span>
+              </div>
+              <p class="text-[11px] text-slate-400">Monetary policy tightening tests bank NIMs vs levered balance sheets.</p>
+            </button>
+          </div>
+
+          <!-- Scenario Impact Summary Scorecard -->
+          <div class="p-4 rounded-xl bg-slate-950/80 border border-slate-800 space-y-3">
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-800 pb-3">
+              <div>
+                <h4 id="macroStressTitle" class="text-sm font-bold text-white">Global Crude Oil Shock (+15% to $90/bbl)</h4>
+                <p id="macroStressDesc" class="text-xs text-slate-400">Simulates Brent crude spiking from $78 to $90/barrel</p>
+              </div>
+              <div class="flex items-baseline space-x-3 text-right">
+                <div>
+                  <div class="text-[10px] text-slate-400">Estimated Portfolio P&amp;L Delta</div>
+                  <div id="macroPnlDelta" class="text-lg font-mono font-bold text-white">&#8377;--</div>
+                </div>
+                <div class="pl-3 border-l border-slate-800">
+                  <div class="text-[10px] text-slate-400">Net Impact %</div>
+                  <div id="macroImpactPct" class="text-lg font-mono font-bold text-white">--%</div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Defensive Recommendation Banner -->
+            <div class="p-3 rounded-lg bg-slate-900 border border-amber-500/20 text-xs text-slate-300 flex items-start space-x-2.5">
+              <i class="fa-solid fa-chess-knight text-amber-400 mt-0.5 flex-shrink-0"></i>
+              <div>
+                <span class="font-bold text-white">Institutional Defensive Action:</span>
+                <span id="macroDefensiveText" class="ml-1 text-slate-300">Loading scenario recommendation...</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Impact Breakdown: Beneficiaries vs Margin Squeezed -->
+          <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
+            <!-- Beneficiaries -->
+            <div class="p-4 rounded-xl bg-emerald-950/20 border border-emerald-500/30 space-y-3">
+              <div class="text-xs font-bold text-emerald-400 uppercase tracking-wider flex items-center justify-between">
+                <span><i class="fa-solid fa-arrow-trend-up mr-1.5"></i> Top Beneficiaries (Margin Expansion)</span>
+                <span class="text-[10px] font-mono text-slate-400">Supply Chain Tailwinds</span>
+              </div>
+              <div id="macroBeneficiariesList" class="space-y-2 text-xs">
+                <!-- Dynamically populated -->
+              </div>
+            </div>
+
+            <!-- Squeezed -->
+            <div class="p-4 rounded-xl bg-rose-950/20 border border-rose-500/30 space-y-3">
+              <div class="text-xs font-bold text-rose-400 uppercase tracking-wider flex items-center justify-between">
+                <span><i class="fa-solid fa-arrow-trend-down mr-1.5"></i> Top Squeezed Holdings (Input Cost Headwinds)</span>
+                <span class="text-[10px] font-mono text-slate-400">Gross Margin Contraction</span>
+              </div>
+              <div id="macroSqueezedList" class="space-y-2 text-xs">
+                <!-- Dynamically populated -->
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Theory Strategy Selector & Filters -->
+      <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-1.5 rounded-xl bg-slate-900/60 themed-elevated border border-slate-800/80">
+        <div class="inline-flex p-1 rounded-lg bg-slate-950/60 themed-card border border-slate-800/80 space-x-1 flex-wrap gap-y-1">
+          <button id="theoryFilterAll" onclick="filterTheoryView('ALL')" class="theory-filter-btn px-3 py-1.5 rounded-md text-xs font-semibold bg-purple-500/20 text-purple-300 border border-purple-500/30 transition">
+            <i class="fa-solid fa-layer-group text-[10px] mr-1"></i> All 3 Indian Theories
+          </button>
+          <button id="theoryFilterPiotroski" onclick="filterTheoryView('GRAHAM_PIOTROSKI_VALUE')" class="theory-filter-btn px-3 py-1.5 rounded-md text-xs font-semibold text-slate-400 hover:text-white transition" title="10-Yr ROCE >= 15% & Sales >= 10% Every Year | Zero Debt">
+            <i class="fa-solid fa-mug-hot text-[10px] mr-1 text-emerald-400"></i> Strategy 1: Coffee Can Compounding
+          </button>
+          <button id="theoryFilterMagic" onclick="filterTheoryView('MAGIC_FORMULA')" class="theory-filter-btn px-3 py-1.5 rounded-md text-xs font-semibold text-slate-400 hover:text-white transition" title="Quality (ROE > 20%) + Growth (PAT CAGR > 22%) + Longevity + Fair Price (PEG <= 1.25)">
+            <i class="fa-solid fa-chart-line text-[10px] mr-1 text-cyan-400"></i> Strategy 2: Motilal Oswal QGLP
+          </button>
+          <button id="theoryFilterSepa" onclick="filterTheoryView('SEPA_MOMENTUM')" class="theory-filter-btn px-3 py-1.5 rounded-md text-xs font-semibold text-slate-400 hover:text-white transition" title="Relative Strength (RS >= 80) + Stage 2 Uptrend + DII/FPI Accumulation + 7% Stop Loss">
+            <i class="fa-solid fa-bolt-lightning text-[10px] mr-1 text-amber-400"></i> Strategy 3: Stage 2 Policy Momentum
+          </button>
+        </div>
+        <div class="text-xs text-slate-400 px-3 flex items-center space-x-2">
+          <i class="fa-solid fa-circle-info text-purple-400"></i>
+          <span>Click on any theory to isolate constituent forensics &amp; simulate swaps</span>
+        </div>
+      </div>
+
+      <!-- Strategy Leaderboard Cards (3 Theories Comparison) -->
+      <div id="theoryLeaderboardCards" class="grid grid-cols-1 md:grid-cols-3 gap-5">
+        <!-- Rendered dynamically -->
+      </div>
+
+      <!-- Theory Deep Dives & Mock Portfolios Container -->
+      <div id="theoryPortfoliosContainer" class="space-y-8">
+        <!-- Strategy 1, 2, 3 details rendered here -->
+      </div>
+    </div>
+
+    <!-- ======================================================== -->
     <!-- GLOBAL MODALS (Globally accessible across all views)      -->
     <!-- ======================================================== -->
+
+    <!-- What-If Trade & Strategy Swap Simulator Modal -->
+    <div id="modalWhatIfSwap" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/85 backdrop-blur-md">
+      <div class="relative w-full max-w-2xl bg-slate-900 themed-card border border-cyan-500/40 rounded-2xl p-6 shadow-2xl text-slate-100 space-y-5">
+        <div class="flex items-center justify-between border-b border-slate-800 pb-3">
+          <div class="flex items-center space-x-2.5">
+            <div class="w-9 h-9 rounded-xl bg-cyan-500/15 border border-cyan-500/30 flex items-center justify-center text-cyan-400">
+              <i class="fa-solid fa-shuffle"></i>
+            </div>
+            <div>
+              <h3 class="text-base font-bold text-white">What-If Stock Swap Simulator</h3>
+              <p class="text-xs text-slate-400">Simulate replacing a weak holding with a high-conviction theory leader</p>
+            </div>
+          </div>
+          <button onclick="closeWhatIfSwapModal()" class="text-slate-400 hover:text-white p-1 rounded-lg">
+            <i class="fa-solid fa-xmark text-base"></i>
+          </button>
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <!-- Left: Stock to Exit -->
+          <div class="p-4 rounded-xl bg-rose-950/20 border border-rose-500/30 space-y-2">
+            <span class="text-[10px] font-mono uppercase font-bold text-rose-400 flex items-center">
+              <i class="fa-solid fa-arrow-down-long mr-1"></i> Stock to Prune / Exit
+            </span>
+            <div id="swapExitTicker" class="text-lg font-bold text-white font-mono">--</div>
+            <div id="swapExitDetails" class="text-xs text-slate-300">--</div>
+            <div class="text-[10px] text-slate-400 pt-1 border-t border-rose-500/20 flex justify-between">
+              <span>Capital to Release:</span>
+              <span id="swapReleasedCapital" class="font-mono font-bold text-white">&#8377;--</span>
+            </div>
+          </div>
+
+          <!-- Right: Theory Leader to Buy -->
+          <div class="p-4 rounded-xl bg-emerald-950/20 border border-emerald-500/30 space-y-2">
+            <span class="text-[10px] font-mono uppercase font-bold text-emerald-400 flex items-center">
+              <i class="fa-solid fa-arrow-up-long mr-1"></i> Theory Replacement Pick
+            </span>
+            <select id="swapTargetSelect" onchange="updateSwapSimulationPreview()" class="w-full bg-slate-950 border border-slate-700 rounded-lg px-2.5 py-1.5 text-xs text-white font-mono focus:border-cyan-400">
+              <optgroup label="☕ Strategy 1: Saurabh Mukherjea Coffee Can Leaders">
+                <option value="TITAN" selected>TITAN - Titan Company (25%+ ROCE, Jewelry Moat)</option>
+                <option value="PIDILITIND">PIDILITIND - Pidilite Industries (70% Fevicol Share, Zero Debt)</option>
+                <option value="ASIANPAINT">ASIANPAINT - Asian Paints (28%+ ROCE, Tinting Network)</option>
+                <option value="HDFCBANK">HDFCBANK - HDFC Bank (30-Yr Underwriting, ROE > 16%)</option>
+                <option value="TCS">TCS - Tata Consultancy Services (54% ROCE, 100% Cash Flow)</option>
+              </optgroup>
+              <optgroup label="🚀 Strategy 2: Raamdeo Agrawal Motilal QGLP Compounders">
+                <option value="TRENT">TRENT - Trent Ltd (Zudio 35% CAGR, 40%+ PAT Growth)</option>
+                <option value="DIXON">DIXON - Dixon Technologies (Mobile PLI Scale Leader)</option>
+                <option value="KAYNES">KAYNES - Kaynes Tech (Defense Electronics, OSAT Semi)</option>
+                <option value="POLYCAB">POLYCAB - Polycab India (Wires & Cables Dominance)</option>
+                <option value="BEL">BEL - Bharat Electronics (ROCE 36.2%, ₹76k Cr Order Backlog)</option>
+              </optgroup>
+              <optgroup label="⚡ Strategy 3: Indian Stage 2 Policy Momentum Leaders">
+                <option value="MAZDOCK">MAZDOCK - Mazagon Dock (RS 94, Indigenous Naval Defense)</option>
+                <option value="PREMIERENE">PREMIERENE - Premier Energies (RS 89, Solar Cell PLI)</option>
+                <option value="BSE">BSE - BSE Limited (RS 95, Options Volume Explosion)</option>
+              </optgroup>
+            </select>
+            <div id="swapTargetDetails" class="text-xs text-slate-300">--</div>
+            <div class="text-[10px] text-slate-400 pt-1 border-t border-emerald-500/20 flex justify-between">
+              <span>Shares to Acquire:</span>
+              <span id="swapAcquiredShares" class="font-mono font-bold text-emerald-300">-- shares</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Before vs After Impact Comparison Matrix -->
+        <div class="p-4 rounded-xl bg-slate-950/80 border border-slate-800 space-y-3">
+          <div class="text-xs font-bold text-white uppercase tracking-wider flex items-center justify-between">
+            <span>Portfolio-Wide Factor Delta Simulation</span>
+            <span class="text-[10px] font-mono text-cyan-400">Systemic Capital Impact</span>
+          </div>
+          <div class="grid grid-cols-2 sm:grid-cols-4 gap-2 text-center text-xs">
+            <div class="p-2.5 rounded-lg bg-slate-900 border border-slate-800">
+              <div class="text-[10px] text-slate-400">Portfolio ROCE</div>
+              <div id="swapDeltaRoce" class="font-mono font-bold text-emerald-400 mt-1">--</div>
+            </div>
+            <div class="p-2.5 rounded-lg bg-slate-900 border border-slate-800">
+              <div class="text-[10px] text-slate-400">Debt-to-Equity</div>
+              <div id="swapDeltaDebt" class="font-mono font-bold text-teal-300 mt-1">--</div>
+            </div>
+            <div class="p-2.5 rounded-lg bg-slate-900 border border-slate-800">
+              <div class="text-[10px] text-slate-400">Portfolio Beta</div>
+              <div id="swapDeltaBeta" class="font-mono font-bold text-cyan-400 mt-1">--</div>
+            </div>
+            <div class="p-2.5 rounded-lg bg-slate-900 border border-slate-800">
+              <div class="text-[10px] text-slate-400">Momentum (RS)</div>
+              <div id="swapDeltaRs" class="font-mono font-bold text-purple-400 mt-1">--</div>
+            </div>
+          </div>
+
+          <!-- Sector Concentration Shift -->
+          <div class="p-2.5 rounded-lg bg-slate-900/60 border border-slate-800 flex items-center justify-between text-[11px]">
+            <span class="text-slate-400"><i class="fa-solid fa-arrows-split-up-and-left mr-1 text-cyan-400"></i> Sector Rebalancing Tilt:</span>
+            <span id="swapSectorTilt" class="font-mono text-slate-200 font-semibold">Simulating sector shifts...</span>
+          </div>
+
+          <!-- Institutional Quant Verdict Box -->
+          <div id="swapVerdictContainer" class="p-3 rounded-lg bg-cyan-950/20 border border-cyan-500/30 text-xs space-y-1.5">
+            <div class="font-bold text-cyan-300 flex items-center">
+              <i class="fa-solid fa-calculator mr-1.5"></i>
+              <span id="swapVerdictTitle">Institutional Quant Assessment</span>
+            </div>
+            <div id="swapVerdictText" class="text-slate-300 text-[11px] leading-relaxed">
+              Analyzing trade impact on portfolio efficiency and Sharpe ratio...
+            </div>
+            <ul id="swapBenefitsList" class="space-y-1 text-[11px] text-slate-300 pt-1">
+              <!-- Dynamically populated -->
+            </ul>
+          </div>
+        </div>
+
+        <!-- Action Buttons -->
+        <div class="pt-3 border-t border-slate-800 flex items-center justify-between">
+          <button type="button" onclick="closeWhatIfSwapModal()" class="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs rounded-lg font-medium transition">
+            Close
+          </button>
+          <div class="flex items-center space-x-2">
+            <button type="button" onclick="executeSwapInTradeModal()" class="px-5 py-2 bg-gradient-to-r from-teal-500 to-cyan-500 hover:from-teal-400 hover:to-cyan-400 text-slate-950 font-bold text-xs rounded-lg shadow-md transition flex items-center space-x-1.5">
+              <i class="fa-solid fa-arrow-right-arrow-left"></i>
+              <span>Open Trade Execution for this Swap</span>
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
 
     <!-- Interactive Financial Explainer Modal for 9-5 Working Professionals -->
     <div id="financialExplainerModal" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm">
@@ -1303,20 +2794,289 @@
       </div>
     </div>
 
-    <!-- Angel One SmartAPI Integration & Auto-Sync Modal -->
-    <div id="angelOneModal" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm">
-      <div class="relative w-full max-w-xl bg-slate-900 border border-cyan-500/40 rounded-2xl p-6 shadow-2xl text-slate-100 space-y-4 max-h-[90vh] overflow-y-auto">
-        <div class="flex items-center justify-between border-b border-slate-800 pb-3">
-          <div class="flex items-center space-x-2.5">
-            <div class="w-10 h-10 rounded-xl bg-cyan-500/20 border border-cyan-500/40 flex items-center justify-center text-cyan-400 text-lg">
-              <i class="fa-solid fa-link"></i>
+    <!-- Behavioral Psychology: Panic Sell Cognitive Interceptor Modal (Kahneman System 2 Brake) -->
+    <div id="modalPanicSellInterceptor" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/85 backdrop-blur-md">
+      <div class="relative w-full max-w-xl bg-[#0a1222] border border-amber-500/40 rounded-2xl p-6 shadow-2xl text-slate-100 space-y-4">
+        <!-- Header -->
+        <div class="flex items-center justify-between border-b border-[#16233d] pb-3">
+          <div class="flex items-center space-x-3">
+            <div class="w-10 h-10 rounded-xl bg-amber-500/20 border border-amber-500/40 flex items-center justify-center text-amber-400 text-lg shadow-sm">
+              <i class="fa-solid fa-brain"></i>
             </div>
             <div>
               <div class="flex items-center space-x-2">
-                <h3 class="text-base font-bold text-white">Angel One SmartAPI Sync</h3>
-                <span class="text-[10px] font-bold px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">100% FREE</span>
+                <h3 class="text-base font-bold text-white">Cognitive Cooling Period</h3>
+                <span class="text-[10px] font-mono font-bold px-2 py-0.5 rounded bg-amber-500/20 text-amber-300 border border-amber-500/30">System 2 Brake</span>
               </div>
-              <p class="text-xs text-slate-400">Sync actual holdings directly from your Angel One demat account</p>
+              <p class="text-xs text-slate-400">Behavioral defense against impulsive market-hours selling</p>
+            </div>
+          </div>
+          <button type="button" class="text-slate-400 hover:text-white p-1.5 rounded-lg bg-[#0f1b32] hover:bg-[#16233d] transition" onclick="closePanicSellInterceptor()">
+            <i class="fa-solid fa-xmark text-sm"></i>
+          </button>
+        </div>
+
+        <!-- The Trigger Warning Banner -->
+        <div class="p-3.5 rounded-xl bg-amber-500/10 border border-amber-500/30 text-xs text-amber-200 leading-relaxed flex items-start space-x-2.5">
+          <i class="fa-solid fa-triangle-exclamation text-amber-400 text-base mt-0.5 flex-shrink-0"></i>
+          <div>
+            <div class="font-bold text-amber-300">You are about to sell <span id="interceptorStockTicker" class="font-mono text-white underline">STOCK</span> at an intraday dip / unrealized loss.</div>
+            <p class="text-[11px] text-amber-200/80 mt-0.5">
+              Behavioral research (Kahneman & Tversky) proves that the emotional pain of a loss feels <strong>2.5x stronger</strong> than an equivalent gain. Selling high-quality compounders during market hours often locks in temporary bottom pullbacks.
+            </p>
+          </div>
+        </div>
+
+        <!-- 3 Objective Reality Checks -->
+        <div class="space-y-2.5">
+          <div class="text-[11px] font-bold uppercase tracking-wider text-slate-400 flex items-center justify-between">
+            <span>3 Objective Reality Checks Before Execution</span>
+            <span class="text-cyan-400 font-mono text-[10px]">Data vs Emotion</span>
+          </div>
+
+          <!-- Check 1: Market Beta vs Company Decay -->
+          <div class="p-3 rounded-xl bg-[#060c18] border border-[#16233d] flex items-start space-x-3">
+            <div class="w-6 h-6 rounded-lg bg-cyan-500/20 text-cyan-400 flex items-center justify-center font-bold text-xs flex-shrink-0 mt-0.5">1</div>
+            <div class="text-xs">
+              <strong class="text-white block">Broader Market Tide (Beta Check)</strong>
+              <p id="interceptorBetaText" class="text-slate-400 text-[11px] mt-0.5">
+                Nifty 50 and sectoral indices are experiencing broader pullbacks. 75%+ of this price decline is market liquidity noise, NOT company deterioration.
+              </p>
+            </div>
+          </div>
+
+          <!-- Check 2: Moat & ROCE Health -->
+          <div class="p-3 rounded-xl bg-[#060c18] border border-[#16233d] flex items-start space-x-3">
+            <div class="w-6 h-6 rounded-lg bg-emerald-500/20 text-emerald-400 flex items-center justify-center font-bold text-xs flex-shrink-0 mt-0.5">2</div>
+            <div class="text-xs">
+              <strong class="text-white block">Business Fundamentals & Moat Check</strong>
+              <p id="interceptorMoatText" class="text-slate-400 text-[11px] mt-0.5">
+                Has the company's competitive advantage or ROCE vanished today? No. High-ROCE businesses with low leverage continue compounding their earnings power uninterrupted.
+              </p>
+            </div>
+          </div>
+
+          <!-- Check 3: Base Rate of Quality Recovery -->
+          <div class="p-3 rounded-xl bg-[#060c18] border border-[#16233d] flex items-start space-x-3">
+            <div class="w-6 h-6 rounded-lg bg-purple-500/20 text-purple-400 flex items-center justify-center font-bold text-xs flex-shrink-0 mt-0.5">3</div>
+            <div class="text-xs">
+              <strong class="text-white block">Historical Compounder Base Rate</strong>
+              <p class="text-slate-400 text-[11px] mt-0.5">
+                Historical NSE/BSE data demonstrates that <strong>91%</strong> of profitable, low-debt businesses rebound and achieve new highs within 4 to 6 months of market pullbacks.
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Career-Wealth Perspective -->
+        <div class="p-3 rounded-xl bg-[#0f1b32]/60 border border-cyan-500/20 text-xs flex items-center justify-between">
+          <div class="flex items-center space-x-2">
+            <i class="fa-solid fa-briefcase text-cyan-400"></i>
+            <span class="text-slate-300">Your corporate day job generates recurring salary. Dips let you accumulate more shares at a discount.</span>
+          </div>
+        </div>
+
+        <!-- Action Buttons with Kahneman 15s Countdown -->
+        <div class="pt-2 border-t border-[#16233d] flex flex-col sm:flex-row items-center justify-between gap-3">
+          <div class="text-xs text-slate-400 flex items-center space-x-1.5">
+            <i class="fa-regular fa-clock text-amber-400"></i>
+            <span>System 2 Pause:</span>
+            <span id="interceptorCountdownTimer" class="font-mono font-bold text-amber-300 bg-amber-500/20 px-2 py-0.5 rounded">15s</span>
+          </div>
+
+          <div class="flex items-center space-x-2 w-full sm:w-auto justify-end">
+            <button type="button" onclick="confirmHoldWithConviction()" class="px-4 py-2 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white text-xs font-bold rounded-lg shadow-md transition flex items-center space-x-1.5">
+              <i class="fa-solid fa-shield-halved"></i>
+              <span>Hold with Conviction (Recommended)</span>
+            </button>
+            <button type="button" id="btnOverridePanicSell" onclick="proceedWithSellExecution()" disabled class="px-3 py-2 bg-[#0f1b32] hover:bg-rose-900/50 text-slate-400 hover:text-rose-200 border border-[#16233d] text-xs font-medium rounded-lg transition disabled:opacity-40 disabled:cursor-not-allowed">
+              <span>Proceed with Sell</span>
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Category-Defining Hero Feature Modal: Why We're Different (Broker vs Guardian) -->
+    <div id="modalWhyDifferent" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/85 backdrop-blur-md">
+      <div class="relative w-full max-w-4xl bg-[#0a1222] border border-cyan-500/40 rounded-2xl p-6 shadow-2xl text-slate-100 space-y-5 max-h-[90vh] overflow-y-auto">
+        <!-- Header -->
+        <div class="flex items-center justify-between border-b border-[#16233d] pb-3">
+          <div class="flex items-center space-x-3">
+            <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-cyan-500/20 to-blue-500/20 border border-cyan-500/40 flex items-center justify-center text-cyan-400 text-lg shadow-sm">
+              <i class="fa-solid fa-bolt"></i>
+            </div>
+            <div>
+              <div class="flex items-center space-x-2">
+                <h3 class="text-base font-bold text-white">Why We're Different</h3>
+                <span class="text-[10px] font-mono font-bold px-2 py-0.5 rounded bg-cyan-500/20 text-cyan-300 border border-cyan-500/30">The Sleep-Well Guardian</span>
+              </div>
+              <p class="text-xs text-slate-400">Traditional Broker Apps vs MarketCompass Navigator for Strategic Investors</p>
+            </div>
+          </div>
+          <button type="button" class="text-slate-400 hover:text-white p-1.5 rounded-lg bg-[#0f1b32] hover:bg-[#16233d] transition" onclick="closeWhyDifferentModal()">
+            <i class="fa-solid fa-xmark text-sm"></i>
+          </button>
+        </div>
+
+        <!-- The 1-Line Hook Banner -->
+        <div class="p-3.5 rounded-xl bg-gradient-to-r from-cyan-500/10 via-[#0d1f3d] to-blue-500/10 border border-cyan-500/30 text-xs text-cyan-200 flex items-center justify-between">
+          <div class="flex items-center space-x-2.5">
+            <i class="fa-solid fa-circle-question text-cyan-400 text-lg flex-shrink-0"></i>
+            <div>
+              <strong class="text-white text-xs block">The 10-Second Test:</strong>
+              <span class="text-[11px] text-slate-300">"Your broker app tells you your stock is down. Our app tells you whether it's temporary <strong>Market Noise</strong> or real <strong>Business Decay</strong>."</span>
+            </div>
+          </div>
+          <span class="text-[10px] font-mono font-bold px-2.5 py-1 rounded bg-[#060c18] border border-cyan-500/40 text-cyan-300 whitespace-nowrap hidden sm:inline">&lt; 60 Sec / Day</span>
+        </div>
+
+        <!-- Side-by-Side Comparison Grid -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <!-- Left: Traditional Broker Apps -->
+          <div class="p-4 rounded-xl bg-[#060c18] border border-rose-500/30 space-y-3">
+            <div class="flex items-center justify-between border-b border-[#16233d] pb-2">
+              <span class="text-xs font-bold text-rose-300 flex items-center">
+                <i class="fa-solid fa-triangle-exclamation text-rose-400 mr-1.5"></i> Traditional Broker Apps
+              </span>
+              <span class="text-[10px] font-mono text-slate-500">Zerodha / Angel / Groww</span>
+            </div>
+            
+            <ul class="space-y-2.5 text-xs text-slate-300">
+              <li class="flex items-start space-x-2">
+                <i class="fa-solid fa-xmark text-rose-400 mt-0.5 flex-shrink-0"></i>
+                <div>
+                  <strong class="text-white">Profits From Trading Velocity:</strong>
+                  <p class="text-[11px] text-slate-400">Brokers make money when you churn stocks, trade F&O, and react to daily volatility.</p>
+                </div>
+              </li>
+              <li class="flex items-start space-x-2">
+                <i class="fa-solid fa-xmark text-rose-400 mt-0.5 flex-shrink-0"></i>
+                <div>
+                  <strong class="text-white">Induces Cortisol & Panic:</strong>
+                  <p class="text-[11px] text-slate-400">Shows flashing red numbers with zero context on whether the business or broader market fell.</p>
+                </div>
+              </li>
+              <li class="flex items-start space-x-2">
+                <i class="fa-solid fa-xmark text-rose-400 mt-0.5 flex-shrink-0"></i>
+                <div>
+                  <strong class="text-white">Blind Loss-Booking Pressure:</strong>
+                  <p class="text-[11px] text-slate-400">Triggers mechanical stop-losses, selling 25% ROCE leaders at temporary market bottoms.</p>
+                </div>
+              </li>
+              <li class="flex items-start space-x-2">
+                <i class="fa-solid fa-xmark text-rose-400 mt-0.5 flex-shrink-0"></i>
+                <div>
+                  <strong class="text-white">Ruinous to 9-5 Careers:</strong>
+                  <p class="text-[11px] text-slate-400">Encourages checking prices 10+ times a day during office meetings and deep-work hours.</p>
+                </div>
+              </li>
+            </ul>
+          </div>
+
+          <!-- Right: MarketCompass Navigator (Sleep-Well Guardian) -->
+          <div class="p-4 rounded-xl bg-gradient-to-b from-[#0a1b38]/60 to-[#060c18] border border-cyan-500/50 space-y-3 shadow-lg shadow-cyan-950/30">
+            <div class="flex items-center justify-between border-b border-cyan-500/20 pb-2">
+              <span class="text-xs font-bold text-cyan-300 flex items-center">
+                <i class="fa-solid fa-compass text-cyan-400 mr-1.5"></i> MarketCompass Navigator
+              </span>
+              <span class="text-[10px] font-mono text-emerald-400 font-bold bg-emerald-500/15 px-2 py-0.5 rounded border border-emerald-500/30">Sleep-Well Guardian</span>
+            </div>
+
+            <ul class="space-y-2.5 text-xs text-slate-300">
+              <li class="flex items-start space-x-2">
+                <i class="fa-solid fa-check text-emerald-400 mt-0.5 flex-shrink-0"></i>
+                <div>
+                  <strong class="text-white">Zero Trading Incentives:</strong>
+                  <p class="text-[11px] text-slate-400">Built exclusively to maximize your long-term compounding conviction and career peace of mind.</p>
+                </div>
+              </li>
+              <li class="flex items-start space-x-2">
+                <i class="fa-solid fa-check text-emerald-400 mt-0.5 flex-shrink-0"></i>
+                <div>
+                  <strong class="text-white">Noise vs Decay™ Radar:</strong>
+                  <p class="text-[11px] text-slate-400">Separates temporary macro dips (🟢 Hold) from structural company traps (🔴 Trim & Swap).</p>
+                </div>
+              </li>
+              <li class="flex items-start space-x-2">
+                <i class="fa-solid fa-check text-emerald-400 mt-0.5 flex-shrink-0"></i>
+                <div>
+                  <strong class="text-white">Loss-Protection Guardrails:</strong>
+                  <p class="text-[11px] text-slate-400">Systematically prevents booking losses on high-ROCE leaders during broader index pullbacks.</p>
+                </div>
+              </li>
+              <li class="flex items-start space-x-2">
+                <i class="fa-solid fa-check text-emerald-400 mt-0.5 flex-shrink-0"></i>
+                <div>
+                  <strong class="text-white">9-5 Work Hours Focus Shield:</strong>
+                  <p class="text-[11px] text-slate-400">60-second morning verdict: "0 actions required today. Focus 100% on your career & deep work."</p>
+                </div>
+              </li>
+            </ul>
+          </div>
+        </div>
+
+        <!-- 3 Defining Superpowers Grid -->
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-1">
+          <div class="p-3 rounded-xl bg-[#060c18] border border-[#16233d] text-center space-y-1">
+            <div class="w-8 h-8 rounded-lg bg-emerald-500/20 text-emerald-400 flex items-center justify-center mx-auto text-sm">
+              <i class="fa-solid fa-sun"></i>
+            </div>
+            <h4 class="text-xs font-bold text-white">60-Second Briefing</h4>
+            <p class="text-[11px] text-slate-400">Check once over morning coffee. Answers: Is capital safe? Any actions? Done.</p>
+          </div>
+
+          <div class="p-3 rounded-xl bg-[#060c18] border border-[#16233d] text-center space-y-1">
+            <div class="w-8 h-8 rounded-lg bg-cyan-500/20 text-cyan-400 flex items-center justify-center mx-auto text-sm">
+              <i class="fa-solid fa-crosshairs"></i>
+            </div>
+            <h4 class="text-xs font-bold text-white">Noise vs Decay</h4>
+            <p class="text-[11px] text-slate-400">Know exactly which red stocks are discounted compounders vs broken value traps.</p>
+          </div>
+
+          <div class="p-3 rounded-xl bg-[#060c18] border border-[#16233d] text-center space-y-1">
+            <div class="w-8 h-8 rounded-lg bg-amber-500/20 text-amber-400 flex items-center justify-center mx-auto text-sm">
+              <i class="fa-solid fa-brain"></i>
+            </div>
+            <h4 class="text-xs font-bold text-white">Panic-Sell Interceptor</h4>
+            <p class="text-[11px] text-slate-400">15s cognitive brake stops you from selling quality leaders during office panic.</p>
+          </div>
+        </div>
+
+        <!-- Action Footer -->
+        <div class="flex flex-col sm:flex-row items-center justify-between gap-3 pt-3 border-t border-[#16233d]">
+          <div class="text-xs text-slate-400 flex items-center space-x-1.5">
+            <i class="fa-solid fa-lock text-emerald-400"></i>
+            <span>100% Free & Client-Side. No demat login credentials stored.</span>
+          </div>
+          <div class="flex items-center space-x-2">
+            <button type="button" onclick="closeWhyDifferentModal()" class="px-4 py-2 bg-[#0f1b32] hover:bg-[#16233d] text-slate-300 text-xs font-medium rounded-lg transition">
+              Close
+            </button>
+            <button type="button" onclick="closeWhyDifferentModal(); scrollToBriefing();" class="px-5 py-2 bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 text-white text-xs font-bold rounded-lg shadow-md transition flex items-center space-x-1.5">
+              <span>View My 60-Second Briefing</span>
+              <i class="fa-solid fa-arrow-down text-[10px]"></i>
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Multi-Broker Portfolio Import & Auto-Sync Modal (Zerodha + Angel One) -->
+    <div id="angelOneModal" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm">
+      <div class="relative w-full max-w-2xl bg-slate-900 border border-cyan-500/40 rounded-2xl p-6 shadow-2xl text-slate-100 space-y-4 max-h-[92vh] overflow-y-auto themed-card themed-border">
+        <div class="flex items-center justify-between border-b border-slate-800 pb-3">
+          <div class="flex items-center space-x-3">
+            <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-blue-500/20 via-cyan-500/20 to-teal-500/20 border border-cyan-500/40 flex items-center justify-center text-cyan-400 text-lg shadow-sm">
+              <i class="fa-solid fa-compass"></i>
+            </div>
+            <div>
+              <div class="flex items-center space-x-2">
+                <h3 class="text-base font-bold text-white tracking-tight">Multi-Broker Portfolio Import</h3>
+                <span class="text-[9px] font-bold px-2 py-0.5 rounded bg-blue-500/20 text-blue-300 border border-blue-500/30">Zerodha</span>
+                <span class="text-[9px] font-bold px-2 py-0.5 rounded bg-teal-500/20 text-teal-300 border border-teal-500/30">Angel One</span>
+              </div>
+              <p class="text-xs text-slate-400">Import holdings from Zerodha or Angel One &mdash; choose to merge or keep separate</p>
             </div>
           </div>
           <button type="button" class="text-slate-400 hover:text-white p-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 transition" onclick="closeAngelOneModal()">
@@ -1327,54 +3087,148 @@
         <!-- Mode Switcher Tabs -->
         <div class="flex border-b border-slate-800 space-x-3 text-xs font-semibold overflow-x-auto">
           <button type="button" id="tabAngelExcel" onclick="switchAngelTab('excel')" class="pb-2 border-b-2 border-cyan-400 text-cyan-400 transition flex items-center space-x-1.5 whitespace-nowrap">
-            <i class="fa-solid fa-file-excel text-emerald-400"></i>
-            <span>Upload Angel One Excel (.xlsx)</span>
+            <i class="fa-solid fa-file-import text-cyan-400"></i>
+            <span>Broker File Import (.csv / .xlsx)</span>
           </button>
           <button type="button" id="tabAngelSmartApi" onclick="switchAngelTab('smartapi')" class="pb-2 border-b-2 border-transparent text-slate-400 hover:text-slate-200 transition flex items-center space-x-1.5 whitespace-nowrap">
-            <i class="fa-solid fa-bolt"></i>
-            <span>SmartAPI Direct Fetch</span>
+            <i class="fa-solid fa-bolt text-teal-400"></i>
+            <span>Angel One SmartAPI</span>
           </button>
           <button type="button" id="tabAngelPaste" onclick="switchAngelTab('paste')" class="pb-2 border-b-2 border-transparent text-slate-400 hover:text-slate-200 transition flex items-center space-x-1.5 whitespace-nowrap">
-            <i class="fa-solid fa-paste"></i>
+            <i class="fa-solid fa-paste text-slate-400"></i>
             <span>1-Click JSON Paste</span>
           </button>
         </div>
 
-        <!-- Tab 0: Upload Angel One Excel (.xlsx) -->
-        <div id="angelTabExcelContent" class="space-y-3.5">
-          <div class="p-3.5 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-xs text-emerald-300 leading-relaxed">
-            <i class="fa-solid fa-circle-check text-emerald-400 mr-1.5"></i>
-            <strong>Angel One Excel Export Supported:</strong> Drag & drop your downloaded <code>Your Holding Details - D200136.xlsx</code> or pick the file below. All positions, quantities, average buy prices, and CMP will be parsed and synchronized instantly!
+        <!-- Tab 0: Multi-Broker File Import (.csv, .xlsx) -->
+        <div id="angelTabExcelContent" class="space-y-4">
+          <!-- Step 1: File Upload Dropzone -->
+          <div>
+            <label class="block text-xs font-bold text-slate-300 mb-1.5 flex items-center space-x-1.5">
+              <span class="w-4 h-4 rounded-full bg-cyan-500/20 text-cyan-300 text-[10px] flex items-center justify-center font-bold">1</span>
+              <span>Upload Zerodha or Angel One Holdings File:</span>
+            </label>
+            <div id="excelDropzone" class="border-2 border-dashed border-slate-700 hover:border-cyan-500 rounded-xl p-4 text-center transition cursor-pointer bg-slate-950/60" onclick="document.getElementById('brokerFileInput').click()">
+              <input type="file" id="brokerFileInput" accept=".csv,.xlsx,.xls,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,text/csv" class="hidden" onchange="handleBrokerFileSelected(event)" />
+              <div class="w-10 h-10 mx-auto rounded-xl bg-cyan-500/10 border border-cyan-500/30 flex items-center justify-center text-cyan-400 text-lg mb-2">
+                <i class="fa-solid fa-cloud-arrow-up"></i>
+              </div>
+              <div id="dropzoneLabel" class="text-xs font-medium text-slate-200">
+                Click to select or drag &amp; drop <strong>Zerodha Kite (.csv)</strong>, <strong>Console (.csv/.xlsx)</strong>, or <strong>Angel One (.xlsx)</strong>
+              </div>
+              <p id="dropzoneSub" class="text-[10px] text-slate-400 mt-1">Accepts standard exports from Zerodha Kite holdings, Console, or Angel One demat</p>
+            </div>
+
+            <!-- Auto-detected broker badge (shown when a file is selected) -->
+            <div id="brokerDetectedBanner" class="hidden mt-2 p-2.5 rounded-xl border flex items-center justify-between text-xs">
+              <div class="flex items-center space-x-2">
+                <i id="brokerDetectedIcon" class="fa-solid fa-check-circle text-sm"></i>
+                <span id="brokerDetectedText" class="font-semibold"></span>
+              </div>
+              <span id="brokerDetectedFileSize" class="font-mono text-[11px] text-slate-400"></span>
+            </div>
           </div>
 
-          <!-- Password Input for Protected Excels -->
-          <div class="p-3 bg-slate-950/80 border border-slate-800 rounded-xl space-y-2">
+          <!-- Step 2: Choose Import Strategy (Merge vs Keep Separate vs Replace) -->
+          <div>
+            <label class="block text-xs font-bold text-slate-300 mb-1.5 flex items-center space-x-1.5">
+              <span class="w-4 h-4 rounded-full bg-cyan-500/20 text-cyan-300 text-[10px] flex items-center justify-center font-bold">2</span>
+              <span>How would you like to handle your portfolio?</span>
+            </label>
+
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
+              <!-- Option 1: Smart-Merge (Recommended) -->
+              <div id="cardImportModeMerge" onclick="setBrokerImportMode('Merge')" class="cursor-pointer p-3 rounded-xl border border-cyan-500 bg-cyan-500/10 hover:bg-cyan-500/15 transition flex flex-col justify-between space-y-1.5 shadow-sm">
+                <div class="flex items-center justify-between">
+                  <span class="text-xs font-bold text-white flex items-center space-x-1.5">
+                    <i class="fa-solid fa-code-merge text-cyan-400"></i>
+                    <span>Merge Both</span>
+                  </span>
+                  <span class="text-[9px] px-1.5 py-0.2 rounded font-bold bg-cyan-500/20 text-cyan-300">RECOMMENDED</span>
+                </div>
+                <p class="text-[10.5px] text-slate-300 leading-snug">
+                  Combines quantities for overlapping stocks and calculates exact volume-weighted average buy price:
+                  <code class="text-[9.5px] text-cyan-300 font-mono block mt-0.5">P = (Q1*P1 + Q2*P2)/(Q1+Q2)</code>
+                  Preserves existing stocks!
+                </p>
+                <div class="text-[10px] text-emerald-400 font-semibold flex items-center space-x-1 pt-1 border-t border-cyan-500/20">
+                  <i class="fa-solid fa-circle-check"></i>
+                  <span>Zero data lost</span>
+                </div>
+              </div>
+
+              <!-- Option 2: Keep Separate (Create New Portfolio) -->
+              <div id="cardImportModeKeepSeparate" onclick="setBrokerImportMode('KeepSeparate')" class="cursor-pointer p-3 rounded-xl border border-slate-800 bg-slate-950/70 hover:border-slate-700 transition flex flex-col justify-between space-y-1.5">
+                <div class="flex items-center justify-between">
+                  <span class="text-xs font-bold text-slate-300 flex items-center space-x-1.5">
+                    <i class="fa-solid fa-folder-plus text-teal-400"></i>
+                    <span>Keep Separate</span>
+                  </span>
+                  <span class="text-[9px] px-1.5 py-0.2 rounded font-bold bg-teal-500/15 text-teal-300">NEW PORTFOLIO</span>
+                </div>
+                <p class="text-[10.5px] text-slate-400 leading-snug">
+                  Creates an independent portfolio in MarketCompass so you can track Zerodha and Angel One separately without mixing capital.
+                </p>
+                <div class="text-[10px] text-teal-300 font-semibold flex items-center space-x-1 pt-1 border-t border-slate-800">
+                  <i class="fa-solid fa-layer-group"></i>
+                  <span>Segregated tracking</span>
+                </div>
+              </div>
+
+              <!-- Option 3: Replace Active Portfolio -->
+              <div id="cardImportModeReplace" onclick="setBrokerImportMode('Replace')" class="cursor-pointer p-3 rounded-xl border border-slate-800 bg-slate-950/70 hover:border-slate-700 transition flex flex-col justify-between space-y-1.5">
+                <div class="flex items-center justify-between">
+                  <span class="text-xs font-bold text-slate-300 flex items-center space-x-1.5">
+                    <i class="fa-solid fa-arrows-rotate text-amber-400"></i>
+                    <span>Replace Active</span>
+                  </span>
+                  <span class="text-[9px] px-1.5 py-0.2 rounded font-bold bg-rose-500/15 text-rose-300">CLEAN SLATE</span>
+                </div>
+                <p class="text-[10.5px] text-slate-400 leading-snug">
+                  Overwrites active portfolio holdings completely with the imported broker file positions.
+                </p>
+                <div class="text-[10px] text-rose-400 font-semibold flex items-center space-x-1 pt-1 border-t border-slate-800">
+                  <i class="fa-solid fa-triangle-exclamation"></i>
+                  <span>Replaces active</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Dynamic Input for New Portfolio Name (Visible when Keep Separate is selected) -->
+            <div id="rowNewPortfolioName" class="hidden mt-2.5 p-3 bg-slate-950 border border-teal-500/30 rounded-xl space-y-1.5">
+              <label for="txtNewPortfolioName" class="text-xs font-semibold text-teal-300 flex items-center space-x-1.5">
+                <i class="fa-solid fa-tag"></i>
+                <span>Name for New Portfolio:</span>
+              </label>
+              <input type="text" id="txtNewPortfolioName" value="Zerodha Portfolio" placeholder="e.g. Zerodha Portfolio, Long Term Broker" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:ring-1 focus:ring-teal-500" />
+              <p class="text-[10px] text-slate-400">This portfolio will be created and added to your portfolio switcher dropdown instantly.</p>
+            </div>
+          </div>
+
+          <!-- Step 3 (Optional): Password Input for Protected Excels -->
+          <div id="brokerPasswordContainer" class="p-3 bg-slate-950/80 border border-slate-800 rounded-xl space-y-1.5">
             <div class="flex items-center justify-between">
               <label for="angelExcelPassword" class="text-xs font-semibold text-slate-300 flex items-center space-x-1.5">
                 <i class="fa-solid fa-key text-teal-400"></i>
-                <span>Excel Password / PAN (Optional)</span>
+                <span>File Password / PAN (Optional)</span>
               </label>
-              <span class="text-[10px] text-slate-400 font-mono">Usually PAN in CAPS</span>
+              <span class="text-[10px] text-slate-500 font-mono">Needed only for password-protected Angel One Excel</span>
             </div>
             <div class="relative">
-              <input type="password" id="angelExcelPassword" placeholder="Enter password (e.g. your PAN card ABCDE1234F)" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 pr-10 text-xs text-teal-300 font-mono focus:outline-none focus:ring-1 focus:ring-teal-500 uppercase tracking-wider" oninput="saveExcelPassword(this.value)" />
+              <input type="password" id="angelExcelPassword" placeholder="Enter PAN in CAPS if protected (e.g. ABCDE1234F)" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-1.5 pr-10 text-xs text-teal-300 font-mono focus:outline-none focus:ring-1 focus:ring-teal-500 uppercase tracking-wider" oninput="saveExcelPassword(this.value)" />
               <button type="button" onclick="togglePasswordVisibility('angelExcelPassword', this)" class="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-500 hover:text-slate-300 text-xs px-1">
                 <i class="fa-solid fa-eye"></i>
               </button>
             </div>
-            <p class="text-[10px] text-slate-400 flex items-center">
-              <i class="fa-solid fa-shield-halved text-teal-400 mr-1.5"></i>
-              <span>Saved locally in browser so you only have to enter it once.</span>
-            </p>
           </div>
 
           <!-- Quick Auto-Detect Button for Downloads Folder -->
           <div class="p-3 bg-slate-950/80 border border-slate-800 rounded-xl flex flex-col sm:flex-row sm:items-center justify-between gap-3">
             <div>
               <div class="text-xs font-bold text-white flex items-center">
-                <i class="fa-solid fa-wand-magic-sparkles text-teal-400 mr-1.5"></i> Auto-Detect Latest Download
+                <i class="fa-solid fa-wand-magic-sparkles text-amber-400 mr-1.5"></i> Auto-Detect Downloads Folder
               </div>
-              <div class="text-[11px] text-slate-400 mt-0.5">Found: <code>Your Holding Details - D200136 (5).xlsx</code> in Downloads folder</div>
+              <div class="text-[11px] text-slate-400 mt-0.5">Found: <code>Your Holding Details - D200136 (5).xlsx</code> in Downloads</div>
             </div>
             <button type="button" id="btnAutoImportExcel" onclick="handleAutoImportDownloadsExcel()" class="px-3.5 py-2 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-slate-950 text-xs font-bold rounded-lg shadow-sm transition flex items-center space-x-1.5 whitespace-nowrap">
               <i class="fa-solid fa-bolt"></i>
@@ -1382,30 +3236,11 @@
             </button>
           </div>
 
-          <div class="text-center text-[10px] text-slate-500 font-semibold uppercase tracking-wider">
-            &mdash; OR UPLOAD EXCEL FILE MANUALLY &mdash;
-          </div>
-
-          <!-- File Upload Dropzone -->
-          <div id="excelDropzone" class="border-2 border-dashed border-slate-700 hover:border-cyan-500 rounded-xl p-5 text-center transition cursor-pointer bg-slate-950/60" onclick="document.getElementById('excelFileInput').click()">
-            <input type="file" id="excelFileInput" accept=".xlsx,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" class="hidden" onchange="handleExcelFileSelected(event)" />
-            <div class="w-10 h-10 mx-auto rounded-xl bg-cyan-500/10 border border-cyan-500/30 flex items-center justify-center text-cyan-400 text-lg mb-2">
-              <i class="fa-solid fa-cloud-arrow-up"></i>
-            </div>
-            <div id="dropzoneLabel" class="text-xs font-medium text-slate-200">
-              Click to select or drag & drop <strong>Angel One Excel file (.xlsx)</strong>
-            </div>
-            <p id="dropzoneSub" class="text-[10px] text-slate-500 mt-1">Accepts standard Angel One "Your Holding Details" spreadsheet export</p>
-          </div>
-
-          <div id="excelUploadSummary" class="hidden p-3 bg-slate-950 border border-emerald-500/30 rounded-xl flex items-center justify-between text-xs text-slate-200">
-            <div class="flex items-center space-x-2">
-              <i class="fa-solid fa-file-excel text-emerald-400 text-base"></i>
-              <span id="excelFileName" class="font-mono text-emerald-300 font-semibold">Your Holding Details.xlsx</span>
-            </div>
-            <button type="button" id="btnConfirmUploadExcel" onclick="handleConfirmUploadExcel()" class="px-4 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs rounded-lg transition shadow-sm flex items-center space-x-1.5">
-              <i class="fa-solid fa-check"></i>
-              <span>Import & Sync Portfolio</span>
+          <!-- Step 4: Submit Broker Import Button -->
+          <div class="pt-2">
+            <button type="button" id="btnSubmitBrokerImport" onclick="submitBrokerImport()" class="w-full py-2.5 bg-gradient-to-r from-blue-600 via-cyan-600 to-teal-600 hover:from-blue-500 hover:to-teal-500 text-white font-bold text-xs rounded-xl shadow-lg shadow-cyan-900/20 transition flex items-center justify-center space-x-2">
+              <i class="fa-solid fa-file-import"></i>
+              <span id="btnSubmitBrokerImportText">Import &amp; Apply Holdings (Smart-Merge)</span>
             </button>
           </div>
         </div>
@@ -1816,6 +3651,6 @@
       </div>
     </div>
   </main>
-  <script src="/app.js"></script>
+  <script src="/app.js?v=2.6.0"></script>
 </body>
 </html>

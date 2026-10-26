@@ -1,4 +1,6 @@
+using System.Collections.Concurrent;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Caching.Memory;
 using PortfolioRebalancer.Application.DTOs;
 using PortfolioRebalancer.Application.Interfaces;
 using PortfolioRebalancer.Application.Services;
@@ -12,22 +14,49 @@ public class PortfoliosController(
     PortfolioDiagnosticService diagnosticService,
     PortfolioAdvisoryService advisoryService,
     MarketTheoryResearchService researchService,
-    IChartPatternRecognitionService chartPatternService) : ControllerBase
+    DailyStockTradingEngine tradingEngine,
+    IChartPatternRecognitionService chartPatternService,
+    IMemoryCache cache) : ControllerBase
 {
+    private void InvalidatePortfolioCache(Guid id)
+    {
+        cache.Remove($"portfolio_summary_{id}");
+        cache.Remove($"portfolio_diagnostics_{id}");
+        cache.Remove($"portfolio_advisory_{id}");
+        cache.Remove($"portfolio_research_{id}");
+        cache.Remove($"portfolio_radar_{id}");
+        cache.Remove($"portfolio_trading_ideas_{id}");
+        cache.Remove("portfolio_all_summaries");
+    }
+
     [HttpGet]
     public async Task<ActionResult<IReadOnlyList<PortfolioSummaryDto>>> GetAll()
     {
+        const string cacheKey = "portfolio_all_summaries";
+        if (cache.TryGetValue(cacheKey, out IReadOnlyList<PortfolioSummaryDto>? cached) && cached is not null)
+        {
+            return Ok(cached);
+        }
+
         var portfolios = await portfolioService.GetAllPortfoliosAsync();
+        cache.Set(cacheKey, portfolios, TimeSpan.FromSeconds(15));
         return Ok(portfolios);
     }
 
     [HttpGet("{id:guid}")]
     public async Task<ActionResult<PortfolioSummaryDto>> GetById(Guid id)
     {
+        var cacheKey = $"portfolio_summary_{id}";
+        if (cache.TryGetValue(cacheKey, out PortfolioSummaryDto? cached) && cached is not null)
+        {
+            return Ok(cached);
+        }
+
         var portfolio = await portfolioService.GetPortfolioAsync(id);
         if (portfolio is null)
             return NotFound(new { error = $"Portfolio with ID '{id}' not found." });
 
+        cache.Set(cacheKey, portfolio, TimeSpan.FromSeconds(30));
         return Ok(portfolio);
     }
 
@@ -56,6 +85,7 @@ public class PortfoliosController(
             if (updated is null)
                 return NotFound(new { error = $"Portfolio with ID '{id}' not found." });
 
+            InvalidatePortfolioCache(id);
             return Ok(updated);
         }
         catch (ArgumentException ex)
@@ -71,6 +101,7 @@ public class PortfoliosController(
         if (updated is null)
             return NotFound(new { error = $"Portfolio with ID '{id}' not found." });
 
+        InvalidatePortfolioCache(id);
         return Ok(updated);
     }
 
@@ -84,6 +115,7 @@ public class PortfoliosController(
         if (updated is null)
             return NotFound(new { error = $"Portfolio with ID '{id}' not found." });
 
+        InvalidatePortfolioCache(id);
         return Ok(updated);
     }
 
@@ -94,6 +126,7 @@ public class PortfoliosController(
         if (updated is null)
             return NotFound(new { error = $"Portfolio with ID '{id}' not found." });
 
+        InvalidatePortfolioCache(id);
         return Ok(updated);
     }
 
@@ -117,6 +150,7 @@ public class PortfoliosController(
             if (updated is null)
                 return NotFound(new { error = $"Portfolio with ID '{id}' not found." });
 
+            InvalidatePortfolioCache(id);
             return Ok(updated);
         }
         catch (Exception ex) when (ex is ArgumentException or InvalidOperationException)
@@ -143,6 +177,7 @@ public class PortfoliosController(
             if (updated is null)
                 return NotFound(new { error = $"Portfolio with ID '{id}' not found." });
 
+            InvalidatePortfolioCache(id);
             return Ok(updated);
         }
         catch (Exception ex) when (ex is ArgumentException or InvalidOperationException)
@@ -163,9 +198,64 @@ public class PortfoliosController(
             if (updated is null)
                 return NotFound(new { error = $"Portfolio with ID '{id}' not found." });
 
+            InvalidatePortfolioCache(id);
             return Ok(updated);
         }
         catch (Exception ex) when (ex is ArgumentException or InvalidOperationException)
+        {
+            return BadRequest(new { error = ex.Message });
+        }
+    }
+
+    /// <summary>
+    /// Imports holdings from Zerodha (Console/Kite CSV or Excel) or Angel One (Demat Excel),
+    /// supporting smart-merging (weighted avg cost recalculation), separate portfolio creation, or overwrite.
+    /// </summary>
+    [HttpPost("import-broker")]
+    public async Task<ActionResult<BrokerImportResponseDto>> ImportBrokerFile(
+        [FromForm] IFormFile file,
+        [FromForm] Guid? portfolioId = null,
+        [FromForm] string mode = "Merge",
+        [FromForm] string? newPortfolioName = null,
+        [FromForm] string? password = null,
+        CancellationToken ct = default)
+    {
+        if (file is null || file.Length == 0)
+        {
+            return BadRequest(new { error = "Please select a valid Zerodha (CSV/Excel) or Angel One file to upload." });
+        }
+
+        if (!Enum.TryParse<BrokerImportMode>(mode, ignoreCase: true, out var importMode))
+        {
+            importMode = BrokerImportMode.Merge;
+        }
+
+        try
+        {
+            using var stream = file.OpenReadStream();
+            var result = await portfolioService.ImportBrokerHoldingsAsync(
+                portfolioId,
+                stream,
+                file.FileName,
+                importMode,
+                newPortfolioName,
+                password,
+                ct);
+
+            if (result == null)
+            {
+                return NotFound(new { error = $"Target portfolio with ID '{portfolioId}' not found." });
+            }
+
+            if (portfolioId.HasValue)
+            {
+                InvalidatePortfolioCache(portfolioId.Value);
+            }
+            InvalidatePortfolioCache(result.PortfolioId);
+
+            return Ok(result);
+        }
+        catch (Exception ex)
         {
             return BadRequest(new { error = ex.Message });
         }
@@ -184,6 +274,7 @@ public class PortfoliosController(
             if (updated is null)
                 return NotFound(new { error = $"Portfolio with ID '{id}' not found." });
 
+            InvalidatePortfolioCache(id);
             return Ok(updated);
         }
         catch (Exception ex)
@@ -228,6 +319,7 @@ public class PortfoliosController(
             if (updated is null)
                 return NotFound(new { error = $"Portfolio with ID '{id}' not found." });
 
+            InvalidatePortfolioCache(id);
             return Ok(new
             {
                 portfolio = updated,
@@ -253,6 +345,7 @@ public class PortfoliosController(
             if (recommendation is null)
                 return NotFound(new { error = $"Portfolio with ID '{id}' not found." });
 
+            InvalidatePortfolioCache(id);
             return Ok(recommendation);
         }
         catch (Exception ex) when (ex is InvalidOperationException or ArgumentException)
@@ -264,50 +357,81 @@ public class PortfoliosController(
     [HttpGet("{id:guid}/diagnostics")]
     public async Task<ActionResult<PortfolioDiagnosticsDto>> GetDiagnostics(Guid id)
     {
+        var cacheKey = $"portfolio_diagnostics_{id}";
+        if (cache.TryGetValue(cacheKey, out PortfolioDiagnosticsDto? cached) && cached is not null)
+        {
+            return Ok(cached);
+        }
+
         var diagnostics = await diagnosticService.RunDiagnosticsAsync(id);
         if (diagnostics is null)
             return NotFound(new { error = $"Portfolio with ID '{id}' not found." });
 
+        cache.Set(cacheKey, diagnostics, TimeSpan.FromSeconds(60));
         return Ok(diagnostics);
     }
 
     [HttpGet("{id:guid}/advisory")]
     public async Task<ActionResult<FinancialAdvisoryReportDto>> GetAdvisoryReport(Guid id)
     {
+        var cacheKey = $"portfolio_advisory_{id}";
+        if (cache.TryGetValue(cacheKey, out FinancialAdvisoryReportDto? cached) && cached is not null)
+        {
+            return Ok(cached);
+        }
+
         var report = await advisoryService.GenerateAdvisoryReportAsync(id);
         if (report is null)
             return NotFound(new { error = $"Portfolio with ID '{id}' not found." });
 
+        cache.Set(cacheKey, report, TimeSpan.FromMinutes(2));
         return Ok(report);
     }
 
     [HttpGet("{id:guid}/research")]
     public async Task<ActionResult<MasterResearchReportDto>> GetResearchReport(Guid id)
     {
+        var cacheKey = $"portfolio_research_{id}";
+        if (cache.TryGetValue(cacheKey, out MasterResearchReportDto? cached) && cached is not null)
+        {
+            return Ok(cached);
+        }
+
         var report = await researchService.GenerateResearchReportAsync(id);
         if (report is null)
             return NotFound(new { error = $"Portfolio with ID '{id}' not found." });
 
+        cache.Set(cacheKey, report, TimeSpan.FromMinutes(2));
         return Ok(report);
     }
 
     [HttpGet("{id:guid}/swing-radar")]
     public async Task<ActionResult<PortfolioSwingRadarDto>> GetPortfolioSwingRadar(Guid id, CancellationToken ct = default)
     {
+        var cacheKey = $"portfolio_radar_{id}";
+        if (cache.TryGetValue(cacheKey, out PortfolioSwingRadarDto? cached) && cached is not null)
+        {
+            return Ok(cached);
+        }
+
         var portfolio = await portfolioService.GetPortfolioAsync(id);
         if (portfolio is null)
             return NotFound(new { error = $"Portfolio with ID '{id}' not found." });
 
-        var activeSetups = new List<PortfolioHoldingSwingDto>();
-        var formingSetups = new List<PortfolioHoldingSwingDto>();
-        var stage2Leaders = new List<PortfolioHoldingSwingDto>();
-        var stage4Risks = new List<PortfolioHoldingSwingDto>();
+        var activeSetups = new ConcurrentBag<PortfolioHoldingSwingDto>();
+        var formingSetups = new ConcurrentBag<PortfolioHoldingSwingDto>();
+        var stage2Leaders = new ConcurrentBag<PortfolioHoldingSwingDto>();
+        var stage4Risks = new ConcurrentBag<PortfolioHoldingSwingDto>();
 
-        foreach (var h in portfolio.Holdings)
+        await Parallel.ForEachAsync(portfolio.Holdings, new ParallelOptions
+        {
+            MaxDegreeOfParallelism = 8,
+            CancellationToken = ct
+        }, async (h, token) =>
         {
             try
             {
-                var chartData = await chartPatternService.GetStockChartDataAsync(h.Ticker, "1y", ct: ct);
+                var chartData = await chartPatternService.GetStockChartDataAsync(h.Ticker, "1y", ct: token);
                 var tf = chartData.TechnoFunda;
                 var swing = tf.SwingSignal;
 
@@ -356,7 +480,7 @@ public class PortfoliosController(
             {
                 // Continue scanning remaining holdings
             }
-        }
+        });
 
         var result = new PortfolioSwingRadarDto(
             PortfolioId: portfolio.Id,
@@ -371,6 +495,26 @@ public class PortfoliosController(
             Stage4Risks: stage4Risks.OrderBy(x => x.UnrealizedPnLPercent).ToList()
         );
 
+        cache.Set(cacheKey, result, TimeSpan.FromMinutes(1));
         return Ok(result);
+    }
+
+    [HttpGet("{id:guid}/daily-trading-ideas")]
+    public async Task<ActionResult<DailyTradingRadarDto>> GetDailyTradingIdeas(Guid id, CancellationToken ct = default)
+    {
+        string cacheKey = $"portfolio_trading_ideas_{id}";
+        if (cache.TryGetValue(cacheKey, out DailyTradingRadarDto? cached) && cached is not null)
+        {
+            return Ok(cached);
+        }
+
+        var ideas = await tradingEngine.ScanPortfolioDailyIdeasAsync(id, ct);
+        if (ideas is null)
+        {
+            return NotFound(new { error = $"Portfolio with ID '{id}' not found." });
+        }
+
+        cache.Set(cacheKey, ideas, TimeSpan.FromMinutes(2));
+        return Ok(ideas);
     }
 }

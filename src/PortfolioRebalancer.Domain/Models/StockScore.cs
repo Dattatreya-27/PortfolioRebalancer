@@ -27,7 +27,10 @@ public sealed record StockScore(
     decimal FairValueEstimate = 0m,      // Estimated intrinsic fair value in INR
     decimal MarginOfSafetyPercent = 0m,  // Discount (+) or Premium (-) relative to CMP
     string ValuationBandVerdict = "",    // e.g. "Attractive Buy / Undervalued"
-    IReadOnlyList<StockAlternative>? BetterMarketAlternatives = null // Curated alternative ideas
+    IReadOnlyList<StockAlternative>? BetterMarketAlternatives = null, // Curated alternative ideas
+    CompanySupplyChainProfile? SupplyChain = null, // Input-transformation-output & raw material graph
+    ShareholdingPatternData? ShareholdingPattern = null, // Institutional shareholding: Promoters, FII, DII, Govt, Public & Whale deals
+    ManagementAuditData? ManagementAudit = null // Management evaluation, concall sentiment & major governance events/uproar
 )
 {
     /// <summary>
@@ -89,4 +92,62 @@ public sealed record StockAlternative(
     decimal RocePercent,
     string WhyBetter,
     string MomentumBadge
+);
+
+public sealed record ShareholdingPatternData(
+    decimal PromoterPercent,
+    decimal FiiPercent,
+    decimal DiiPercent,
+    decimal GovernmentPercent,
+    decimal PublicPercent,
+    decimal PromoterPledgePercent,
+    string QuarterPeriod,
+    decimal QoQPromoterChange,
+    decimal QoQFiiChange,
+    decimal QoQDiiChange,
+    IReadOnlyList<WhaleTransactionAlert> RecentWhaleDeals,
+    decimal BigPublicInvestorsPercent = 0m,
+    decimal GeneralRetailPublicPercent = 0m,
+    IReadOnlyList<BigPublicInvestorDetail>? BigPublicInvestors = null
+);
+
+public sealed record BigPublicInvestorDetail(
+    string InvestorName,
+    decimal StakePercent,
+    decimal HoldingValueCrores,
+    string InvestorType, // "Super-Investor / Marquee HNI" | "Family Office" | "Corporate Body"
+    string TrendDirection // "ACCUMULATING" | "STEADY" | "NEW_ENTRY" | "TRIMMING"
+);
+
+public sealed record WhaleTransactionAlert(
+    string DealDate,
+    string ClientName,
+    string DealType, // "BUY" or "SELL"
+    string TransactionType, // "BULK_DEAL (>0.5%)" or "BLOCK_DEAL (>1% / ₹10Cr+)" or "PROMOTER_SAST"
+    decimal Quantity,
+    decimal TradePrice,
+    decimal StakePercent,
+    decimal DealValueCrores,
+    string Significance
+);
+
+public sealed record ManagementAuditData(
+    string IntegrityRating, // "Tier-1 Pristine Governance" | "Disciplined / Clean" | "Watchlist / Moderate Concerns" | "Severe Governance Red Flag"
+    decimal GovernanceScore, // 0 - 100
+    string CapitalAllocationTrackRecord, // "Disciplined: High ROCE (>22%), Zero Dilution, Consistent Free Cash Flow"
+    string ExecutionCapability, // "Industry Leader: Aggressive store rollout with industry-leading sales/sqft"
+    string ManagementSentiment, // "BULLISH_EXPANSION" | "CAUTIOUSLY_OPTIMISTIC" | "DEFENSIVE_CHOP" | "DISTRESSED"
+    string SentimentSummary, // Summary of management outlook
+    string LatestConcallHighlights, // Key takeaways from latest concall
+    string ConcallDate, // e.g. "Q2 FY25 Earnings Call"
+    IReadOnlyList<ManagementEventAlert> MajorEventsAndUproar // Key positive catalysts or negative governance/uproar events
+);
+
+public sealed record ManagementEventAlert(
+    string EventDate,
+    string EventType, // "GOVERNANCE_UPROAR" | "MANAGEMENT_SHAKEUP" | "PROMOTER_ACTION" | "CAPEX_BREAKTHROUGH" | "REGULATORY_SCRUTINY"
+    string Severity, // "POSITIVE_CATALYST" | "CRITICAL_RED_FLAG" | "WATCHLIST_NOTICE" | "NEUTRAL"
+    string Headline,
+    string Details,
+    string StrategicImpact
 );

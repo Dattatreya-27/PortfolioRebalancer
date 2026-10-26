@@ -21,14 +21,34 @@ public sealed class Portfolio
     public IReadOnlyList<SectorAllocation> TargetAllocations => _targetAllocations.AsReadOnly();
 
     /// <summary>Total market value of all holdings.</summary>
-    public Money TotalValue => _holdings.Count == 0
-        ? Money.Zero()
-        : _holdings.Aggregate(Money.Zero(_holdings[0].MarketValue.Currency), (total, h) => total + h.MarketValue);
+    public Money TotalValue
+    {
+        get
+        {
+            if (_holdings.Count == 0) return Money.Zero();
+            decimal total = 0m;
+            for (int i = 0; i < _holdings.Count; i++)
+            {
+                total += _holdings[i].MarketValue.Amount;
+            }
+            return new Money(total, _holdings[0].MarketValue.Currency);
+        }
+    }
 
     /// <summary>Total invested capital across all holdings.</summary>
-    public Money TotalInvested => _holdings.Count == 0
-        ? Money.Zero()
-        : _holdings.Aggregate(Money.Zero(_holdings[0].InvestedAmount.Currency), (total, h) => total + h.InvestedAmount);
+    public Money TotalInvested
+    {
+        get
+        {
+            if (_holdings.Count == 0) return Money.Zero();
+            decimal total = 0m;
+            for (int i = 0; i < _holdings.Count; i++)
+            {
+                total += _holdings[i].InvestedAmount.Amount;
+            }
+            return new Money(total, _holdings[0].InvestedAmount.Currency);
+        }
+    }
 
     /// <summary>Total unrealized Profit/Loss in rupees = TotalValue - TotalInvested.</summary>
     public Money TotalUnrealizedPnL => TotalValue - TotalInvested;
@@ -37,6 +57,31 @@ public sealed class Portfolio
     public decimal TotalUnrealizedPnLPercent => TotalInvested.Amount > 0
         ? Math.Round(((TotalValue.Amount - TotalInvested.Amount) / TotalInvested.Amount) * 100m, 2)
         : 0m;
+
+    /// <summary>Total Day's Profit/Loss in rupees across all holdings.</summary>
+    public Money TotalDayPnL
+    {
+        get
+        {
+            if (_holdings.Count == 0) return Money.Zero();
+            decimal total = 0m;
+            for (int i = 0; i < _holdings.Count; i++)
+            {
+                total += _holdings[i].DayPnL.Amount;
+            }
+            return new Money(total, _holdings[0].MarketValue.Currency);
+        }
+    }
+
+    /// <summary>Total Day's Profit/Loss percentage = (TotalDayPnL / (TotalValue - TotalDayPnL)) * 100.</summary>
+    public decimal TotalDayPnLPercent
+    {
+        get
+        {
+            var baseValue = TotalValue.Amount - TotalDayPnL.Amount;
+            return baseValue > 0 ? Math.Round((TotalDayPnL.Amount / baseValue) * 100m, 2) : 0m;
+        }
+    }
 
     /// <summary>Updates live market prices for portfolio holdings.</summary>
     public void UpdateHoldingPrices(IReadOnlyDictionary<string, Money> latestPrices)
@@ -57,11 +102,15 @@ public sealed class Portfolio
     {
         ArgumentNullException.ThrowIfNull(holding);
 
-        var existing = _holdings.FindIndex(h => h.Stock.Ticker == holding.Stock.Ticker);
+        var cleanHolding = holding.Quantity % 1 != 0
+            ? holding.WithQuantity(Math.Round(holding.Quantity, 0, MidpointRounding.AwayFromZero))
+            : holding;
+
+        var existing = _holdings.FindIndex(h => h.Stock.Ticker == cleanHolding.Stock.Ticker);
         if (existing >= 0)
-            _holdings[existing] = holding;
+            _holdings[existing] = cleanHolding;
         else
-            _holdings.Add(holding);
+            _holdings.Add(cleanHolding);
 
         LastSyncedAt = DateTime.UtcNow;
     }
@@ -69,7 +118,9 @@ public sealed class Portfolio
     public void ExecuteTrade(Stock stock, string tradeType, decimal quantity, decimal tradePrice)
     {
         ArgumentNullException.ThrowIfNull(stock);
-        if (quantity <= 0) throw new ArgumentException("Trade quantity must be greater than zero.", nameof(quantity));
+        var cleanQty = Math.Round(quantity, 0, MidpointRounding.AwayFromZero);
+        if (cleanQty <= 0 && !tradeType.Trim().Equals("ADJUST", StringComparison.OrdinalIgnoreCase))
+            throw new ArgumentException("Trade quantity must be at least 1 whole share.", nameof(quantity));
         if (tradePrice <= 0) throw new ArgumentException("Trade price must be greater than zero.", nameof(tradePrice));
 
         var normalizedType = tradeType.Trim().ToUpperInvariant();
@@ -82,8 +133,8 @@ public sealed class Portfolio
                 var existing = _holdings[existingIndex];
                 var oldQty = existing.Quantity;
                 var oldAvg = existing.AverageBuyPrice?.Amount ?? existing.Stock.CurrentPrice.Amount;
-                var newQty = oldQty + quantity;
-                var newAvgPrice = Math.Round(((oldQty * oldAvg) + (quantity * tradePrice)) / newQty, 2);
+                var newQty = oldQty + cleanQty;
+                var newAvgPrice = Math.Round(((oldQty * oldAvg) + (cleanQty * tradePrice)) / newQty, 2);
 
                 _holdings[existingIndex] = new Holding
                 {
@@ -97,7 +148,7 @@ public sealed class Portfolio
                 _holdings.Add(new Holding
                 {
                     Stock = stock,
-                    Quantity = quantity,
+                    Quantity = cleanQty,
                     AverageBuyPrice = Money.INR(Math.Round(tradePrice, 2))
                 });
             }
@@ -107,7 +158,7 @@ public sealed class Portfolio
             if (existingIndex >= 0)
             {
                 var existing = _holdings[existingIndex];
-                if (quantity >= existing.Quantity)
+                if (cleanQty >= existing.Quantity)
                 {
                     _holdings.RemoveAt(existingIndex);
                 }
@@ -116,7 +167,7 @@ public sealed class Portfolio
                     _holdings[existingIndex] = new Holding
                     {
                         Stock = stock,
-                        Quantity = existing.Quantity - quantity,
+                        Quantity = existing.Quantity - cleanQty,
                         AverageBuyPrice = existing.AverageBuyPrice
                     };
                 }
@@ -128,7 +179,7 @@ public sealed class Portfolio
         }
         else if (normalizedType == "ADJUST")
         {
-            if (quantity <= 0)
+            if (cleanQty <= 0)
             {
                 if (existingIndex >= 0) _holdings.RemoveAt(existingIndex);
             }
@@ -137,7 +188,7 @@ public sealed class Portfolio
                 var newHolding = new Holding
                 {
                     Stock = stock,
-                    Quantity = quantity,
+                    Quantity = cleanQty,
                     AverageBuyPrice = Money.INR(Math.Round(tradePrice, 2))
                 };
                 if (existingIndex >= 0) _holdings[existingIndex] = newHolding;
@@ -200,15 +251,36 @@ public sealed class Portfolio
     /// </summary>
     public Dictionary<Sector, Percentage> GetCurrentSectorWeights()
     {
-        if (TotalValue.Amount == 0) return new();
+        if (_holdings.Count == 0) return new();
 
-        return _holdings
-            .GroupBy(h => h.Stock.Sector)
-            .ToDictionary(
-                g => g.Key,
-                g => Percentage.FromFraction(
-                    g.Sum(h => h.MarketValue.Amount) / TotalValue.Amount)
-            );
+        var sectorTotals = new Dictionary<Sector, decimal>();
+        decimal totalAmount = 0m;
+
+        for (int i = 0; i < _holdings.Count; i++)
+        {
+            var h = _holdings[i];
+            var mv = h.MarketValue.Amount;
+            totalAmount += mv;
+
+            if (sectorTotals.TryGetValue(h.Stock.Sector, out var current))
+            {
+                sectorTotals[h.Stock.Sector] = current + mv;
+            }
+            else
+            {
+                sectorTotals[h.Stock.Sector] = mv;
+            }
+        }
+
+        if (totalAmount == 0) return new();
+
+        var result = new Dictionary<Sector, Percentage>(sectorTotals.Count);
+        foreach (var (sector, amount) in sectorTotals)
+        {
+            result[sector] = Percentage.FromFraction(amount / totalAmount);
+        }
+
+        return result;
     }
 
     public override string ToString() => $"{Name} ({Holdings.Count} holdings, {TotalValue})";

@@ -9,6 +9,9 @@ public static class DependencyInjection
 {
     public static IServiceCollection AddApplicationServices(this IServiceCollection services)
     {
+        // Core Caching
+        services.AddMemoryCache();
+
         // Infrastructure adapters
         services.AddSingleton<IPortfolioRepository, JsonFilePortfolioRepository>();
         services.AddSingleton<IStockDataProvider, YahooFinanceLiveStockDataProvider>();
@@ -25,6 +28,11 @@ public static class DependencyInjection
         services.AddScoped<PortfolioDiagnosticService>();
         services.AddScoped<PortfolioAdvisoryService>();
         services.AddScoped<MarketTheoryResearchService>();
+        services.AddScoped<DailyStockTradingEngine>();
+        services.AddScoped<TheoryPortfolioService>();
+        services.AddScoped<ITheoryPortfolioService>(sp => sp.GetRequiredService<TheoryPortfolioService>());
+        services.AddScoped<PortfolioTheoryAuditService>();
+        services.AddScoped<IPortfolioTheoryAuditService>(sp => sp.GetRequiredService<PortfolioTheoryAuditService>());
 
         return services;
     }

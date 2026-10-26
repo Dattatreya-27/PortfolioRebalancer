@@ -29,6 +29,12 @@ public sealed class Holding
         ? Math.Round(((MarketValue.Amount - InvestedAmount.Amount) / InvestedAmount.Amount) * 100m, 2)
         : 0m;
 
+    /// <summary>Day's Profit/Loss in rupees = Stock.DayChangeMoney * Quantity.</summary>
+    public Money DayPnL => Stock.DayChangeMoney * Quantity;
+
+    /// <summary>Day's change percentage = Stock.DayChangePercent.</summary>
+    public decimal DayPnLPercent => Stock.DayChangePercent;
+
     /// <summary>Creates a new Holding with a different quantity (immutable update).</summary>
     public Holding WithQuantity(decimal newQuantity) => new()
     {
@@ -37,5 +43,5 @@ public sealed class Holding
         AverageBuyPrice = AverageBuyPrice
     };
 
-    public override string ToString() => $"{Quantity:N2} x {Stock.Ticker} = {MarketValue} (Buy: {AverageBuyPrice})";
+    public override string ToString() => $"{(long)Math.Round(Quantity)} x {Stock.Ticker} = {MarketValue} (Buy: {AverageBuyPrice})";
 }

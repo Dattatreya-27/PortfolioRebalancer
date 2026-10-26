@@ -1,4 +1,4 @@
-﻿## Build and Binary Outputs
+## Build and Binary Outputs
 [Bb]in/
 [Oo]bj/
 [Ll]og/
@@ -22,6 +22,7 @@ scratch/
 ## User Private Financial Data & Portfolios
 data/*.json
 !data/portfolios.sample.json
+src/data/
 *.xlsx
 *.xls
 *.csv
