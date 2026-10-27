@@ -774,149 +774,195 @@
     <div id="viewPortfolio" class="view-panel space-y-6">
 
       <!-- ======================================================== -->
-      <!-- 9-5 WORK HOURS FOCUS SHIELD & CAREER-WEALTH HARMONY      -->
-      <!-- Behavioral Psychology Defense for Corporate Professionals-->
+      <!-- UNIFIED EXECUTIVE HERO COCKPIT                           -->
+      <!-- Greeting, Market Regime Weather, Net Worth & 60-Sec Deck -->
       <!-- ======================================================== -->
-      <div id="workHoursShieldBanner" class="p-5 rounded-2xl bg-gradient-to-r from-[#0b172a] via-[#09152b] to-[#0d1f3d] border border-cyan-500/40 shadow-2xl backdrop-blur-md space-y-4 transition-all duration-300">
-        <!-- Top Bar: Shield Header & Mode Status -->
-        <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-3 pb-3 border-b border-cyan-500/20">
-          <div class="flex items-center space-x-3">
-            <div class="w-10 h-10 rounded-xl bg-cyan-500/20 border border-cyan-500/40 flex items-center justify-center text-cyan-400 text-lg shadow-md">
-              <i class="fa-solid fa-briefcase"></i>
+      <div id="morningBriefingSection" class="p-6 rounded-2xl bg-gradient-to-r from-[#0d1627] via-[#0a1222] to-[#0d1627] border border-cyan-500/30 shadow-2xl backdrop-blur-md space-y-5">
+        
+        <!-- 1. Top Bar: Greeting, Session Status & Market Weather Vane -->
+        <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-4 pb-4 border-b border-[#16233d]">
+          <div class="flex items-start sm:items-center space-x-3.5">
+            <div class="w-12 h-12 rounded-2xl bg-gradient-to-tr from-cyan-500/20 to-blue-500/20 border border-cyan-500/40 flex items-center justify-center text-cyan-400 text-xl shadow-lg shadow-cyan-500/10 flex-shrink-0">
+              <i class="fa-solid fa-sun"></i>
             </div>
             <div>
-              <div class="flex items-center space-x-2">
-                <h2 id="shieldHeading" class="text-base font-bold text-white tracking-tight">9-5 Work Hours Focus Shield Active</h2>
-                <span id="shieldStatusBadge" class="px-2.5 py-0.5 rounded-full text-xs font-mono font-bold bg-cyan-500/20 text-cyan-300 border border-cyan-500/30">
-                  Market Hours (09:15 - 15:30 IST)
-                </span>
-              </div>
-              <p id="shieldSubheading" class="text-xs text-slate-300 mt-0.5">
-                Emotional anxiety filter active. Intraday price flashing suppressed to safeguard your deep work and professional career focus.
-              </p>
-            </div>
-          </div>
-
-          <div class="flex items-center space-x-3">
-            <div id="shieldMacroWeather" class="hidden sm:flex items-center space-x-2 text-xs bg-[#060c18] px-3 py-1.5 rounded-xl border border-[#16233d]">
-              <span class="text-slate-500 font-mono text-[10px]">PULSE:</span>
-              <span class="text-white font-mono font-bold">Nifty 24,820</span>
-              <span class="text-emerald-400 font-mono text-[10px] font-bold">Calm (VIX 13.8)</span>
-            </div>
-            <button onclick="toggleWorkShield(false)" class="text-xs bg-[#060c18] hover:bg-[#0f1b32] text-slate-300 hover:text-white border border-[#16233d] px-3 py-1.5 rounded-lg flex items-center space-x-1.5 transition">
-              <i class="fa-solid fa-power-off text-rose-400"></i>
-              <span>Deactivate Shield</span>
-            </button>
-          </div>
-        </div>
-
-        <!-- 3 Behavioral Reassurance Pillars -->
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-3.5 pt-1">
-          <!-- Pillar 1: Action Verdict -->
-          <div class="p-3.5 rounded-xl bg-[#060c18]/80 border border-[#16233d] space-y-1.5 flex flex-col justify-between">
-            <div>
-              <div class="flex items-center justify-between text-xs font-bold text-white mb-1.5">
-                <span class="flex items-center"><i class="fa-solid fa-circle-check text-emerald-400 mr-2"></i> Today's Action Status</span>
-                <span id="shieldActionPill" class="text-[10px] font-mono px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-300 font-bold">0 ACTIONS NEEDED</span>
-              </div>
-              <p id="shieldActionDetail" class="text-xs text-slate-300 leading-relaxed">
-                No trades or rebalancing required today. Your portfolio is built with high-ROCE compounding businesses that generate cashflow regardless of intraday screen blips.
-              </p>
-            </div>
-            <div class="text-[11px] text-cyan-400 font-medium pt-2 border-t border-[#16233d] flex items-center justify-between">
-              <span>Guidance:</span>
-              <span class="font-bold">Focus 100% on your career today &rarr;</span>
-            </div>
-          </div>
-
-          <!-- Pillar 2: Career-Wealth Salary Runway Cushion -->
-          <div class="p-3.5 rounded-xl bg-[#060c18]/80 border border-[#16233d] space-y-1.5 flex flex-col justify-between">
-            <div>
-              <div class="flex items-center justify-between text-xs font-bold text-white mb-1.5">
-                <span class="flex items-center"><i class="fa-solid fa-umbrella text-cyan-400 mr-2"></i> Career-Wealth Cushion</span>
-                <span id="salaryCushionMultiplier" class="text-[10px] font-mono px-2 py-0.5 rounded bg-cyan-500/20 text-cyan-300 font-bold">4.8x Coverage</span>
-              </div>
-              <p id="salaryCushionText" class="text-xs text-slate-300 leading-relaxed">
-                Your salaried income provides fresh recurring capital every month. Any temporary intraday market pullback is cushioned multiple times over by incoming monthly savings.
-              </p>
-            </div>
-            <div class="text-[11px] text-slate-400 pt-2 border-t border-[#16233d] flex items-center justify-between">
-              <span>Salary advantage:</span>
-              <span class="text-emerald-400 font-mono font-bold">Pullbacks = Cheaper SIP Units</span>
-            </div>
-          </div>
-
-          <!-- Pillar 3: Kahneman System 1 vs 2 Reminder -->
-          <div class="p-3.5 rounded-xl bg-[#060c18]/80 border border-[#16233d] space-y-1.5 flex flex-col justify-between">
-            <div>
-              <div class="flex items-center justify-between text-xs font-bold text-white mb-1.5">
-                <span class="flex items-center"><i class="fa-solid fa-eye-slash text-amber-400 mr-2"></i> Screen Addiction Defense</span>
-                <span class="text-[10px] font-mono px-2 py-0.5 rounded bg-amber-500/20 text-amber-300 font-bold">Myopic Shield</span>
-              </div>
-              <p class="text-xs text-slate-300 leading-relaxed">
-                Checking stock prices 10 times a day during meetings increases emotional loss aversion by <strong>300%</strong> without altering the company's real annual profits.
-              </p>
-            </div>
-            <div class="text-[11px] text-slate-400 pt-2 border-t border-[#16233d] flex items-center justify-between">
-              <span>Next check-in:</span>
-              <span id="shieldNextCheckin" class="text-cyan-300 font-mono font-bold">Post 3:30 PM IST (Evening Calm)</span>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- ======================================================== -->
-      <!-- PILLAR C & A: 1-CLICK MORNING BRIEFING & MARKET REGIME   -->
-      <!-- Institutional Conviction Cockpit & Loss-Shield Banner    -->
-      <!-- ======================================================== -->
-      <div id="morningBriefingSection" class="p-5 rounded-2xl bg-gradient-to-r from-[#0d1627] via-[#0a1222] to-[#0d1627] border border-cyan-500/30 shadow-2xl backdrop-blur-md space-y-4">
-        <!-- Top Bar: Greeting & Market Weather Vane -->
-        <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-3 pb-3 border-b border-[#16233d]">
-          <div class="flex items-center space-x-3">
-            <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-cyan-500/20 to-blue-500/20 border border-cyan-500/40 flex items-center justify-center text-cyan-400 shadow-md">
-              <i class="fa-solid fa-sun text-lg"></i>
-            </div>
-            <div>
-              <div class="flex items-center space-x-2">
-                <h2 id="briefingGreeting" class="text-base font-bold text-white tracking-tight">Good Morning, Investor</h2>
+              <div class="flex items-center space-x-2.5 flex-wrap gap-y-1">
+                <h2 id="briefingGreeting" class="text-lg sm:text-xl font-bold text-white tracking-tight">Good Afternoon, Investor</h2>
                 <span id="briefingActionPill" class="px-2.5 py-0.5 rounded-full text-xs font-mono font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
-                  All Clear: Hold & Let Compound
+                  All Clear: Hold &amp; Let Compound
                 </span>
                 <button onclick="openWhyDifferentModal()" class="px-2 py-0.5 rounded-full text-[11px] font-mono font-bold bg-cyan-500/15 text-cyan-300 border border-cyan-500/30 hover:bg-cyan-500/25 transition hidden sm:inline-flex items-center space-x-1" title="See what makes this 60-second briefing fundamentally different from broker apps">
                   <i class="fa-solid fa-sparkles text-[9px] text-amber-400"></i>
                   <span>Why This App?</span>
                 </button>
               </div>
-              <p id="briefingMarketPulse" class="text-xs text-slate-400 mt-0.5">
+              <p id="briefingMarketPulse" class="text-xs text-slate-400 mt-1">
                 Nifty 50 is in a selective bull market at 24,820 (+0.35%). Volatility is calm (India VIX 13.8).
               </p>
             </div>
           </div>
 
-          <!-- Market Regime Weather Indicators (Pillar A) -->
+          <!-- Market Regime & Focus Weather Capsules -->
           <div class="flex flex-wrap items-center gap-2 text-xs">
             <!-- Nifty 50 Trend Tile -->
-            <div class="px-3 py-1.5 rounded-xl bg-[#060c18] border border-[#16233d] flex items-center space-x-2">
+            <div class="px-3 py-1.5 rounded-xl bg-[#060c18] border border-[#16233d] flex items-center space-x-2 shadow-sm">
               <span class="text-slate-500 font-mono text-[10px]">NIFTY 50:</span>
               <span id="regimeNiftyPrice" class="font-bold text-white font-mono">24,820</span>
               <span id="regimeNiftyChange" class="text-[10px] text-emerald-400 font-bold font-mono">+0.35%</span>
             </div>
             <!-- Market Breadth Tile -->
-            <div class="px-3 py-1.5 rounded-xl bg-[#060c18] border border-[#16233d] flex items-center space-x-2" title="Percentage of Nifty 500 stocks above 50-day moving average">
+            <div class="px-3 py-1.5 rounded-xl bg-[#060c18] border border-[#16233d] flex items-center space-x-2 shadow-sm" title="Percentage of Nifty 500 stocks above 50-day moving average">
               <span class="text-slate-500 font-mono text-[10px]">BREADTH:</span>
               <span id="regimeBreadth" class="font-bold text-cyan-400 font-mono">64.5%</span>
-              <span class="text-[9px] text-slate-400">>50 DMA</span>
+              <span class="text-[9px] text-slate-400">&gt;50 DMA</span>
             </div>
             <!-- India VIX Volatility Tile -->
-            <div class="px-3 py-1.5 rounded-xl bg-[#060c18] border border-[#16233d] flex items-center space-x-2" title="India VIX: <16 is Calm, >20 is High Fear">
+            <div class="px-3 py-1.5 rounded-xl bg-[#060c18] border border-[#16233d] flex items-center space-x-2 shadow-sm" title="India VIX: &lt;16 is Calm, &gt;20 is High Fear">
               <span class="text-slate-500 font-mono text-[10px]">INDIA VIX:</span>
               <span id="regimeVix" class="font-bold text-emerald-400 font-mono">13.8</span>
               <span class="text-[9px] text-emerald-400">Calm</span>
             </div>
+            <!-- Integrated 9-5 Shield Status Capsule -->
+            <button id="btnToggleWorkShield" onclick="toggleWorkShield()" class="px-3 py-1.5 rounded-xl bg-[#060c18] hover:bg-[#0f1b32] border border-cyan-500/30 text-slate-300 hover:text-white flex items-center space-x-1.5 transition shadow-sm" title="Click to toggle 9-5 Work Focus Shield &amp; Career Harmony Drawer">
+              <i id="workShieldIcon" class="fa-solid fa-briefcase text-cyan-400 text-xs"></i>
+              <span id="workShieldBtnText" class="text-[11px] font-medium">9-5 Shield</span>
+              <span id="workShieldStatusDot" class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+            </button>
           </div>
         </div>
 
-        <!-- Pillar A: Loss-Protection Guardrail Banner -->
+        <!-- 2. Portfolio Switcher & Primary Financial Action Controls -->
+        <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-4 py-1">
+          <div class="flex items-center space-x-3">
+            <div class="flex items-center space-x-2">
+              <i class="fa-solid fa-wallet text-cyan-400 text-base"></i>
+              <span class="text-xs font-semibold text-slate-300 uppercase tracking-wider">Active Portfolio:</span>
+            </div>
+            <select id="portfolioSelect" class="bg-[#060c18] border border-[#16233d] rounded-xl text-sm px-3.5 py-1.5 text-white font-medium focus:outline-none focus:ring-2 focus:ring-cyan-500/30 focus:border-cyan-500/50 min-w-[240px] shadow-sm">
+              <option value="">Loading portfolios...</option>
+            </select>
+          </div>
+
+          <div class="flex flex-wrap items-center gap-2.5">
+            <!-- Quick Add / Create Bar -->
+            <div class="flex items-center space-x-1.5">
+              <input id="newPortfolioName" type="text" placeholder="New portfolio..." class="bg-[#060c18] border border-[#16233d] rounded-lg px-2.5 py-1.5 text-xs text-slate-200 placeholder-slate-500 focus:outline-none focus:ring-1 focus:ring-cyan-500/30 focus:border-cyan-500/50 w-36" />
+              <button id="btnCreatePortfolio" class="bg-[#0f1b32] hover:bg-[#16233d] text-cyan-400 text-xs font-semibold px-2.5 py-1.5 rounded-lg border border-[#16233d] transition">
+                + Create
+              </button>
+            </div>
+
+            <!-- Trade Logger Button -->
+            <button id="btnOpenTradeModal" onclick="openTradeModal()" class="bg-cyan-600 hover:bg-cyan-500 text-slate-950 text-xs font-bold px-3 py-1.5 rounded-lg border border-cyan-500/40 transition flex items-center space-x-1.5 shadow-sm">
+              <i class="fa-solid fa-bolt text-xs"></i>
+              <span>Log Trade</span>
+            </button>
+
+            <!-- Multi-Broker Import Button (Zerodha + Angel One) -->
+            <button id="btnOpenBrokerSync" onclick="openBrokerImportModal()" class="bg-gradient-to-r from-blue-600 via-cyan-600 to-teal-600 hover:from-blue-500 hover:to-teal-500 text-white text-xs font-bold px-3 py-1.5 rounded-lg border border-cyan-500/50 transition flex items-center space-x-1.5 shadow-sm" title="Import Zerodha (.csv/.xlsx) or Angel One (.xlsx)">
+              <i class="fa-solid fa-file-import text-xs"></i>
+              <span>Import Broker</span>
+              <span class="text-[9px] px-1 py-0.2 rounded bg-black/30 text-cyan-200 font-mono font-normal">Zerodha &bull; Angel</span>
+            </button>
+
+            <!-- Add Stock Position Button -->
+            <button id="btnToggleAddHolding" class="bg-[#0f1b32] hover:bg-[#16233d] text-slate-200 text-xs font-medium px-3 py-1.5 rounded-lg border border-[#16233d] transition flex items-center space-x-1.5">
+              <i class="fa-solid fa-plus text-cyan-400 text-xs"></i>
+              <span>Add Stock</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- 3. The 6 Financial KPI Cards (Instant Portfolio Net Worth & Performance) -->
+        <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
+          <!-- Current Market Value -->
+          <div class="p-3.5 bg-[#060c18]/90 rounded-xl border border-[#16233d] shadow-sm">
+            <div class="flex items-center justify-between text-[11px] text-slate-400 font-medium">
+              <span>Current Value</span>
+              <span class="text-[9px] text-cyan-400 font-mono">CMP</span>
+            </div>
+            <div id="statTotalValue" class="text-xl sm:text-2xl font-bold text-white mt-1 privacy-mask">&#8377;0</div>
+            <div class="text-[10px] text-slate-500 mt-0.5">Live market valuation</div>
+          </div>
+
+          <!-- Total Invested Capital -->
+          <div class="p-3.5 bg-[#060c18]/90 rounded-xl border border-[#16233d] shadow-sm">
+            <div class="flex items-center justify-between text-[11px] text-slate-400 font-medium">
+              <span>Total Invested</span>
+              <span class="text-[9px] text-slate-400 font-mono">Cost</span>
+            </div>
+            <div id="statTotalInvested" class="text-xl sm:text-2xl font-bold text-slate-200 mt-1 privacy-mask">&#8377;0</div>
+            <div class="text-[10px] text-slate-500 mt-0.5">Purchase cost basis</div>
+          </div>
+
+          <!-- Day's Profit / Loss -->
+          <div class="p-3.5 bg-[#060c18]/90 rounded-xl border border-[#16233d] shadow-sm">
+            <div class="flex items-center justify-between text-[11px] text-slate-400 font-medium">
+              <span>Day's P&amp;L</span>
+              <span id="statDayPnLBadge" class="text-[9px] font-bold px-1.5 py-0.2 rounded bg-emerald-500/20 text-emerald-400 privacy-mask">TODAY</span>
+            </div>
+            <div id="statDayPnL" class="text-xl sm:text-2xl font-bold text-emerald-400 mt-1 privacy-mask">&#8377;0 (0.00%)</div>
+            <div class="text-[10px] text-slate-500 mt-0.5">Today's net move</div>
+          </div>
+
+          <!-- Total Unrealized P&L -->
+          <div class="p-3.5 bg-[#060c18]/90 rounded-xl border border-[#16233d] shadow-sm">
+            <div class="flex items-center justify-between text-[11px] text-slate-400 font-medium">
+              <span>Unrealized P&amp;L</span>
+              <span id="statPnLBadge" class="text-[9px] font-bold px-1.5 py-0.2 rounded bg-emerald-500/20 text-emerald-400 privacy-mask">NET GAIN</span>
+            </div>
+            <div id="statTotalPnL" class="text-xl sm:text-2xl font-bold text-emerald-400 mt-1 privacy-mask">&#8377;0 (0.00%)</div>
+            <div class="text-[10px] text-slate-500 mt-0.5">Overall profit / loss</div>
+          </div>
+
+          <!-- Positions Count -->
+          <div class="p-3.5 bg-[#060c18]/90 rounded-xl border border-[#16233d] shadow-sm">
+            <div class="text-[11px] text-slate-400 font-medium">Active Holdings</div>
+            <div id="statHoldingsCount" class="text-xl sm:text-2xl font-bold text-white mt-1">0</div>
+            <div class="text-[10px] text-slate-500 mt-0.5">Diversified equities</div>
+          </div>
+
+          <!-- Health Score -->
+          <div class="p-3.5 bg-[#060c18]/90 rounded-xl border border-[#16233d] shadow-sm">
+            <div class="flex items-center justify-between text-[11px] text-slate-400 font-medium">
+              <span>Portfolio Health</span>
+              <span id="statHealthRating" class="text-[9px] font-bold text-emerald-400 truncate">Evaluating...</span>
+            </div>
+            <div id="statHealthScore" class="text-xl sm:text-2xl font-bold text-cyan-400 mt-1">0 / 100</div>
+            <div class="text-[10px] text-slate-500 mt-0.5">Risk &amp; constraint checks</div>
+          </div>
+        </div>
+
+        <!-- Collapsible Add Position Form -->
+        <div id="addPositionPanel" class="hidden pt-3 border-t border-[#16233d]">
+          <div class="flex items-center justify-between mb-2">
+            <h4 class="text-xs font-semibold text-slate-300 uppercase tracking-wider flex items-center">
+              <i class="fa-solid fa-cart-plus text-cyan-400 mr-2"></i> Add / Update Equity Position
+            </h4>
+            <span class="text-xs text-slate-500">Updates existing position if ticker already exists</span>
+          </div>
+          <div class="grid grid-cols-1 sm:grid-cols-4 gap-3">
+            <div>
+              <label class="block text-xs font-medium text-slate-400 mb-1">NSE Symbol</label>
+              <input id="inputTicker" type="text" placeholder="e.g. RELIANCE, TCS" class="w-full uppercase bg-[#060c18] border border-[#16233d] rounded-lg px-3 py-2 text-sm text-slate-200 focus:outline-none focus:ring-2 focus:ring-cyan-500/30 focus:border-cyan-500/50" />
+            </div>
+            <div>
+              <label class="block text-xs font-medium text-slate-400 mb-1">Shares (Quantity)</label>
+              <input id="inputQuantity" type="number" step="1" min="1" placeholder="50" class="w-full bg-[#060c18] border border-[#16233d] rounded-lg px-3 py-2 text-sm text-slate-200 focus:outline-none focus:ring-2 focus:ring-cyan-500/30 focus:border-cyan-500/50" />
+            </div>
+            <div>
+              <label class="block text-xs font-medium text-slate-400 mb-1">Buy Price (&#8377;) <span class="text-slate-500 text-[10px]">(Optional)</span></label>
+              <input id="inputBuyPrice" type="number" step="any" min="0" placeholder="e.g. 1150.00" class="w-full bg-[#060c18] border border-[#16233d] rounded-lg px-3 py-2 text-sm text-slate-200 focus:outline-none focus:ring-2 focus:ring-cyan-500/30 focus:border-cyan-500/50" />
+            </div>
+            <div class="flex items-end">
+              <button id="btnAddHolding" class="w-full bg-cyan-600 hover:bg-cyan-500 text-slate-950 font-bold py-2 rounded-lg text-sm transition">
+                Save Position
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- 4. Loss-Protection Guardrail Banner -->
         <div id="briefingPolicyBanner" class="p-3 rounded-xl bg-[#060c18] border border-cyan-500/20 text-xs flex items-start space-x-2.5">
           <i class="fa-solid fa-shield-halved text-cyan-400 text-sm mt-0.5 flex-shrink-0"></i>
           <div>
@@ -927,13 +973,13 @@
           </div>
         </div>
 
-        <!-- Action Items & Conviction Swaps Grid (Pillar B & C) -->
+        <!-- 5. The 60-Second Action & Conviction Deck (3 Columns) -->
         <div class="grid grid-cols-1 lg:grid-cols-3 gap-3.5 pt-1">
           <!-- Column 1: Executive Action Bullets (Plain English) -->
           <div class="p-3.5 rounded-xl bg-[#060c18] border border-[#16233d] space-y-2 flex flex-col justify-between">
             <div>
               <div class="flex items-center justify-between text-xs font-bold text-white mb-2">
-                <span class="flex items-center"><i class="fa-solid fa-list-check text-cyan-400 mr-2"></i> Today's Focus</span>
+                <span class="flex items-center"><i class="fa-solid fa-list-check text-cyan-400 mr-2"></i> 1. Today's Focus</span>
                 <span id="briefingSoundRatio" class="text-[10px] font-mono px-2 py-0.5 rounded bg-emerald-500/15 text-emerald-300">
                   Loading...
                 </span>
@@ -946,8 +992,8 @@
               </ul>
             </div>
             <div class="pt-2 border-t border-[#16233d] text-[10px] text-slate-500 flex items-center justify-between">
-              <span>Time required today:</span>
-              <strong class="text-cyan-300 font-mono">&lt; 2 Minutes</strong>
+              <span>Time required:</span>
+              <strong class="text-cyan-300 font-mono">&lt; 1 Minute</strong>
             </div>
           </div>
 
@@ -955,7 +1001,7 @@
           <div class="p-3.5 rounded-xl bg-[#060c18] border border-[#16233d] space-y-2 flex flex-col justify-between">
             <div>
               <div class="flex items-center justify-between text-xs font-bold text-white mb-2">
-                <span class="flex items-center"><i class="fa-solid fa-anchor text-amber-400 mr-2"></i> In Red: Do NOT Sell (Sound Core)</span>
+                <span class="flex items-center"><i class="fa-solid fa-anchor text-amber-400 mr-2"></i> 2. In Red: Do NOT Sell (Sound Core)</span>
                 <span class="text-[10px] font-mono text-amber-400">Temporary Beta</span>
               </div>
               <div id="briefingHoldList" class="space-y-1.5 text-[11px]">
@@ -963,15 +1009,15 @@
               </div>
             </div>
             <div class="pt-2 border-t border-[#16233d] text-[10px] text-slate-500">
-              Down due to broader market consolidation, NOT fundamental decay.
+              Down due to broader index rotation, NOT fundamental decay.
             </div>
           </div>
 
-          <!-- Column 3: The Broken Theses / High-Conviction Swaps (Opportunity Cost Matrix) -->
+          <!-- Column 3: The Broken Theses / High-Conviction Swaps -->
           <div class="p-3.5 rounded-xl bg-[#060c18] border border-[#16233d] space-y-2 flex flex-col justify-between">
             <div>
               <div class="flex items-center justify-between text-xs font-bold text-white mb-2">
-                <span class="flex items-center"><i class="fa-solid fa-repeat text-rose-400 mr-2"></i> Broken Theses (Smart Swaps)</span>
+                <span class="flex items-center"><i class="fa-solid fa-repeat text-rose-400 mr-2"></i> 3. Broken Theses (Smart Swaps)</span>
                 <span class="text-[10px] font-mono text-rose-400">Opportunity Drag</span>
               </div>
               <div id="briefingSwapList" class="space-y-1.5 text-[11px]">
@@ -984,139 +1030,80 @@
             </div>
           </div>
         </div>
-      </div>
 
-      <!-- Top Executive Cockpit: Portfolio Selector + 5 KPI Cards -->
-    <div class="bg-[#0a1222]/90 border border-[#16233d] rounded-2xl p-5 backdrop-blur-md shadow-xl shadow-cyan-950/20">
-      <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-4 mb-4 pb-4 border-b border-[#16233d]">
-        <div class="flex items-center space-x-4">
-          <div class="flex items-center space-x-2">
-            <i class="fa-solid fa-wallet text-cyan-400 text-lg"></i>
-            <span class="text-sm font-semibold text-white">Active Portfolio:</span>
+        <!-- 6. Collapsible 9-5 Work Focus Shield & Career-Wealth Harmony Drawer -->
+        <div id="workHoursShieldBanner" class="hidden p-4 rounded-xl bg-[#060c18]/90 border border-cyan-500/30 space-y-3 transition-all duration-300">
+          <div class="flex items-center justify-between pb-2 border-b border-[#16233d]">
+            <div class="flex items-center space-x-2.5">
+              <i class="fa-solid fa-briefcase text-cyan-400 text-sm"></i>
+              <h3 id="shieldHeading" class="text-xs font-bold text-white">9-5 Work Hours Focus Shield Active</h3>
+              <span id="shieldStatusBadge" class="px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-cyan-500/20 text-cyan-300 border border-cyan-500/30">
+                Market Hours (09:15 - 15:30 IST)
+              </span>
+            </div>
+            <div class="flex items-center space-x-2">
+              <span id="shieldNextCheckin" class="text-[10px] font-mono text-cyan-300 font-bold hidden sm:inline">Post 3:30 PM IST (Evening Calm)</span>
+              <button onclick="toggleWorkShield(false)" class="text-[10px] bg-slate-800 hover:bg-slate-700 text-rose-300 hover:text-white px-2 py-1 rounded transition">
+                Deactivate
+              </button>
+            </div>
           </div>
-          <select id="portfolioSelect" class="bg-[#060c18] border border-[#16233d] rounded-lg text-sm px-3.5 py-1.5 text-slate-200 focus:outline-none focus:ring-2 focus:ring-cyan-500/30 focus:border-cyan-500/50 min-w-[260px]">
-            <option value="">Loading portfolios...</option>
-          </select>
+          <p id="shieldSubheading" class="text-[11px] text-slate-400">
+            Emotional anxiety filter active. Intraday price flashing suppressed to safeguard your deep work and professional career focus.
+          </p>
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs pt-1">
+            <div class="p-2.5 rounded-lg bg-[#0a1222] border border-[#16233d] space-y-1">
+              <div class="flex items-center justify-between text-[11px] font-bold text-white">
+                <span class="flex items-center"><i class="fa-solid fa-circle-check text-emerald-400 mr-1.5"></i> Today's Action Status</span>
+                <span id="shieldActionPill" class="text-[9px] font-mono px-1.5 py-0.2 rounded bg-emerald-500/20 text-emerald-300 font-bold">0 ACTIONS NEEDED</span>
+              </div>
+              <p id="shieldActionDetail" class="text-[11px] text-slate-300 leading-relaxed">
+                No trades or rebalancing required today. Your portfolio is built with high-ROCE compounding businesses.
+              </p>
+            </div>
+            <div class="p-2.5 rounded-lg bg-[#0a1222] border border-[#16233d] space-y-1">
+              <div class="flex items-center justify-between text-[11px] font-bold text-white">
+                <span class="flex items-center"><i class="fa-solid fa-umbrella text-cyan-400 mr-1.5"></i> Career-Wealth Runway Cushion</span>
+                <span id="salaryCushionMultiplier" class="text-[9px] font-mono px-1.5 py-0.2 rounded bg-cyan-500/20 text-cyan-300 font-bold">4.8x Coverage</span>
+              </div>
+              <p id="salaryCushionText" class="text-[11px] text-slate-300 leading-relaxed">
+                Your salaried income provides fresh recurring capital every month. Any temporary market pullback is cushioned multiple times over by incoming monthly savings.
+              </p>
+            </div>
+          </div>
+          <!-- Hidden placeholder to preserve shieldMacroWeather ID if referenced -->
+          <div id="shieldMacroWeather" class="hidden"></div>
         </div>
 
-        <div class="flex flex-wrap items-center gap-3">
-          <!-- Quick Add / Create Bar -->
-          <div class="flex items-center space-x-2">
-            <input id="newPortfolioName" type="text" placeholder="New portfolio name..." class="bg-[#060c18] border border-[#16233d] rounded-lg px-3 py-1.5 text-xs text-slate-200 placeholder-slate-500 focus:outline-none focus:ring-1 focus:ring-cyan-500/30 focus:border-cyan-500/50 w-44" />
-            <button id="btnCreatePortfolio" class="bg-[#0f1b32] hover:bg-[#16233d] text-cyan-400 text-xs font-semibold px-3 py-1.5 rounded-lg border border-[#16233d] transition">
-              + New Portfolio
+        <!-- 7. Quick Navigation Jump Bar -->
+        <div class="flex flex-wrap items-center justify-between gap-2 pt-3 border-t border-[#16233d] text-xs">
+          <div class="flex flex-wrap items-center gap-1.5">
+            <span class="text-[11px] font-semibold text-slate-400 mr-1">Quick Jump:</span>
+            <button onclick="document.getElementById('holdingsSection')?.scrollIntoView({behavior:'smooth'})" class="px-2.5 py-1 rounded-lg bg-[#060c18] hover:bg-[#0f1b32] text-slate-300 hover:text-white border border-[#16233d] transition flex items-center space-x-1">
+              <i class="fa-solid fa-table-list text-cyan-400 text-[10px]"></i>
+              <span>Holdings Table</span>
+            </button>
+            <button onclick="document.getElementById('allocationDeckSection')?.scrollIntoView({behavior:'smooth'})" class="px-2.5 py-1 rounded-lg bg-[#060c18] hover:bg-[#0f1b32] text-slate-300 hover:text-white border border-[#16233d] transition flex items-center space-x-1">
+              <i class="fa-solid fa-chart-pie text-cyan-400 text-[10px]"></i>
+              <span>Allocation Breakdown</span>
+            </button>
+            <button onclick="navigateTo('theories')" class="px-2.5 py-1 rounded-lg bg-[#060c18] hover:bg-[#0f1b32] text-slate-300 hover:text-white border border-[#16233d] transition flex items-center space-x-1">
+              <i class="fa-solid fa-graduation-cap text-purple-400 text-[10px]"></i>
+              <span>Theory Lab (3 Indian Theories)</span>
+            </button>
+            <button onclick="navigateTo('discover')" class="px-2.5 py-1 rounded-lg bg-[#060c18] hover:bg-[#0f1b32] text-slate-300 hover:text-white border border-[#16233d] transition flex items-center space-x-1">
+              <i class="fa-solid fa-magnifying-glass text-teal-400 text-[10px]"></i>
+              <span>Stock Search &amp; Whale Radar</span>
             </button>
           </div>
-
-          <button id="btnToggleAddHolding" class="bg-[#0f1b32] hover:bg-[#16233d] text-slate-200 text-xs font-medium px-3 py-1.5 rounded-lg border border-[#16233d] transition flex items-center space-x-1.5">
-            <i class="fa-solid fa-plus text-cyan-400"></i>
-            <span>Add Stock Position</span>
-          </button>
-
-          <!-- Trade Logger Button -->
-          <button id="btnOpenTradeModal" onclick="openTradeModal()" class="bg-cyan-600 hover:bg-cyan-500 text-slate-950 text-xs font-bold px-3 py-1.5 rounded-lg border border-cyan-500/40 transition flex items-center space-x-1.5 shadow-sm">
-            <i class="fa-solid fa-bolt"></i>
-            <span>Log Trade</span>
-          </button>
-
-          <!-- Multi-Broker Import Button (Zerodha + Angel One) -->
-          <button id="btnOpenBrokerSync" onclick="openBrokerImportModal()" class="bg-gradient-to-r from-blue-600 via-cyan-600 to-teal-600 hover:from-blue-500 hover:to-teal-500 text-white text-xs font-bold px-3 py-1.5 rounded-lg border border-cyan-500/50 transition flex items-center space-x-1.5 shadow-sm" title="Import Zerodha (.csv/.xlsx) or Angel One (.xlsx)">
-            <i class="fa-solid fa-file-import"></i>
-            <span>Import Broker</span>
-            <span class="text-[9px] px-1 py-0.2 rounded bg-black/30 text-cyan-200 font-mono font-normal">Zerodha &bull; Angel</span>
-          </button>
+          <div class="text-[11px] text-slate-400 flex items-center space-x-1.5">
+            <i class="fa-solid fa-clock text-cyan-400"></i>
+            <span>Indian Standard Time (IST)</span>
+          </div>
         </div>
+
       </div>
 
-      <!-- 6 Metric Cards -->
-      <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3.5">
-        <!-- Current Market Value -->
-        <div class="p-4 bg-[#060c18]/90 rounded-xl border border-[#16233d] shadow-sm">
-          <div class="flex items-center justify-between text-xs text-slate-400 font-medium">
-            <span>Current Value</span>
-            <span class="text-[10px] text-cyan-400 font-mono">CMP</span>
-          </div>
-          <div id="statTotalValue" class="text-2xl font-bold text-white mt-1 privacy-mask">&#8377;0</div>
-          <div class="text-[11px] text-slate-500 mt-0.5">Live market valuation</div>
-        </div>
-
-        <!-- Total Invested Capital -->
-        <div class="p-4 bg-[#060c18]/90 rounded-xl border border-[#16233d] shadow-sm">
-          <div class="flex items-center justify-between text-xs text-slate-400 font-medium">
-            <span>Total Invested</span>
-            <span class="text-[10px] text-slate-400 font-mono">Cost</span>
-          </div>
-          <div id="statTotalInvested" class="text-2xl font-bold text-slate-200 mt-1 privacy-mask">&#8377;0</div>
-          <div class="text-[11px] text-slate-500 mt-0.5">Purchase cost basis</div>
-        </div>
-
-        <!-- Day's Profit / Loss -->
-        <div class="p-4 bg-[#060c18]/90 rounded-xl border border-[#16233d] shadow-sm">
-          <div class="flex items-center justify-between text-xs text-slate-400 font-medium">
-            <span>Day's P&L</span>
-            <span id="statDayPnLBadge" class="text-[10px] font-bold px-1.5 py-0.2 rounded bg-emerald-500/20 text-emerald-400 privacy-mask">TODAY</span>
-          </div>
-          <div id="statDayPnL" class="text-2xl font-bold text-emerald-400 mt-1 privacy-mask">&#8377;0 (0.00%)</div>
-          <div class="text-[11px] text-slate-500 mt-0.5">Today's net move</div>
-        </div>
-
-        <!-- Total Unrealized P&L -->
-        <div class="p-4 bg-[#060c18]/90 rounded-xl border border-[#16233d] shadow-sm">
-          <div class="flex items-center justify-between text-xs text-slate-400 font-medium">
-            <span>Unrealized P&L</span>
-            <span id="statPnLBadge" class="text-[10px] font-bold px-1.5 py-0.2 rounded bg-emerald-500/20 text-emerald-400 privacy-mask">NET GAIN</span>
-          </div>
-          <div id="statTotalPnL" class="text-2xl font-bold text-emerald-400 mt-1 privacy-mask">&#8377;0 (0.00%)</div>
-          <div class="text-[11px] text-slate-500 mt-0.5">Overall profit / loss</div>
-        </div>
-
-        <!-- Positions Count -->
-        <div class="p-4 bg-[#060c18]/90 rounded-xl border border-[#16233d] shadow-sm">
-          <div class="text-xs text-slate-400 font-medium">Active Holdings</div>
-          <div id="statHoldingsCount" class="text-2xl font-bold text-white mt-1">0</div>
-          <div class="text-[11px] text-slate-500 mt-0.5">Diversified equities</div>
-        </div>
-
-        <!-- Health Score -->
-        <div class="p-4 bg-[#060c18]/90 rounded-xl border border-[#16233d] shadow-sm">
-          <div class="flex items-center justify-between text-xs text-slate-400 font-medium">
-            <span>Portfolio Health</span>
-            <span id="statHealthRating" class="text-[10px] font-bold text-emerald-400 truncate">Evaluating...</span>
-          </div>
-          <div id="statHealthScore" class="text-2xl font-bold text-cyan-400 mt-1">0 / 100</div>
-          <div class="text-[11px] text-slate-500 mt-0.5">Risk & constraint checks</div>
-        </div>
-      </div>
-
-      <!-- Collapsible Add Position Form -->
-      <div id="addPositionPanel" class="hidden mt-4 pt-4 border-t border-[#16233d]">
-        <div class="flex items-center justify-between mb-3">
-          <h4 class="text-xs font-semibold text-slate-300 uppercase tracking-wider flex items-center">
-            <i class="fa-solid fa-cart-plus text-cyan-400 mr-2"></i> Add / Update Equity Position
-          </h4>
-          <span class="text-xs text-slate-500">Updates existing position if ticker already exists</span>
-        </div>
-        <div class="grid grid-cols-1 sm:grid-cols-4 gap-3">
-          <div>
-            <label class="block text-xs font-medium text-slate-400 mb-1">NSE Symbol</label>
-            <input id="inputTicker" type="text" placeholder="e.g. RELIANCE, TCS" class="w-full uppercase bg-[#060c18] border border-[#16233d] rounded-lg px-3 py-2 text-sm text-slate-200 focus:outline-none focus:ring-2 focus:ring-cyan-500/30 focus:border-cyan-500/50" />
-          </div>
-          <div>
-            <label class="block text-xs font-medium text-slate-400 mb-1">Shares (Quantity)</label>
-            <input id="inputQuantity" type="number" step="1" min="1" placeholder="50" class="w-full bg-[#060c18] border border-[#16233d] rounded-lg px-3 py-2 text-sm text-slate-200 focus:outline-none focus:ring-2 focus:ring-cyan-500/30 focus:border-cyan-500/50" />
-          </div>
-          <div>
-            <label class="block text-xs font-medium text-slate-400 mb-1">Buy Price (&#8377;) <span class="text-slate-500 text-[10px]">(Optional)</span></label>
-            <input id="inputBuyPrice" type="number" step="any" min="0" placeholder="e.g. 1150.00" class="w-full bg-[#060c18] border border-[#16233d] rounded-lg px-3 py-2 text-sm text-slate-200 focus:outline-none focus:ring-2 focus:ring-cyan-500/30 focus:border-cyan-500/50" />
-          </div>
-          <div class="flex items-end">
-            <button id="btnAddHolding" class="w-full bg-cyan-600 hover:bg-cyan-500 text-slate-950 font-bold py-2 rounded-lg text-sm transition">
-              Save Position
-            </button>
-          </div>
-        </div>
-      </div>
-    </div>
 
       <!-- ======================================================== -->
       <!-- DUAL ALLOCATION PIE CHARTS: SECTOR & MARKET CAP DECK     -->
