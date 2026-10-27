@@ -522,10 +522,6 @@ function navigateTo(viewName, updateHash = true) {
   if (viewName === 'manage') {
     updateTargetSumBadge();
   } else if (viewName === 'discover') {
-    const stratContainer = document.getElementById("quantStrategiesContainer");
-    if (currentPortfolioId && (!stratContainer || stratContainer.children.length === 0)) {
-      loadResearchReport(currentPortfolioId);
-    }
     loadSwingRadarFeed();
   } else if (viewName === 'theories') {
     loadTheoryPortfolios();
@@ -3262,101 +3258,9 @@ async function handleInspectStock() {
 }
 
 async function loadResearchReport(portfolioId) {
-  const section = document.getElementById("researchReportSection");
-  section.classList.remove("hidden");
-  section.scrollIntoView({ behavior: 'smooth' });
-
-  const stratContainer = document.getElementById("quantStrategiesContainer");
-  const scenContainer = document.getElementById("scenariosContainer");
-  stratContainer.innerHTML = `<div class="p-4 text-xs text-slate-400">Loading backtested factor models...</div>`;
-  scenContainer.innerHTML = `<div class="p-4 text-xs text-slate-400">Loading macro news scenarios...</div>`;
-
-  try {
-    const res = await fetch(`/api/portfolios/${portfolioId}/research`);
-    if (!res.ok) {
-      stratContainer.innerHTML = `<div class="p-4 text-xs text-rose-400">Failed loading research models.</div>`;
-      return;
-    }
-    const data = await res.json();
-
-    // Render 3 Backtested Strategies
-    stratContainer.innerHTML = "";
-    data.topStrategies.forEach(s => {
-      const card = document.createElement("div");
-      card.className = "p-4 bg-slate-950/90 rounded-xl border border-slate-800 flex flex-col justify-between space-y-3";
-      card.innerHTML = `
-        <div>
-          <div class="flex justify-between items-start">
-            <h5 class="font-bold text-white text-xs">${s.strategyName}</h5>
-            <span class="text-[11px] font-mono font-bold px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">
-              ${s.historicalCagrPercent}% CAGR
-            </span>
-          </div>
-          <p class="text-[11px] text-slate-400 mt-1 leading-relaxed">${s.philosophy}</p>
-          <div class="p-2 bg-slate-900 rounded text-[10px] font-mono text-teal-400/90 mt-2 border border-slate-800">
-            <strong>Rule:</strong> ${s.coreCriteria}
-          </div>
-          <div class="grid grid-cols-2 gap-2 text-[10px] text-slate-400 mt-2 font-mono">
-            <div>Benchmark: <span class="text-slate-200">${s.benchmarkCagrPercent}%</span></div>
-            <div>Max Drawdown: <span class="text-rose-400">-${s.maxDrawdownPercent}%</span></div>
-          </div>
-        </div>
-
-        <div>
-          <div class="text-[10px] font-semibold uppercase text-slate-400 mb-1.5 flex items-center">
-            <i class="fa-solid fa-bullseye text-teal-400 mr-1"></i> Top Opportunities Detected:
-          </div>
-          <div class="space-y-1.5">
-            ${s.identifiedOpportunities.map(op => `
-              <div class="p-2 bg-slate-900 rounded border border-slate-800 text-[11px]">
-                <div class="flex justify-between items-center">
-                  <span class="font-bold font-mono text-white">${op.ticker}</span>
-                  <span class="text-emerald-400 font-mono font-semibold">+${op.upsidePotentialPercent}% Upside</span>
-                </div>
-                <div class="text-[10px] text-slate-400 mt-0.5">${op.triggerSignal}</div>
-                <div class="text-[10px] text-slate-500 mt-0.5">Target: \u20B9${op.targetPrice} &bull; ${op.catalystRationale}</div>
-              </div>
-            `).join('')}
-          </div>
-        </div>
-      `;
-      stratContainer.appendChild(card);
-    });
-
-    // Render News & Macro Scenarios
-    scenContainer.innerHTML = "";
-    data.scenarioStressTests.forEach(sc => {
-      const isPos = sc.marketImpact === "Positive";
-      const badgeColor = isPos ? "emerald" : "rose";
-      const card = document.createElement("div");
-      card.className = `p-4 bg-slate-950/90 rounded-xl border border-${badgeColor}-500/40 flex flex-col justify-between space-y-2.5`;
-      card.innerHTML = `
-        <div>
-          <div class="flex justify-between items-start">
-            <h5 class="font-bold text-white text-xs">${sc.scenarioName}</h5>
-            <span class="text-[10px] font-bold px-2 py-0.5 rounded bg-${badgeColor}-500/20 text-${badgeColor}-400 uppercase">
-              ${sc.marketImpact} (${sc.projectedPortfolioImpactPercent > 0 ? '+' : ''}${sc.projectedPortfolioImpactPercent}%)
-            </span>
-          </div>
-          <p class="text-[11px] text-slate-300 mt-1">${sc.triggerEvent}</p>
-        </div>
-
-        <div class="text-[10px] space-y-1 border-t border-slate-800 pt-2">
-          <div><strong class="text-slate-400">Resilient Winners:</strong> <span class="text-emerald-400 font-mono">${sc.resilientHoldings.join(', ')}</span></div>
-          <div><strong class="text-slate-400">Vulnerable:</strong> <span class="text-rose-400 font-mono">${sc.vulnerableHoldings.join(', ')}</span></div>
-        </div>
-
-        <div class="p-2 rounded bg-slate-900 text-[10px] text-teal-300/90 border border-slate-800 leading-relaxed">
-          <i class="fa-solid fa-lightbulb text-teal-400 mr-1"></i> <strong>Advisory Response:</strong> ${sc.advisoryAction}
-        </div>
-      `;
-      scenContainer.appendChild(card);
-    });
-
-  } catch (err) {
-    stratContainer.innerHTML = `<div class="p-4 text-xs text-rose-400">Error loading research report.</div>`;
-  }
+  // Legacy quant research report superseded by Theory Lab (#/theories)
 }
+
 // ==========================================
 // INTERACTIVE TRADE LOGGER & POSITION ADJUSTER
 // ==========================================
@@ -5130,24 +5034,20 @@ window._scStateMap = window._scStateMap || {};
 function renderInstitutionalSupplyChainEcosystem(supplyChain, ticker, companyName) {
   if (!supplyChain) return '';
 
-  // Store in memory for dynamic reactivity without network re-fetch
+  window._scDataMap = window._scDataMap || {};
   window._scDataMap[ticker] = { supplyChain, ticker, companyName };
 
+  window._scStateMap = window._scStateMap || {};
   if (!window._scStateMap[ticker]) {
     window._scStateMap[ticker] = {
-      activeTab: 'graph', // default to flagship interactive directed graph!
-      activeShockIndex: 0,
-      activeMacroTrigger: 'COPPER_SPIKE', // 'COPPER_SPIKE' | 'COPPER_DROP' | 'CRUDE_SPIKE' | 'STEEL_SPIKE' | 'INR_WEAK' | 'BASE'
-      sliderDeltaPercent: 20,
+      activeTab: 'chain', // 'chain' | 'cogs' | 'revenue'
       expandedNodes: {}
     };
   }
 
   const state = window._scStateMap[ticker];
-  const activeTab = state.activeTab || 'graph';
-  const activeShockIdx = state.activeShockIndex || 0;
+  const activeTab = state.activeTab || 'chain';
 
-  // Extract key summary metrics
   const primaryInput = supplyChain.keyInputs && supplyChain.keyInputs.length > 0 ? supplyChain.keyInputs[0] : null;
   const primaryOutput = supplyChain.keyOutputs && supplyChain.keyOutputs.length > 0 ? supplyChain.keyOutputs[0] : null;
   const moatRating = supplyChain.valueChain?.moatRating || 'Wide Economic Moat';
@@ -5155,14 +5055,12 @@ function renderInstitutionalSupplyChainEcosystem(supplyChain, ticker, companyNam
   const buyerConcentration = primaryOutput?.customerConcentration || 'Diversified End Market';
 
   return `
-    <div id="sc-component-${ticker}" class="supply-node-card p-4 sm:p-5 bg-gradient-to-r from-[#060c18] via-[#091120] to-[#060c18] rounded-2xl border border-cyan-500/30 space-y-4 shadow-2xl relative overflow-hidden">
-      <!-- Ambient Glow Behind Centerpiece -->
-      <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-cyan-500/5 rounded-full blur-3xl pointer-events-none"></div>
-
+    <div id="sc-component-${ticker}" class="supply-node-card p-4 sm:p-5 bg-slate-900/80 themed-card rounded-2xl border border-slate-800 themed-border space-y-4 shadow-lg">
+      
       <!-- Top Header & Navigation Bar -->
-      <div class="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-3 pb-3 border-b border-[#16233d]">
+      <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-slate-800 themed-border">
         <div class="flex items-center space-x-3">
-          <div class="w-9 h-9 rounded-xl bg-gradient-to-tr from-cyan-500/20 via-blue-500/20 to-indigo-500/20 border border-cyan-500/40 flex items-center justify-center text-cyan-400 shadow-md shadow-cyan-500/10">
+          <div class="w-9 h-9 rounded-xl bg-cyan-500/10 border border-cyan-500/30 flex items-center justify-center text-cyan-400 shadow-sm">
             <i class="fa-solid fa-diagram-project text-sm"></i>
           </div>
           <div>
@@ -5170,635 +5068,269 @@ function renderInstitutionalSupplyChainEcosystem(supplyChain, ticker, companyNam
               <h4 class="text-xs sm:text-sm font-bold text-white uppercase tracking-wider">
                 Supply Chain &amp; Value-Creation Ecosystem
               </h4>
-              <span class="px-2 py-0.5 rounded text-[9px] font-mono font-bold bg-cyan-500/15 text-cyan-300 border border-cyan-500/30">
-                BLOOMBERG SPLC &bull; TIER-1 DAG
+              <span class="px-2 py-0.5 rounded text-[9px] font-mono font-semibold bg-slate-800 text-cyan-300 border border-cyan-500/30">
+                BUSINESS MODEL FORENSICS
               </span>
             </div>
             <p class="text-[11px] text-slate-400 mt-0.5">
-              Multi-tier upstream sourcing &bull; core transformation moat &bull; downstream customer realization
+              Input sourcing &bull; core transformation moat &bull; revenue realization &amp; end markets
             </p>
           </div>
         </div>
 
-        <!-- 5 Quick-Toggle Institutional Tabs -->
-        <div class="flex flex-wrap items-center gap-1 p-1 bg-[#060c18] border border-[#16233d] rounded-xl self-start md:self-center shadow-inner">
-          <button type="button" onclick="switchSupplyChainTab('graph', '${ticker}')"
-            class="supply-pill-tab px-2.5 py-1 rounded-lg text-[10px] font-semibold flex items-center space-x-1.5 transition ${activeTab === 'graph' ? 'bg-cyan-500/20 text-cyan-200 border border-cyan-500/40 shadow-sm' : 'text-slate-400 hover:text-slate-200 hover:bg-[#0f1b32]/50 border border-transparent'}">
-            <i class="fa-solid fa-diagram-project text-[10px] text-cyan-400"></i>
-            <span>1. Product &amp; Shock Graph</span>
-          </button>
-          <button type="button" onclick="switchSupplyChainTab('pipeline', '${ticker}')"
-            class="supply-pill-tab px-2.5 py-1 rounded-lg text-[10px] font-semibold flex items-center space-x-1.5 transition ${activeTab === 'pipeline' ? 'bg-amber-500/20 text-amber-200 border border-amber-500/40 shadow-sm' : 'text-slate-400 hover:text-slate-200 hover:bg-[#0f1b32]/50 border border-transparent'}">
-            <i class="fa-solid fa-network-wired text-[10px]"></i>
-            <span>2. Pipeline Flow</span>
+        <!-- 3 Clean, Lightweight Tabs (Zero Cognitive Noise) -->
+        <div class="flex items-center gap-1 p-1 bg-slate-950/70 themed-elevated border border-slate-800 themed-border rounded-xl self-start sm:self-center shadow-inner text-xs">
+          <button type="button" onclick="switchSupplyChainTab('chain', '${ticker}')"
+            class="px-3 py-1.5 rounded-lg text-xs font-semibold flex items-center space-x-1.5 transition ${activeTab === 'chain' ? 'bg-cyan-500/20 text-cyan-200 border border-cyan-500/40 shadow-xs' : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/40 border border-transparent'}">
+            <i class="fa-solid fa-network-wired text-[11px] mr-1 text-cyan-400"></i>
+            <span>1. Visual Value Chain</span>
           </button>
           <button type="button" onclick="switchSupplyChainTab('cogs', '${ticker}')"
-            class="supply-pill-tab px-2.5 py-1 rounded-lg text-[10px] font-semibold flex items-center space-x-1.5 transition ${activeTab === 'cogs' ? 'bg-amber-500/20 text-amber-200 border border-amber-500/40 shadow-sm' : 'text-slate-400 hover:text-slate-200 hover:bg-[#0f1b32]/50 border border-transparent'}">
-            <i class="fa-solid fa-boxes-stacked text-[10px]"></i>
-            <span>3. COGS Tree</span>
+            class="px-3 py-1.5 rounded-lg text-xs font-semibold flex items-center space-x-1.5 transition ${activeTab === 'cogs' ? 'bg-amber-500/20 text-amber-200 border border-amber-500/40 shadow-xs' : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/40 border border-transparent'}">
+            <i class="fa-solid fa-boxes-stacked text-[11px] mr-1 text-amber-400"></i>
+            <span>2. COGS &amp; Sourcing</span>
           </button>
           <button type="button" onclick="switchSupplyChainTab('revenue', '${ticker}')"
-            class="supply-pill-tab px-2.5 py-1 rounded-lg text-[10px] font-semibold flex items-center space-x-1.5 transition ${activeTab === 'revenue' ? 'bg-emerald-500/20 text-emerald-200 border border-emerald-500/40 shadow-sm' : 'text-slate-400 hover:text-slate-200 hover:bg-[#0f1b32]/50 border border-transparent'}">
-            <i class="fa-solid fa-chart-pie text-[10px]"></i>
-            <span>4. Revenue Mix</span>
-          </button>
-          <button type="button" onclick="switchSupplyChainTab('stress', '${ticker}')"
-            class="supply-pill-tab px-2.5 py-1 rounded-lg text-[10px] font-semibold flex items-center space-x-1.5 transition ${activeTab === 'stress' ? 'bg-rose-500/20 text-rose-200 border border-rose-500/40 shadow-sm' : 'text-slate-400 hover:text-slate-200 hover:bg-[#0f1b32]/50 border border-transparent'}">
-            <i class="fa-solid fa-bolt-lightning text-[10px]"></i>
-            <span>5. Macro Stress Test</span>
+            class="px-3 py-1.5 rounded-lg text-xs font-semibold flex items-center space-x-1.5 transition ${activeTab === 'revenue' ? 'bg-emerald-500/20 text-emerald-200 border border-emerald-500/40 shadow-xs' : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/40 border border-transparent'}">
+            <i class="fa-solid fa-chart-pie text-[11px] mr-1 text-emerald-400"></i>
+            <span>3. Revenue &amp; Clients</span>
           </button>
         </div>
       </div>
 
       <!-- High-Density Executive Summary Strip -->
-      <div class="relative z-10 grid grid-cols-2 sm:grid-cols-4 gap-2 text-[10px]">
-        <div class="p-2 rounded-xl bg-[#060c18]/90 border border-amber-500/20 space-y-0.5">
-          <div class="text-slate-500 uppercase font-mono tracking-wider text-[9px] flex items-center justify-between">
-            <span>Upstream Anchor</span>
-            <i class="fa-solid fa-arrow-down-up-across-line text-amber-400 text-[9px]"></i>
-          </div>
+      <div class="grid grid-cols-2 sm:grid-cols-4 gap-2.5 text-xs">
+        <div class="p-2.5 rounded-xl bg-slate-950/70 themed-elevated border border-slate-800 themed-border space-y-0.5">
+          <div class="text-slate-500 uppercase font-mono tracking-wider text-[9px]">Primary Sourcing Anchor</div>
           <div class="font-bold text-white truncate" title="${primaryInput?.name || 'Feedstock'}">
             ${primaryInput?.name || 'Feedstock'}
           </div>
-          <div class="text-[9px] text-amber-300/80 font-mono">
-            ${primaryInput?.costWeightEstimate || 'COGS Driver'}
-          </div>
+          <div class="text-[10px] text-amber-400 font-mono">${primaryInput?.costWeightEstimate || 'COGS Driver'}</div>
         </div>
 
-        <div class="p-2 rounded-xl bg-[#060c18]/90 border border-cyan-500/25 space-y-0.5">
-          <div class="text-slate-500 uppercase font-mono tracking-wider text-[9px] flex items-center justify-between">
-            <span>Moat Rating</span>
-            <i class="fa-solid fa-chess-rook text-cyan-400 text-[9px]"></i>
-          </div>
-          <div class="font-bold text-cyan-200 truncate">
-            ${moatRating}
-          </div>
-          <div class="text-[9px] text-cyan-400/80 font-mono">
-            ${conversionMargin}
-          </div>
+        <div class="p-2.5 rounded-xl bg-slate-950/70 themed-elevated border border-slate-800 themed-border space-y-0.5">
+          <div class="text-slate-500 uppercase font-mono tracking-wider text-[9px]">Economic Moat</div>
+          <div class="font-bold text-cyan-300 truncate">${moatRating}</div>
+          <div class="text-[10px] text-slate-400 font-mono">${conversionMargin}</div>
         </div>
 
-        <div class="p-2 rounded-xl bg-[#060c18]/90 border border-emerald-500/20 space-y-0.5">
-          <div class="text-slate-500 uppercase font-mono tracking-wider text-[9px] flex items-center justify-between">
-            <span>Customer Dispersion</span>
-            <i class="fa-solid fa-users-viewfinder text-emerald-400 text-[9px]"></i>
-          </div>
-          <div class="font-bold text-white truncate" title="${buyerConcentration}">
-            ${buyerConcentration}
-          </div>
-          <div class="text-[9px] text-emerald-300/80 font-mono">
-            ${primaryOutput?.revenueContribution || 'Core Output'}
-          </div>
+        <div class="p-2.5 rounded-xl bg-slate-950/70 themed-elevated border border-slate-800 themed-border space-y-0.5">
+          <div class="text-slate-500 uppercase font-mono tracking-wider text-[9px]">Customer Dispersion</div>
+          <div class="font-bold text-white truncate" title="${buyerConcentration}">${buyerConcentration}</div>
+          <div class="text-[10px] text-emerald-400 font-mono">${primaryOutput?.revenueContribution || 'Core Output'}</div>
         </div>
 
-        <div class="p-2 rounded-xl bg-[#060c18]/90 border border-indigo-500/25 space-y-0.5">
-          <div class="text-slate-500 uppercase font-mono tracking-wider text-[9px] flex items-center justify-between">
-            <span>Pass-Through Lag</span>
-            <i class="fa-solid fa-hourglass-half text-indigo-400 text-[9px]"></i>
-          </div>
-          <div class="font-bold text-indigo-200 font-mono">
-            ${primaryInput?.passThroughLagDays || '30-45 Days'}
-          </div>
-          <div class="text-[9px] text-slate-400 truncate">
-            Margin Repricing Window
-          </div>
+        <div class="p-2.5 rounded-xl bg-slate-950/70 themed-elevated border border-slate-800 themed-border space-y-0.5">
+          <div class="text-slate-500 uppercase font-mono tracking-wider text-[9px]">Repricing Lag Window</div>
+          <div class="font-bold text-indigo-300 font-mono">${primaryInput?.passThroughLagDays || '30-45 Days'}</div>
+          <div class="text-[10px] text-slate-400">Margin Pass-Through</div>
         </div>
       </div>
 
-      <!-- Business Model High-Level Summary Note -->
-      <div class="relative z-10 p-2.5 bg-[#060c18]/80 border border-[#16233d] rounded-xl text-xs text-slate-300 leading-relaxed flex items-start space-x-2">
+      <!-- Business Model Plain English Synthesis -->
+      <div class="p-3 bg-slate-950/60 themed-elevated border border-slate-800 themed-border rounded-xl text-xs text-slate-300 flex items-start space-x-2.5 leading-relaxed">
         <i class="fa-solid fa-circle-nodes text-cyan-400 text-xs mt-0.5 flex-shrink-0"></i>
-        <div class="text-[11px] leading-relaxed">
+        <div>
           <strong class="text-white">Business Model Synthesis:</strong> ${supplyChain.businessModelSummary}
         </div>
       </div>
 
-      <!-- Dynamic Tab Content Renderers -->
-      <div class="relative z-10 pt-1">
-        ${activeTab === 'graph' ? renderInteractiveProductShockGraph(supplyChain, ticker, companyName) : ''}
-        ${activeTab === 'pipeline' ? renderPipelineFlowTab(supplyChain, ticker) : ''}
+      <!-- Dynamic Tab Content -->
+      <div class="pt-1">
+        ${activeTab === 'chain' ? renderVisualValueChainTab(supplyChain, ticker, companyName) : ''}
         ${activeTab === 'cogs' ? renderCogsTreeTab(supplyChain, ticker) : ''}
         ${activeTab === 'revenue' ? renderRevenueMixTab(supplyChain, ticker) : ''}
-        ${activeTab === 'stress' ? renderStressTestTab(supplyChain, ticker, activeShockIdx) : ''}
       </div>
     </div>
   `;
 }
 
 // ----------------------------------------------------------------------------
-// TAB 1: FLAGSHIP INTERACTIVE PRODUCT & COMMODITY RELATIONSHIP GRAPH
+// TAB 1: VISUAL DIRECTED VALUE CHAIN (Clean, Light to the Eyes, Zero Shocks)
 // ----------------------------------------------------------------------------
-function renderInteractiveProductShockGraph(supplyChain, ticker, companyName) {
-  const state = window._scStateMap[ticker] || { activeMacroTrigger: 'COPPER_SPIKE', sliderDeltaPercent: 20 };
-  const triggerKey = state.activeMacroTrigger || 'COPPER_SPIKE';
-  const deltaVal = state.sliderDeltaPercent !== undefined ? state.sliderDeltaPercent : 20;
-
+function renderVisualValueChainTab(supplyChain, ticker, companyName) {
   const inputs = supplyChain.keyInputs || [];
   const valueChain = supplyChain.valueChain || {};
   const outputs = supplyChain.keyOutputs || [];
 
-  // Determine Company Archetype & Reaction under current trigger
-  const reaction = computeCompanyShockReaction(ticker, triggerKey, deltaVal, supplyChain);
-
   return `
     <div class="space-y-4">
-      <!-- 1. Interactive Macro Trigger & Price Sensitivity Controller -->
-      <div class="p-3.5 bg-gradient-to-r from-slate-950 via-[#0a1324] to-slate-950 rounded-xl border border-cyan-500/35 shadow-lg space-y-3">
-        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-2 border-b border-[#16233d]">
-          <div class="flex items-center space-x-2">
-            <span class="w-6 h-6 rounded-md bg-cyan-500/20 border border-cyan-500/40 flex items-center justify-center text-cyan-300 text-xs shadow-inner">
-              <i class="fa-solid fa-sliders"></i>
-            </span>
-            <span class="text-xs font-bold text-white uppercase tracking-wider">
-              Macro Price Shock &amp; Trigger Propagation Engine
-            </span>
-            <span class="text-[9px] font-mono px-2 py-0.5 rounded bg-cyan-500/15 text-cyan-300 border border-cyan-500/30">
-              SIMULATION DESK
-            </span>
-          </div>
-          <div class="text-[11px] font-mono text-slate-400">
-            Simulate how swings in primary commodities transmit through suppliers to margins
-          </div>
-        </div>
-
-        <!-- Quick-Select Preset Scenario Buttons -->
-        <div class="flex flex-wrap items-center gap-1.5">
-          <span class="text-[10px] uppercase font-mono font-bold text-slate-400 mr-1">Triggers:</span>
-          <button type="button" onclick="triggerMacroCommodityShock('COPPER_SPIKE', '${ticker}')"
-            class="px-2.5 py-1 rounded-lg text-[10px] font-semibold transition flex items-center space-x-1.5 ${triggerKey === 'COPPER_SPIKE' ? 'bg-amber-500/25 text-amber-200 border border-amber-500/50 shadow-sm' : 'bg-slate-900/80 text-slate-300 hover:bg-slate-800 border border-slate-700/60'}">
-            <i class="fa-solid fa-bolt text-amber-400 text-[10px]"></i>
-            <span>Copper Surge (+20%)</span>
-          </button>
-          <button type="button" onclick="triggerMacroCommodityShock('COPPER_DROP', '${ticker}')"
-            class="px-2.5 py-1 rounded-lg text-[10px] font-semibold transition flex items-center space-x-1.5 ${triggerKey === 'COPPER_DROP' ? 'bg-emerald-500/25 text-emerald-200 border border-emerald-500/50 shadow-sm' : 'bg-slate-900/80 text-slate-300 hover:bg-slate-800 border border-slate-700/60'}">
-            <i class="fa-solid fa-arrow-trend-down text-emerald-400 text-[10px]"></i>
-            <span>Copper Drop (-20%)</span>
-          </button>
-          <button type="button" onclick="triggerMacroCommodityShock('CRUDE_SPIKE', '${ticker}')"
-            class="px-2.5 py-1 rounded-lg text-[10px] font-semibold transition flex items-center space-x-1.5 ${triggerKey === 'CRUDE_SPIKE' ? 'bg-rose-500/25 text-rose-200 border border-rose-500/50 shadow-sm' : 'bg-slate-900/80 text-slate-300 hover:bg-slate-800 border border-slate-700/60'}">
-            <i class="fa-solid fa-oil-well text-rose-400 text-[10px]"></i>
-            <span>Crude Oil Spike (+25%)</span>
-          </button>
-          <button type="button" onclick="triggerMacroCommodityShock('STEEL_SPIKE', '${ticker}')"
-            class="px-2.5 py-1 rounded-lg text-[10px] font-semibold transition flex items-center space-x-1.5 ${triggerKey === 'STEEL_SPIKE' ? 'bg-indigo-500/25 text-indigo-200 border border-indigo-500/50 shadow-sm' : 'bg-slate-900/80 text-slate-300 hover:bg-slate-800 border border-slate-700/60'}">
-            <i class="fa-solid fa-cubes-stacked text-indigo-400 text-[10px]"></i>
-            <span>Steel &amp; Coal (+15%)</span>
-          </button>
-          <button type="button" onclick="triggerMacroCommodityShock('INR_WEAK', '${ticker}')"
-            class="px-2.5 py-1 rounded-lg text-[10px] font-semibold transition flex items-center space-x-1.5 ${triggerKey === 'INR_WEAK' ? 'bg-teal-500/25 text-teal-200 border border-teal-500/50 shadow-sm' : 'bg-slate-900/80 text-slate-300 hover:bg-slate-800 border border-slate-700/60'}">
-            <i class="fa-solid fa-dollar-sign text-teal-400 text-[10px]"></i>
-            <span>USD/INR Weakens (+5%)</span>
-          </button>
-          <button type="button" onclick="resetMacroCommodityShock('${ticker}')"
-            class="px-2 py-1 rounded-lg text-[10px] font-semibold transition text-slate-400 hover:text-white bg-slate-900 hover:bg-slate-800 border border-slate-700">
-            <i class="fa-solid fa-rotate-left mr-1"></i>Reset
-          </button>
-        </div>
-
-        <!-- Interactive Continuous Price Shock Slider -->
-        <div class="p-2.5 bg-slate-950/80 rounded-lg border border-slate-800 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs">
-          <div class="flex items-center space-x-2">
-            <span class="text-slate-400 font-medium">Custom Magnitude:</span>
-            <input type="range" min="-40" max="40" step="5" value="${deltaVal}"
-              oninput="updateCustomShockSlider(this.value, '${ticker}')"
-              class="w-36 sm:w-48 accent-cyan-400 cursor-pointer" />
-            <span class="font-mono font-bold ${deltaVal > 0 ? 'text-amber-400' : deltaVal < 0 ? 'text-emerald-400' : 'text-slate-300'} text-xs">
-              ${deltaVal > 0 ? '+' : ''}${deltaVal}%
-            </span>
-          </div>
-
-          <div class="flex items-center space-x-2 text-[11px] font-mono">
-            <span class="text-slate-400">Current Shock Scenario:</span>
-            <span class="px-2 py-0.5 rounded font-bold ${reaction.badgeClass}">
-              ${reaction.headline}
-            </span>
-          </div>
-        </div>
-      </div>
-
-      <!-- 2. The Directed Product & Commodity Relationship Graph (5-Tier Node Grid) -->
-      <div class="p-4 bg-[#050a14] rounded-2xl border border-[#16233d] shadow-inner space-y-4">
-        <div class="flex items-center justify-between text-[11px] text-slate-400 pb-2 border-b border-[#16233d]">
-          <span class="flex items-center space-x-1.5 font-bold uppercase tracking-wider text-slate-300">
-            <i class="fa-solid fa-network-wired text-cyan-400"></i>
-            <span>Directed Product &amp; Commodity Flow Graph</span>
-          </span>
-          <span class="text-[10px] font-mono text-cyan-400">
-            Live Shock Heatmap &bull; Upstream &rarr; Moat &rarr; Downstream
-          </span>
-        </div>
-
-        <!-- 5-Tier Directed Node Canvas with Animated Flow Connectors -->
-        <div class="grid grid-cols-1 md:grid-cols-5 gap-3 items-center">
-          
-          <!-- NODE COLUMN 1: Upstream Commodities & Feedstocks -->
-          <div class="space-y-2">
-            <div class="text-[10px] uppercase font-mono font-bold text-amber-400 flex items-center justify-between">
-              <span>1. Upstream Inputs</span>
-              <span class="text-[9px] text-slate-500">Raw Feedstock</span>
-            </div>
-            ${inputs.map((inp, idx) => {
-              const isShockTarget = isInputAffectedByShock(inp.name, triggerKey);
-              const nodeGlow = isShockTarget ? (deltaVal > 0 ? 'border-amber-500/80 bg-amber-950/20 text-amber-200 shadow-amber-500/20' : 'border-emerald-500/80 bg-emerald-950/20 text-emerald-200 shadow-emerald-500/20') : 'border-slate-800 bg-[#091120] text-slate-200';
-              return `
-                <div class="p-2.5 rounded-xl border ${nodeGlow} transition shadow-sm space-y-1 text-[11px] relative">
-                  ${isShockTarget ? `<span class="absolute -top-1.5 -right-1 px-1.5 py-0.2 rounded text-[8px] font-mono font-bold bg-amber-500 text-slate-950 animate-pulse">SHOCK</span>` : ''}
-                  <div class="font-bold flex items-center justify-between">
-                    <span class="truncate pr-1">${inp.name}</span>
-                    <i class="fa-solid fa-box text-[10px] text-amber-400"></i>
-                  </div>
-                  <div class="text-[9px] font-mono text-slate-400 flex items-center justify-between">
-                    <span>${inp.costWeightEstimate}</span>
-                    <span class="text-amber-300/80">${inp.category}</span>
-                  </div>
-                </div>
-              `;
-            }).join('')}
-          </div>
-
-          <!-- CONNECTOR 1 -> 2 (Animated SVG) -->
-          <div class="hidden md:flex flex-col items-center justify-center">
-            <svg viewBox="0 0 60 40" class="w-full h-12 overflow-visible">
-              <path d="M 0,20 L 60,20" fill="none" stroke="#f59e0b" stroke-width="2" class="flow-dash-anim" opacity="0.75" />
-              <polygon points="54,16 60,20 54,24" fill="#f59e0b" />
-            </svg>
-            <span class="text-[8px] font-mono text-slate-500 uppercase tracking-tighter">Sourcing</span>
-          </div>
-
-          <!-- NODE COLUMN 3: Target Company Transformation & Moat Hub (Centerpiece) -->
-          <div class="p-4 rounded-2xl border ${reaction.cardGlowClass} bg-gradient-to-b from-[#091326] via-[#0b1730] to-[#081020] space-y-2.5 text-center shadow-xl relative">
-            <div class="flex items-center justify-center space-x-2">
-              <span class="w-7 h-7 rounded-lg bg-cyan-500/20 border border-cyan-500/40 flex items-center justify-center text-cyan-300 text-xs shadow-inner">
-                <i class="fa-solid fa-building-columns"></i>
+      <div class="grid grid-cols-1 md:grid-cols-4 gap-3 items-stretch">
+        
+        <!-- COLUMN 1: Upstream Sourcing & Inputs -->
+        <div class="p-3.5 bg-slate-950/70 themed-elevated rounded-xl border border-amber-500/25 space-y-2.5 flex flex-col justify-between">
+          <div>
+            <div class="flex items-center justify-between pb-2 border-b border-amber-500/20">
+              <span class="text-xs font-bold text-amber-300 uppercase tracking-wide flex items-center">
+                <i class="fa-solid fa-boxes-packing mr-1.5 text-xs"></i> 1. Inputs &amp; Sourcing
               </span>
-              <div class="text-left">
-                <div class="font-extrabold text-white text-sm font-mono tracking-tight">${ticker}</div>
-                <div class="text-[10px] text-slate-400 truncate max-w-[130px]">${companyName}</div>
-              </div>
+              <span class="text-[9px] font-mono px-1.5 py-0.2 rounded bg-amber-500/15 text-amber-300">Raw Feedstock</span>
             </div>
-
-            <!-- Value Transformation Core -->
-            <div class="p-2 bg-slate-950/80 rounded-xl border border-slate-800 text-[10px] space-y-1">
-              <span class="text-[9px] font-mono uppercase text-cyan-400 font-bold block">Transformation Moat</span>
-              <div class="font-semibold text-slate-200 leading-tight">${valueChain.coreProcess || 'Value Conversion Engine'}</div>
-              <div class="text-[9px] font-mono text-emerald-400">${valueChain.grossConversionMargin || '28-35% Value-Add'}</div>
-            </div>
-
-            <!-- Dynamic Shock Margin Impact Badge -->
-            <div class="p-2.5 rounded-xl ${reaction.reactionBannerClass} space-y-1 text-left">
-              <div class="flex items-center justify-between text-[10px] font-bold font-mono">
-                <span class="flex items-center"><i class="${reaction.icon} mr-1.5"></i>${reaction.statusLabel}</span>
-                <span>${reaction.marginDeltaBps}</span>
-              </div>
-              <p class="text-[10px] text-slate-300 leading-tight">
-                ${reaction.mechanismSummary}
-              </p>
-              <div class="text-[9px] font-mono text-slate-400 pt-0.5 border-t border-white/10 flex items-center justify-between">
-                <span>Pass-Through Window:</span>
-                <span class="font-bold text-white">${reaction.lagText}</span>
-              </div>
+            <div class="space-y-2 pt-2">
+              ${inputs.map(inp => `
+                <div class="p-2.5 rounded-lg bg-slate-900/80 themed-card border border-slate-800 themed-border space-y-1 text-xs">
+                  <div class="font-semibold text-white flex items-center justify-between">
+                    <span class="truncate pr-1">${inp.name}</span>
+                    <span class="text-[10px] font-mono text-amber-400 font-bold whitespace-nowrap">${inp.costWeightEstimate}</span>
+                  </div>
+                  <div class="text-[11px] text-slate-400">
+                    <strong class="text-slate-300">Sources:</strong> ${inp.typicalSourceOrSuppliers}
+                  </div>
+                  <div class="flex items-center justify-between text-[10px] font-mono text-slate-400 pt-1 border-t border-slate-800/60">
+                    <span>Power: ${inp.supplierBargainingPower || 'Moderate'}</span>
+                    <span class="text-amber-300/80">Lag: ${inp.passThroughLagDays || '30-45d'}</span>
+                  </div>
+                </div>
+              `).join('')}
             </div>
           </div>
-
-          <!-- CONNECTOR 3 -> 4 (Animated SVG) -->
-          <div class="hidden md:flex flex-col items-center justify-center">
-            <svg viewBox="0 0 60 40" class="w-full h-12 overflow-visible">
-              <path d="M 0,20 L 60,20" fill="none" stroke="#06b6d4" stroke-width="2" class="flow-dash-anim" opacity="0.75" />
-              <polygon points="54,16 60,20 54,24" fill="#06b6d4" />
-            </svg>
-            <span class="text-[8px] font-mono text-slate-500 uppercase tracking-tighter">Output Flow</span>
+          <div class="text-[10px] text-slate-500 pt-1 border-t border-slate-800/60">
+            Raw material input cost foundation
           </div>
-
-          <!-- NODE COLUMN 5: Finished Products & End Client Markets -->
-          <div class="space-y-2">
-            <div class="text-[10px] uppercase font-mono font-bold text-emerald-400 flex items-center justify-between">
-              <span>5. Realized End Markets</span>
-              <span class="text-[9px] text-slate-500">Revenue Drivers</span>
-            </div>
-            ${outputs.map((out, idx) => `
-              <div class="p-2.5 rounded-xl border border-slate-800 bg-[#091120] text-slate-200 transition shadow-sm space-y-1 text-[11px]">
-                <div class="font-bold text-white flex items-center justify-between">
-                  <span class="truncate pr-1">${out.productOrService}</span>
-                  <span class="text-[9px] font-mono px-1.5 py-0.2 rounded bg-emerald-500/15 text-emerald-300 border border-emerald-500/30 font-bold">${out.revenueContribution || 'Core'}</span>
-                </div>
-                <div class="text-[9px] text-slate-400 truncate">
-                  <strong class="text-slate-300">Client:</strong> ${out.customerSegment}
-                </div>
-                <div class="text-[9px] font-mono text-cyan-400 flex items-center justify-between pt-0.5">
-                  <span>Pricing Power: ${out.pricingPowerScore || 8}/10</span>
-                  <span class="text-slate-400">${out.demandDrivers ? out.demandDrivers.split(',')[0] : 'Capex'}</span>
-                </div>
-              </div>
-            `).join('')}
-          </div>
-
         </div>
-      </div>
 
-      <!-- 3. Commercial Analysis: Cross-Stock Domino Market Radar (Winners vs Squeezed) -->
-      ${renderCrossStockDominoRadar(triggerKey, deltaVal, ticker)}
+        <!-- COLUMN 2: Core Transformation & Moat Engine -->
+        <div class="p-3.5 bg-slate-950/70 themed-elevated rounded-xl border border-cyan-500/25 space-y-2.5 flex flex-col justify-between">
+          <div>
+            <div class="flex items-center justify-between pb-2 border-b border-cyan-500/20">
+              <span class="text-xs font-bold text-cyan-300 uppercase tracking-wide flex items-center">
+                <i class="fa-solid fa-gears mr-1.5 text-xs"></i> 2. Core Transformation
+              </span>
+              <span class="text-[9px] font-mono px-1.5 py-0.2 rounded bg-cyan-500/15 text-cyan-300">Value Add</span>
+            </div>
+            <div class="space-y-2 pt-2 text-xs">
+              <div class="p-2.5 rounded-lg bg-slate-900/80 themed-card border border-slate-800 themed-border space-y-1">
+                <span class="text-[10px] font-mono uppercase text-cyan-400 font-bold block">Conversion Process</span>
+                <p class="font-semibold text-white leading-snug">${valueChain.coreProcess || 'Industrial Architecture & Systems'}</p>
+              </div>
+
+              <div class="p-2.5 rounded-lg bg-slate-900/80 themed-card border border-slate-800 themed-border space-y-1">
+                <span class="text-[10px] font-mono uppercase text-cyan-400 font-bold block">Value-Addition</span>
+                <p class="text-slate-300 text-[11px] leading-relaxed">${valueChain.valueAdditionSummary || 'Transforms raw inputs into high-margin market offerings.'}</p>
+              </div>
+
+              <div class="p-2.5 rounded-lg bg-cyan-950/30 border border-cyan-500/30 space-y-1">
+                <span class="text-[10px] font-mono uppercase text-emerald-400 font-bold block">Moat &amp; Margin</span>
+                <div class="font-bold text-white text-xs">${valueChain.moatRating || 'Wide Economic Moat'}</div>
+                <div class="text-[11px] text-emerald-300 font-mono">${valueChain.grossConversionMargin || 'Gross Value Add'}</div>
+                <p class="text-[10px] text-slate-300 leading-snug pt-0.5">${valueChain.moatFactor || 'Proprietary IP and high client switching costs.'}</p>
+              </div>
+            </div>
+          </div>
+          <div class="text-[10px] text-slate-500 pt-1 border-t border-slate-800/60">
+            Protected conversion margin engine
+          </div>
+        </div>
+
+        <!-- COLUMN 3: Products & Revenue Mix -->
+        <div class="p-3.5 bg-slate-950/70 themed-elevated rounded-xl border border-emerald-500/25 space-y-2.5 flex flex-col justify-between">
+          <div>
+            <div class="flex items-center justify-between pb-2 border-b border-emerald-500/20">
+              <span class="text-xs font-bold text-emerald-300 uppercase tracking-wide flex items-center">
+                <i class="fa-solid fa-box-open mr-1.5 text-xs"></i> 3. Products &amp; Solutions
+              </span>
+              <span class="text-[9px] font-mono px-1.5 py-0.2 rounded bg-emerald-500/15 text-emerald-300">Revenue</span>
+            </div>
+            <div class="space-y-2 pt-2">
+              ${outputs.map(out => `
+                <div class="p-2.5 rounded-lg bg-slate-900/80 themed-card border border-slate-800 themed-border space-y-1 text-xs">
+                  <div class="font-semibold text-white flex items-center justify-between">
+                    <span class="truncate pr-1">${out.productOrService}</span>
+                    <span class="text-[10px] font-mono px-1.5 py-0.2 rounded bg-emerald-500/15 text-emerald-300 font-bold whitespace-nowrap">${out.revenueContribution || 'Core'}</span>
+                  </div>
+                  <div class="text-[11px] text-slate-400">
+                    <strong class="text-slate-300">Target Segment:</strong> ${out.customerSegment}
+                  </div>
+                  <div class="flex items-center justify-between text-[10px] font-mono text-cyan-400 pt-1 border-t border-slate-800/60">
+                    <span>Pricing Power: ${out.pricingPowerScore || 8}/10</span>
+                    <span class="text-slate-400">${out.demandDrivers ? out.demandDrivers.split(',')[0] : 'Growth'}</span>
+                  </div>
+                </div>
+              `).join('')}
+            </div>
+          </div>
+          <div class="text-[10px] text-slate-500 pt-1 border-t border-slate-800/60">
+            Commercial monetization mix
+          </div>
+        </div>
+
+        <!-- COLUMN 4: Customer Realization & End Markets -->
+        <div class="p-3.5 bg-slate-950/70 themed-elevated rounded-xl border border-indigo-500/25 space-y-2.5 flex flex-col justify-between">
+          <div>
+            <div class="flex items-center justify-between pb-2 border-b border-indigo-500/20">
+              <span class="text-xs font-bold text-indigo-300 uppercase tracking-wide flex items-center">
+                <i class="fa-solid fa-users-viewfinder mr-1.5 text-xs"></i> 4. End Client Markets
+              </span>
+              <span class="text-[9px] font-mono px-1.5 py-0.2 rounded bg-indigo-500/15 text-indigo-300">Demand</span>
+            </div>
+            <div class="space-y-2 pt-2 text-xs">
+              <div class="p-2.5 rounded-lg bg-slate-900/80 themed-card border border-slate-800 themed-border space-y-1">
+                <span class="text-[10px] font-mono uppercase text-indigo-400 font-bold block">Concentration Profile</span>
+                <p class="font-semibold text-white text-xs">${supplyChain.customerConcentration?.concentrationVerdict || primaryOutput?.customerConcentration || 'Diversified End Market'}</p>
+                <div class="text-[10px] text-slate-400 font-mono">
+                  ${supplyChain.customerConcentration ? `Top 5 Clients: ${supplyChain.customerConcentration.top5CustomerPercent}% | Top 10: ${supplyChain.customerConcentration.top10CustomerPercent}%` : 'Low counterparty default risk'}
+                </div>
+              </div>
+
+              <div class="p-2.5 rounded-lg bg-slate-900/80 themed-card border border-slate-800 themed-border space-y-1">
+                <span class="text-[10px] font-mono uppercase text-indigo-400 font-bold block">Primary Demand Catalysts</span>
+                <p class="text-slate-300 text-[11px] leading-relaxed">${primaryOutput?.demandDrivers || 'Capex expansion, secular consumer demand, and organized sector growth.'}</p>
+              </div>
+
+              <div class="p-2.5 rounded-lg bg-slate-900/80 themed-card border border-slate-800 themed-border space-y-1">
+                <span class="text-[10px] font-mono uppercase text-indigo-400 font-bold block">Counterparty Risk Grade</span>
+                <div class="text-xs font-bold text-emerald-400">${supplyChain.customerConcentration?.counterpartyRiskGrade || primaryOutput?.counterpartyRiskTier || 'Investment Grade'}</div>
+                <div class="text-[10px] text-slate-400">Institutional creditworthiness</div>
+              </div>
+            </div>
+          </div>
+          <div class="text-[10px] text-slate-500 pt-1 border-t border-slate-800/60">
+            Cashflow collection reliability
+          </div>
+        </div>
+
+      </div>
     </div>
   `;
 }
 
 // ----------------------------------------------------------------------------
-// COMPUTE COMPANY SHOCK REACTION LOGIC (PRODUCER VS CONSUMER SENSITIVITY)
+// TAB 2: COGS & SOURCING TREE
 // ----------------------------------------------------------------------------
-function computeCompanyShockReaction(ticker, triggerKey, deltaVal, supplyChain) {
-  const cleanTicker = ticker.toUpperCase();
-  const absDelta = Math.abs(deltaVal);
-  const isPositiveShock = deltaVal > 0;
-
-  // 1. COPPER SCENARIOS
-  if (triggerKey === 'COPPER_SPIKE' || triggerKey === 'COPPER_DROP') {
-    if (['HINDCOPPER', 'HINDALCO', 'VEDL'].includes(cleanTicker)) {
-      // Producer / Miner / Smelter
-      if (isPositiveShock) {
-        return {
-          headline: 'UPSTREAM PRODUCER BENEFICIARY (Direct Top-Line Windfall)',
-          badgeClass: 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/35',
-          cardGlowClass: 'border-emerald-500 shadow-emerald-500/30 shock-glow-beneficiary',
-          reactionBannerClass: 'bg-emerald-950/40 border border-emerald-500/40 text-emerald-200',
-          statusLabel: 'PRODUCER MARGIN EXPANSION',
-          marginDeltaBps: `+${Math.round(280 * (absDelta / 20))} to +${Math.round(420 * (absDelta / 20))} bps EBITDA`,
-          mechanismSummary: 'Mine extraction & fixed smelting costs remain steady while cathode realization expands 1:1 with LME spot prices.',
-          lagText: 'Immediate (Day 1 Spot Realization)',
-          icon: 'fa-solid fa-arrow-trend-up text-emerald-400'
-        };
-      } else {
-        return {
-          headline: 'UPSTREAM MARGIN SQUEEZE (Lower Realization on Fixed Mining Base)',
-          badgeClass: 'bg-rose-500/20 text-rose-300 border border-rose-500/35',
-          cardGlowClass: 'border-rose-500 shadow-rose-500/30 shock-glow-squeezed',
-          reactionBannerClass: 'bg-rose-950/40 border border-rose-500/40 text-rose-200',
-          statusLabel: 'PRODUCER CASH FLOW COMPRESSION',
-          marginDeltaBps: `-${Math.round(320 * (absDelta / 20))} bps EBITDA`,
-          mechanismSummary: 'LME price decline depresses gross realizations while underground mining labor remains fixed.',
-          lagText: 'Immediate',
-          icon: 'fa-solid fa-arrow-trend-down text-rose-400'
-        };
-      }
-    } else if (['POLYCAB', 'KEI'].includes(cleanTicker)) {
-      // Consumer with High Pricing Power
-      if (isPositiveShock) {
-        return {
-          headline: 'HIGH-MOAT CONSUMER (Short-Term Squeeze -> 100% Pass-Through)',
-          badgeClass: 'bg-amber-500/20 text-amber-300 border border-amber-500/35',
-          cardGlowClass: 'border-amber-500/70 shadow-amber-500/20',
-          reactionBannerClass: 'bg-amber-950/40 border border-amber-500/40 text-amber-200',
-          statusLabel: 'TEMPORARY INPUT COST SQUEEZE',
-          marginDeltaBps: `-${Math.round(140 * (absDelta / 20))} bps (30d Lag)`,
-          mechanismSummary: 'Raw copper is ~65% of COGS. Margin dips during 30-day inventory burn, then fully recovered via weekly formula price hikes to dealers.',
-          lagText: '30-45 Days (Dealer Pricing Formula)',
-          icon: 'fa-solid fa-shield-halved text-amber-400'
-        };
-      } else {
-        return {
-          headline: 'CONSUMER WINDFALL (Gross Margin Expansion on Softening Copper)',
-          badgeClass: 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/35',
-          cardGlowClass: 'border-emerald-500 shadow-emerald-500/30 shock-glow-beneficiary',
-          reactionBannerClass: 'bg-emerald-950/40 border border-emerald-500/40 text-emerald-200',
-          statusLabel: 'INVENTORY MARGIN EXPANSION',
-          marginDeltaBps: `+${Math.round(180 * (absDelta / 20))} bps Gross Margin`,
-          mechanismSummary: 'Cheaper raw feedstock expands conversion spreads before finished cable prices adjust downward.',
-          lagText: '30-45 Days',
-          icon: 'fa-solid fa-arrow-trend-up text-emerald-400'
-        };
-      }
-    } else if (['HAVELLS', 'VOLTAS'].includes(cleanTicker)) {
-      // Consumer with Moderate or Low Pricing Power
-      return {
-        headline: 'DOWNSTREAM APPLIANCE SQUEEZE (Extended Pricing Lag)',
-        badgeClass: 'bg-rose-500/20 text-rose-300 border border-rose-500/35',
-        cardGlowClass: 'border-rose-500 shadow-rose-500/30 shock-glow-squeezed',
-        reactionBannerClass: 'bg-rose-950/40 border border-rose-500/40 text-rose-200',
-        statusLabel: 'MARGIN COMPRESSION (EXTENDED LAG)',
-        marginDeltaBps: `-${Math.round(180 * (absDelta / 20))} bps Operating EBITDA`,
-        mechanismSummary: 'Copper represents 18-32% of bill of materials. Consumer retail resistance delays retail price hikes by 60-90 days.',
-        lagText: '60-90 Days (Consumer Catalog Lag)',
-        icon: 'fa-solid fa-triangle-exclamation text-rose-400'
-      };
-    }
-  }
-
-  // 2. CRUDE OIL SCENARIOS
-  if (triggerKey === 'CRUDE_SPIKE') {
-    if (['ONGC', 'OIL'].includes(cleanTicker)) {
-      return {
-        headline: 'UPSTREAM HYDROCARBON WINNER (Direct Net Realization Windfall)',
-        badgeClass: 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/35',
-        cardGlowClass: 'border-emerald-500 shadow-emerald-500/30 shock-glow-beneficiary',
-        reactionBannerClass: 'bg-emerald-950/40 border border-emerald-500/40 text-emerald-200',
-        statusLabel: 'EBITDA EXPANSION (+$20/bbl = +₹9,200 Cr PAT)',
-        marginDeltaBps: `+${Math.round(380 * (absDelta / 25))} bps Operating EBITDA`,
-        mechanismSummary: 'Every $10/bbl rise in Brent flows directly to upstream operating profit with zero extra extraction cost.',
-        lagText: 'Day 1 Spot Realization',
-        icon: 'fa-solid fa-arrow-trend-up text-emerald-400'
-      };
-    } else if (['ASIANPAINT', 'BERGEPAINT'].includes(cleanTicker)) {
-      return {
-        headline: 'PETROCHEM CONSUMER (Input Cost Surge -> Brand Pricing Power Defense)',
-        badgeClass: 'bg-amber-500/20 text-amber-300 border border-amber-500/35',
-        cardGlowClass: 'border-amber-500/70 shadow-amber-500/20',
-        reactionBannerClass: 'bg-amber-950/40 border border-amber-500/40 text-amber-200',
-        statusLabel: 'INTERMEDIATE MONOMER SQUEEZE',
-        marginDeltaBps: `-${Math.round(180 * (absDelta / 25))} bps Gross Margin`,
-        mechanismSummary: 'Crude derivatives (solvents, phthalic anhydride, monomers) are 36% of COGS. 60-day lag before retail paint price hikes catch up.',
-        lagText: '45-60 Days',
-        icon: 'fa-solid fa-shield text-amber-400'
-      };
-    } else if (['INDIGO', 'INTERGLOBE', 'MRF'].includes(cleanTicker)) {
-      return {
-        headline: 'SEVERE CRUDE SHOCK VICTIM (High Fuel/Rubber Squeeze)',
-        badgeClass: 'bg-rose-500/20 text-rose-300 border border-rose-500/35',
-        cardGlowClass: 'border-rose-500 shadow-rose-500/30 shock-glow-squeezed',
-        reactionBannerClass: 'bg-rose-950/40 border border-rose-500/40 text-rose-200',
-        statusLabel: 'OPERATING MARGIN EROSION',
-        marginDeltaBps: `-${Math.round(420 * (absDelta / 25))} bps EBIT`,
-        mechanismSummary: 'Jet ATF fuel or synthetic rubber absorbs 40%+ of revenue. Inability to immediately raise ticket/tyre prices creates deep margin erosion.',
-        lagText: '90+ Days',
-        icon: 'fa-solid fa-triangle-exclamation text-rose-400'
-      };
-    }
-  }
-
-  // 3. STEEL & COAL SCENARIOS
-  if (triggerKey === 'STEEL_SPIKE') {
-    if (['TATASTEEL', 'JSWSTEEL'].includes(cleanTicker)) {
-      return {
-        headline: 'STEEL PRODUCER BENCHMARK (Hot-Rolled Coil Realization Surge)',
-        badgeClass: 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/35',
-        cardGlowClass: 'border-emerald-500 shadow-emerald-500/30 shock-glow-beneficiary',
-        reactionBannerClass: 'bg-emerald-950/40 border border-emerald-500/40 text-emerald-200',
-        statusLabel: 'PRODUCER EBITDA EXPANSION',
-        marginDeltaBps: `+${Math.round(290 * (absDelta / 15))} bps EBITDA`,
-        mechanismSummary: 'Domestic HRC price hikes expand operating spreads over iron ore and captive coking coal.',
-        lagText: '15-20 Days',
-        icon: 'fa-solid fa-arrow-trend-up text-emerald-400'
-      };
-    } else if (['TATAMOTORS', 'MARUTI', 'LT'].includes(cleanTicker)) {
-      return {
-        headline: 'AUTO & INFRA CONSUMER (Steel Sheet & Rebar Input Pressure)',
-        badgeClass: 'bg-rose-500/20 text-rose-300 border border-rose-500/35',
-        cardGlowClass: 'border-rose-500 shadow-rose-500/30 shock-glow-squeezed',
-        reactionBannerClass: 'bg-rose-950/40 border border-rose-500/40 text-rose-200',
-        statusLabel: 'AUTOMOTIVE SHEET METAL SQUEEZE',
-        marginDeltaBps: `-${Math.round(130 * (absDelta / 15))} bps Gross Margin`,
-        mechanismSummary: 'Automotive cold-rolled steel and EPC structural rebars pressure gross margin during quarterly OEM negotiation cycles.',
-        lagText: '60-90 Days',
-        icon: 'fa-solid fa-arrow-trend-down text-rose-400'
-      };
-    }
-  }
-
-  // 4. USD/INR CURRENCY WEAKENING
-  if (triggerKey === 'INR_WEAK') {
-    if (['TCS', 'INFY', 'KPITTECH', 'SUNPHARMA'].includes(cleanTicker)) {
-      return {
-        headline: 'EXPORTER CURRENCY TAILWIND (90%+ USD Billings vs INR Base)',
-        badgeClass: 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/35',
-        cardGlowClass: 'border-emerald-500 shadow-emerald-500/30 shock-glow-beneficiary',
-        reactionBannerClass: 'bg-emerald-950/40 border border-emerald-500/40 text-emerald-200',
-        statusLabel: 'OPERATING MARGIN EXPANSION',
-        marginDeltaBps: `+${Math.round(110 * (absDelta / 5))} bps Operating Margin`,
-        mechanismSummary: 'Every 1% rupee depreciation expands IT/pharma operating margin by ~25-30 bps after hedging.',
-        lagText: 'Quarterly Settlement',
-        icon: 'fa-solid fa-arrow-trend-up text-emerald-400'
-      };
-    }
-  }
-
-  // Default / Sector Fallback
-  return {
-    headline: 'BALANCED OPERATIONAL ELASTICITY (Diversified Input Structure)',
-    badgeClass: 'bg-cyan-500/20 text-cyan-300 border border-cyan-500/35',
-    cardGlowClass: 'border-cyan-500/50',
-    reactionBannerClass: 'bg-slate-900/60 border border-slate-800 text-slate-300',
-    statusLabel: 'DIVERSIFIED PASS-THROUGH',
-    marginDeltaBps: `${deltaVal >= 0 ? '-' : '+'}${Math.round(Math.abs(deltaVal) * 4.5)} bps Estimated Impact`,
-    mechanismSummary: 'Balanced input-output dynamics insulate company from catastrophic single-commodity swings.',
-    lagText: '30-45 Days',
-    icon: 'fa-solid fa-scale-balanced text-cyan-400'
-  };
-}
-
-function isInputAffectedByShock(inputName, triggerKey) {
-  const norm = (inputName || '').toLowerCase();
-  if (triggerKey === 'COPPER_SPIKE' || triggerKey === 'COPPER_DROP') {
-    return norm.includes('copper') || norm.includes('metal') || norm.includes('ore');
-  }
-  if (triggerKey === 'CRUDE_SPIKE') {
-    return norm.includes('crude') || norm.includes('petro') || norm.includes('polymer') || norm.includes('monomer') || norm.includes('fuel');
-  }
-  if (triggerKey === 'STEEL_SPIKE') {
-    return norm.includes('steel') || norm.includes('coal') || norm.includes('iron') || norm.includes('coking');
-  }
-  if (triggerKey === 'INR_WEAK') {
-    return norm.includes('import') || norm.includes('semiconductor') || norm.includes('hardware');
-  }
-  return false;
-}
-
-// ----------------------------------------------------------------------------
-// COMMERCIAL DOMINO EFFECT: CROSS-STOCK SENSITIVITY TABLE
-// ----------------------------------------------------------------------------
-function renderCrossStockDominoRadar(triggerKey, deltaVal, currentTicker) {
-  let dominoRows = [];
-
-  if (triggerKey === 'COPPER_SPIKE' || triggerKey === 'COPPER_DROP') {
-    dominoRows = [
-      { ticker: 'HINDCOPPER', name: 'Hindustan Copper', role: 'Pure-Play Sovereign Miner', exp: '100% Topline tied to LME Copper', bps: '+420 bps EBITDA', lag: 'Day 1 (Spot)', verdict: 'Primary Mining Winner', type: 'winner' },
-      { ticker: 'HINDALCO', name: 'Hindalco Industries', role: 'Birla Copper Smelter & Refiner', exp: 'Cathode Spot Pricing (Dahej Smelter)', bps: '+280 bps EBITDA', lag: '5-7 Days', verdict: 'Large-Cap Beneficiary', type: 'winner' },
-      { ticker: 'POLYCAB', name: 'Polycab India', role: 'Cables & Wires Hegemon', exp: '65% of Raw Material COGS', bps: '-140 bps (30d Lag)', lag: '30-45 Days', verdict: '100% Pass-Through Formula', type: 'buffer' },
-      { ticker: 'HAVELLS', name: 'Havells India', role: 'Consumer Electricals & Switchgears', exp: '32% of Bill of Materials', bps: '-180 bps EBITDA', lag: '45-60 Days', verdict: 'Moderate Consumer Squeeze', type: 'loser' },
-      { ticker: 'VOLTAS', name: 'Voltas Ltd', role: 'AC Copper Tube Appliance Maker', exp: '18% of Cooling Appliance BOM', bps: '-120 bps EBIT', lag: '60-90 Days', verdict: 'Seasonal Pricing Lag Hit', type: 'loser' }
-    ];
-  } else if (triggerKey === 'CRUDE_SPIKE') {
-    dominoRows = [
-      { ticker: 'ONGC', name: 'Oil & Natural Gas Corp', role: 'National Upstream Flagship', exp: '71% Domestic Crude Output', bps: '+380 bps EBITDA', lag: 'Day 1 (Spot)', verdict: 'Upstream Windfall Winner', type: 'winner' },
-      { ticker: 'OIL', name: 'Oil India Ltd', role: 'Pure Upstream Hydrocarbons', exp: '100% Hydrocarbon Realization', bps: '+410 bps EBITDA', lag: 'Day 1 (Spot)', verdict: 'Direct E&P Beneficiary', type: 'winner' },
-      { ticker: 'ASIANPAINT', name: 'Asian Paints', role: 'Decorative Paint Leader', exp: '36% Monomer & Solvent COGS', bps: '-180 bps Margin', lag: '45-60 Days', verdict: 'Unmatched Pricing Power', type: 'buffer' },
-      { ticker: 'INDIGO', name: 'InterGlobe Aviation', role: 'Commercial Airline', exp: '40% Operating Costs (ATF Fuel)', bps: '-420 bps EBIT', lag: '90+ Days', verdict: 'Severe Fuel Cost Squeeze', type: 'loser' },
-      { ticker: 'MRF', name: 'MRF Tyres', role: 'Tyre & Rubber Manufacturer', exp: 'Synthetic Rubber & Carbon Black', bps: '-210 bps EBITDA', lag: '60 Days', verdict: 'Raw Material Margin Erosion', type: 'loser' }
-    ];
-  } else if (triggerKey === 'STEEL_SPIKE') {
-    dominoRows = [
-      { ticker: 'TATASTEEL', name: 'Tata Steel', role: 'Integrated Primary Steelmaker', exp: 'Domestic HRC Realizations', bps: '+290 bps EBITDA', lag: '15 Days', verdict: 'Hot-Rolled Coil Beneficiary', type: 'winner' },
-      { ticker: 'JSWSTEEL', name: 'JSW Steel', role: 'Primary Steel & Coated Coils', exp: 'Spot Steel Price Spreads', bps: '+260 bps EBITDA', lag: '15 Days', verdict: 'Steel Margin Expansion', type: 'winner' },
-      { ticker: 'TATAMOTORS', name: 'Tata Motors', role: 'Commercial & Passenger Auto OEM', exp: 'Sheet Steel & Heavy Forgings', bps: '-130 bps Margin', lag: '60-90 Days', verdict: 'OEM Cost Absorption Lag', type: 'loser' },
-      { ticker: 'LT', name: 'Larsen & Toubro', role: 'Heavy Infrastructure EPC', exp: 'Structural Steel & Rebar Contracts', bps: '-90 bps EBIT', lag: 'Fixed PPAs', verdict: 'Legacy Fixed-Price Squeeze', type: 'loser' }
-    ];
-  } else {
-    dominoRows = [
-      { ticker: 'KPITTECH', name: 'KPIT Technologies', role: 'Automotive Software Exporter', exp: '94% Revenue in USD/EUR', bps: '+120 bps EBITDA', lag: 'Immediate', verdict: 'Exporter Currency Tailwind', type: 'winner' },
-      { ticker: 'TCS', name: 'Tata Consultancy Services', role: 'IT Global Services', exp: 'Global Cross-Currency Inflows', bps: '+95 bps EBIT', lag: 'Quarterly', verdict: 'Stable FX Cash Expansion', type: 'winner' },
-      { ticker: 'POLYCAB', name: 'Polycab India', role: 'Cable Infrastructure Leader', exp: 'Formula-Indexed Domestic Books', bps: 'Neutral Buffer', lag: '30 Days', verdict: 'Balanced Domestic Footprint', type: 'buffer' }
-    ];
-  }
+function renderCogsTreeTab(supplyChain, ticker) {
+  const inputs = supplyChain.keyInputs || [];
 
   return `
-    <div class="p-3.5 bg-slate-950/90 rounded-xl border border-slate-800 space-y-2.5">
-      <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-800/80 pb-2">
-        <div class="flex items-center space-x-2">
-          <span class="w-2 h-2 rounded-full bg-cyan-400 animate-pulse"></span>
-          <h5 class="text-xs font-bold text-white uppercase tracking-wider">
-            Commercial Domino Effect: Cross-Stock Sensitivity for Selected Trigger
-          </h5>
-          <span class="text-[9px] font-mono px-2 py-0.5 rounded bg-slate-800 text-slate-300 border border-slate-700">
-            INDIAN EQUITIES MULTIPLIER
-          </span>
-        </div>
-        <div class="text-[10px] text-slate-400 font-mono">
-          Click any stock to inspect its full 5-pillar profile
-        </div>
+    <div class="space-y-3">
+      <div class="p-3 bg-slate-950/60 themed-elevated rounded-xl border border-slate-800 themed-border text-xs text-slate-300 flex items-center justify-between">
+        <span><i class="fa-solid fa-boxes-stacked text-amber-400 mr-1.5"></i> <strong>Cost of Goods Sold (COGS) Breakdown</strong> &bull; Raw material sourcing, vendor concentration, and price pass-through agility</span>
+        <span class="text-[10px] font-mono text-slate-400">${inputs.length} Major Cost Items</span>
       </div>
 
-      <div class="overflow-x-auto rounded-lg border border-slate-800/80">
+      <div class="overflow-x-auto rounded-xl border border-slate-800 themed-border">
         <table class="w-full text-left text-xs font-mono">
-          <thead class="bg-slate-900/90 text-[10px] uppercase text-slate-400 border-b border-slate-800">
+          <thead class="bg-slate-950/80 themed-elevated text-[10px] uppercase text-slate-400 border-b border-slate-800 themed-border">
             <tr>
-              <th class="py-2 px-3">Stock Ticker</th>
-              <th class="py-2 px-3">Role in Ecosystem</th>
-              <th class="py-2 px-3">Commodity Exposure</th>
-              <th class="py-2 px-3 text-right">EBITDA Impact (bps)</th>
-              <th class="py-2 px-3 text-center">Pass-Through Lag</th>
-              <th class="py-2 px-3">Market Verdict</th>
-              <th class="py-2 px-2 text-right">Action</th>
+              <th class="py-2.5 px-3">Input Material / Service</th>
+              <th class="py-2.5 px-3">Category</th>
+              <th class="py-2.5 px-3 text-right">Cost Weight</th>
+              <th class="py-2.5 px-3">Primary Suppliers / Geography</th>
+              <th class="py-2.5 px-3 text-center">Bargaining Power</th>
+              <th class="py-2.5 px-3 text-center">Pass-Through Lag</th>
             </tr>
           </thead>
-          <tbody class="divide-y divide-slate-800/60 bg-slate-950/50">
-            ${dominoRows.map(row => {
-              const isCurrent = row.ticker.toUpperCase() === currentTicker.toUpperCase();
-              const badge = row.type === 'winner'
-                ? 'bg-emerald-500/15 text-emerald-300 border-emerald-500/30'
-                : row.type === 'buffer'
-                  ? 'bg-amber-500/15 text-amber-300 border-amber-500/30'
-                  : 'bg-rose-500/15 text-rose-300 border-rose-500/30';
-
+          <tbody class="divide-y divide-slate-800/60 themed-border bg-slate-900/60 themed-card">
+            ${inputs.map(inp => {
+              const bPower = inp.supplierBargainingPower || 'Moderate';
+              const bBadge = bPower.includes('High') || bPower.includes('Oligopol') ? 'text-rose-400' : (bPower.includes('Low') ? 'text-emerald-400' : 'text-amber-400');
               return `
-                <tr class="hover:bg-slate-900/60 transition ${isCurrent ? 'bg-cyan-950/20 border-l-2 border-l-cyan-400' : ''}">
-                  <td class="py-2 px-3 font-bold text-white">
-                    <span class="text-cyan-300">${row.ticker}</span>
-                    <span class="text-[10px] text-slate-400 block font-normal font-sans">${row.name}</span>
-                  </td>
-                  <td class="py-2 px-3 text-slate-300 text-[11px] font-sans">${row.role}</td>
-                  <td class="py-2 px-3 text-slate-400 text-[11px] font-sans">${row.exp}</td>
-                  <td class="py-2 px-3 text-right font-bold ${row.type === 'winner' ? 'text-emerald-400' : row.type === 'buffer' ? 'text-amber-400' : 'text-rose-400'}">
-                    ${row.bps}
-                  </td>
-                  <td class="py-2 px-3 text-center text-slate-300 text-[10px]">${row.lag}</td>
-                  <td class="py-2 px-3">
-                    <span class="px-2 py-0.5 rounded text-[9px] font-bold border ${badge}">${row.verdict}</span>
-                  </td>
-                  <td class="py-2 px-2 text-right">
-                    ${isCurrent ? `
-                      <span class="text-[9px] font-mono text-cyan-400 px-2 py-0.5 rounded bg-cyan-500/10 border border-cyan-500/20 font-bold">CURRENT</span>
-                    ` : `
-                      <button type="button" onclick="quickInspectTicker('${row.ticker}')" class="px-2 py-0.5 rounded bg-slate-800 hover:bg-slate-700 text-teal-300 hover:text-white border border-slate-700 text-[10px] font-bold transition">
-                        Inspect &rarr;
-                      </button>
-                    `}
-                  </td>
+                <tr class="hover:bg-slate-800/40 transition">
+                  <td class="py-2.5 px-3 font-semibold text-white font-sans">${inp.name}</td>
+                  <td class="py-2.5 px-3 text-slate-400 text-[11px]">${inp.category}</td>
+                  <td class="py-2.5 px-3 text-right font-bold text-amber-300">${inp.costWeightEstimate}</td>
+                  <td class="py-2.5 px-3 text-slate-300 text-[11px] font-sans">${inp.typicalSourceOrSuppliers}</td>
+                  <td class="py-2.5 px-3 text-center font-bold ${bBadge}">${bPower}</td>
+                  <td class="py-2.5 px-3 text-center text-slate-300">${inp.passThroughLagDays || '30-45 Days'}</td>
                 </tr>
               `;
             }).join('')}
@@ -5809,623 +5341,63 @@ function renderCrossStockDominoRadar(triggerKey, deltaVal, currentTicker) {
   `;
 }
 
-// Global Macro Trigger Handlers
-window.triggerMacroCommodityShock = function(shockKey, ticker) {
-  if (!window._scStateMap[ticker]) {
-    window._scStateMap[ticker] = { activeTab: 'graph', activeShockIndex: 0, expandedNodes: {} };
-  }
-  window._scStateMap[ticker].activeMacroTrigger = shockKey;
-  if (shockKey === 'COPPER_SPIKE') window._scStateMap[ticker].sliderDeltaPercent = 20;
-  else if (shockKey === 'COPPER_DROP') window._scStateMap[ticker].sliderDeltaPercent = -20;
-  else if (shockKey === 'CRUDE_SPIKE') window._scStateMap[ticker].sliderDeltaPercent = 25;
-  else if (shockKey === 'STEEL_SPIKE') window._scStateMap[ticker].sliderDeltaPercent = 15;
-  else if (shockKey === 'INR_WEAK') window._scStateMap[ticker].sliderDeltaPercent = 5;
-
-  const container = document.getElementById(`sc-component-${ticker}`);
-  if (container && window._scDataMap[ticker]) {
-    const { supplyChain, companyName } = window._scDataMap[ticker];
-    container.outerHTML = renderInstitutionalSupplyChainEcosystem(supplyChain, ticker, companyName);
-  }
-};
-
-window.updateCustomShockSlider = function(val, ticker) {
-  if (!window._scStateMap[ticker]) {
-    window._scStateMap[ticker] = { activeTab: 'graph', activeShockIndex: 0, expandedNodes: {} };
-  }
-  window._scStateMap[ticker].sliderDeltaPercent = parseInt(val, 10);
-  const container = document.getElementById(`sc-component-${ticker}`);
-  if (container && window._scDataMap[ticker]) {
-    const { supplyChain, companyName } = window._scDataMap[ticker];
-    container.outerHTML = renderInstitutionalSupplyChainEcosystem(supplyChain, ticker, companyName);
-  }
-};
-
-window.resetMacroCommodityShock = function(ticker) {
-  if (window._scStateMap[ticker]) {
-    window._scStateMap[ticker].activeMacroTrigger = 'BASE';
-    window._scStateMap[ticker].sliderDeltaPercent = 0;
-  }
-  const container = document.getElementById(`sc-component-${ticker}`);
-  if (container && window._scDataMap[ticker]) {
-    const { supplyChain, companyName } = window._scDataMap[ticker];
-    container.outerHTML = renderInstitutionalSupplyChainEcosystem(supplyChain, ticker, companyName);
-  }
-};
-
-
-function renderPipelineFlowTab(supplyChain, ticker) {
-  const inputs = supplyChain.keyInputs || [];
-  const valueChain = supplyChain.valueChain || {};
-  const outputs = supplyChain.keyOutputs || [];
-
-  return `
-    <div class="grid grid-cols-1 lg:grid-cols-11 gap-3 items-stretch">
-      <!-- TIER 1: WHAT IT CONSUMES (INPUTS / RAW MATERIALS / SUPPLIERS) -->
-      <div class="lg:col-span-4 p-3.5 bg-[#060c18] border border-amber-500/30 rounded-xl space-y-3 flex flex-col justify-between shadow-sm">
-        <div>
-          <div class="flex items-center justify-between pb-2 border-b border-amber-500/20">
-            <div class="flex items-center space-x-2">
-              <span class="w-6 h-6 rounded-md bg-amber-500/20 border border-amber-500/40 flex items-center justify-center text-amber-300 text-xs">
-                <i class="fa-solid fa-boxes-packing"></i>
-              </span>
-              <span class="text-xs font-bold text-amber-300 uppercase tracking-wide">1. Sourcing &amp; Inputs</span>
-            </div>
-            <span class="text-[9px] font-mono px-1.5 py-0.5 rounded bg-amber-500/10 text-amber-400 border border-amber-500/20">
-              Raw Feedstock / COGS
-            </span>
-          </div>
-
-          <div class="space-y-2 pt-2.5">
-            ${inputs.map((inp, idx) => {
-              const bPower = inp.supplierBargainingPower || 'Moderate';
-              const bPowerColor = bPower.includes('High') || bPower.includes('Oligopol') ? 'rose' : (bPower.includes('Low') ? 'emerald' : 'amber');
-              const lag = inp.passThroughLagDays || '30-45 Days';
-              const detailId = `sc-inp-detail-${ticker}-${idx}`;
-
-              return `
-                <div class="supply-node-card p-2.5 bg-[#0a1222] rounded-lg border border-[#16233d] hover:border-amber-500/40 transition space-y-1.5 text-[11px]">
-                  <div class="flex items-start justify-between gap-1.5">
-                    <span class="font-bold text-white flex items-center leading-snug">
-                      <i class="fa-solid fa-arrow-right-to-bracket text-amber-400 mr-1.5 text-[9px] flex-shrink-0"></i>
-                      ${inp.name}
-                    </span>
-                    <span class="text-[9px] font-mono px-1.5 py-0.5 rounded bg-amber-500/15 text-amber-300 border border-amber-500/25 whitespace-nowrap">
-                      ${inp.costWeightEstimate}
-                    </span>
-                  </div>
-
-                  <div class="text-slate-400 text-[10px]">
-                    <strong class="text-slate-300">Sources:</strong> ${inp.typicalSourceOrSuppliers}
-                  </div>
-
-                  <!-- Institutional Telemetry Badges -->
-                  <div class="flex flex-wrap items-center gap-1 pt-1 text-[9px] font-mono">
-                    <span class="px-1.5 py-0.5 rounded bg-${bPowerColor}-500/10 text-${bPowerColor}-300 border border-${bPowerColor}-500/20" title="Supplier Pricing & Bargaining Leverage">
-                      <i class="fa-solid fa-handshake-simple mr-1 text-[8px]"></i>Bargaining: ${bPower}
-                    </span>
-                    <span class="px-1.5 py-0.5 rounded bg-slate-800 text-slate-300 border border-slate-700" title="Cost Repricing / Pass-Through Lag Window">
-                      <i class="fa-regular fa-clock mr-1 text-[8px]"></i>Lag: ${lag}
-                    </span>
-                    <button type="button" onclick="toggleSupplyChainNodeDetail('${detailId}', '${ticker}')" class="ml-auto text-[9px] text-amber-400 hover:text-amber-300 underline transition">
-                      Details
-                    </button>
-                  </div>
-
-                  <!-- Expandable Volatility Drawer -->
-                  <div id="${detailId}" class="hidden pt-1.5 border-t border-[#16233d] text-[10px] text-slate-400 italic">
-                    <strong class="text-amber-400/90 not-italic">Risk Exposure:</strong> ${inp.riskOrVolatilityNote}
-                  </div>
-                </div>
-              `;
-            }).join('')}
-          </div>
-        </div>
-
-        <div class="mt-2 pt-2 border-t border-[#16233d] text-[10px] text-slate-500 flex items-center justify-between">
-          <span>Cost Structure Risk</span>
-          <span class="text-amber-400/90 font-mono">COGS Sensitivity</span>
-        </div>
-      </div>
-
-      <!-- CONNECTOR 1 (Upstream to Core Moat) -->
-      <div class="hidden lg:flex lg:col-span-1 flex-col items-center justify-center space-y-2">
-        <svg viewBox="0 0 40 80" class="w-10 h-20 overflow-visible">
-          <defs>
-            <linearGradient id="scGradIn" x1="0%" y1="0%" x2="100%" y2="0%">
-              <stop offset="0%" stop-color="#f59e0b" stop-opacity="0.9"/>
-              <stop offset="100%" stop-color="#06b6d4" stop-opacity="0.9"/>
-            </linearGradient>
-          </defs>
-          <path d="M 0,40 L 40,40" fill="none" stroke="url(#scGradIn)" stroke-width="2.5" class="supply-flow-path" />
-          <polygon points="34,36 40,40 34,44" fill="#06b6d4" />
-        </svg>
-        <span class="text-[8px] font-mono uppercase text-slate-500 tracking-wider text-center">Value Added</span>
-      </div>
-
-      <!-- TIER 2: VALUE-ADD TRANSFORMATION (THE MOAT / ENGINE) -->
-      <div class="lg:col-span-2 p-3.5 bg-[#060c18] border border-cyan-500/40 rounded-xl space-y-3 flex flex-col justify-between shadow-md supply-glow-cyan">
-        <div>
-          <div class="flex items-center space-x-2 pb-2 border-b border-cyan-500/20">
-            <span class="w-6 h-6 rounded-md bg-cyan-500/20 border border-cyan-500/40 flex items-center justify-center text-cyan-300 text-xs">
-              <i class="fa-solid fa-gears"></i>
-            </span>
-            <span class="text-xs font-bold text-cyan-300 uppercase tracking-wide">2. Transformation</span>
-          </div>
-
-          <div class="space-y-2.5 pt-2.5 text-[11px]">
-            <div class="p-2.5 bg-[#0a1222] rounded-lg border border-[#16233d] space-y-1">
-              <span class="text-[9px] font-mono font-bold text-cyan-400 uppercase tracking-wider block">Core Conversion Process</span>
-              <p class="font-semibold text-white leading-tight">${valueChain.coreProcess || 'Industrial Architecture & Systems'}</p>
-            </div>
-
-            <div class="p-2.5 bg-[#0a1222] rounded-lg border border-[#16233d] space-y-1">
-              <span class="text-[9px] font-mono font-bold text-cyan-400 uppercase tracking-wider block">Value-Addition</span>
-              <p class="text-slate-300 text-[10px] leading-relaxed">${valueChain.valueAdditionSummary || 'Transforms inputs into high-value market offerings.'}</p>
-            </div>
-
-            <div class="p-2.5 bg-cyan-950/40 rounded-lg border border-cyan-500/35 space-y-1">
-              <div class="flex items-center justify-between">
-                <span class="text-[9px] font-mono font-bold text-emerald-400 uppercase tracking-wider">Economic Moat</span>
-                <span class="px-1.5 py-0.2 rounded text-[8px] font-mono bg-emerald-500/15 text-emerald-300 border border-emerald-500/25">
-                  ${valueChain.moatRating || 'Wide Moat'}
-                </span>
-              </div>
-              <p class="text-emerald-200 text-[10px] leading-snug">${valueChain.moatFactor || 'Proprietary IP and high client switching lock-in.'}</p>
-            </div>
-
-            ${valueChain.grossConversionMargin ? `
-              <div class="p-1.5 rounded-md bg-indigo-950/30 border border-indigo-500/20 text-[9px] text-indigo-300 font-mono text-center">
-                <i class="fa-solid fa-scale-balanced mr-1"></i> ${valueChain.grossConversionMargin}
-              </div>
-            ` : ''}
-          </div>
-        </div>
-
-        <div class="mt-2 pt-2 border-t border-[#16233d] text-[10px] text-slate-500 flex items-center justify-between">
-          <span>Pricing Power</span>
-          <span class="text-cyan-400/90 font-mono">Gross Margin Anchor</span>
-        </div>
-      </div>
-
-      <!-- CONNECTOR 2 (Core Moat to Downstream) -->
-      <div class="hidden lg:flex lg:col-span-1 flex-col items-center justify-center space-y-2">
-        <svg viewBox="0 0 40 80" class="w-10 h-20 overflow-visible">
-          <defs>
-            <linearGradient id="scGradOut" x1="0%" y1="0%" x2="100%" y2="0%">
-              <stop offset="0%" stop-color="#06b6d4" stop-opacity="0.9"/>
-              <stop offset="100%" stop-color="#10b981" stop-opacity="0.9"/>
-            </linearGradient>
-          </defs>
-          <path d="M 0,40 L 40,40" fill="none" stroke="url(#scGradOut)" stroke-width="2.5" class="supply-flow-path" />
-          <polygon points="34,36 40,40 34,44" fill="#10b981" />
-        </svg>
-        <span class="text-[8px] font-mono uppercase text-slate-500 tracking-wider text-center">Revenue Out</span>
-      </div>
-
-      <!-- TIER 3: WHAT IT PRODUCES & WHO BUYS IT (OUTPUTS / CUSTOMERS) -->
-      <div class="lg:col-span-3 p-3.5 bg-[#060c18] border border-emerald-500/30 rounded-xl space-y-3 flex flex-col justify-between shadow-sm">
-        <div>
-          <div class="flex items-center justify-between pb-2 border-b border-emerald-500/20">
-            <div class="flex items-center space-x-2">
-              <span class="w-6 h-6 rounded-md bg-emerald-500/20 border border-emerald-500/40 flex items-center justify-center text-emerald-300 text-xs">
-                <i class="fa-solid fa-truck-ramp-box"></i>
-              </span>
-              <span class="text-xs font-bold text-emerald-300 uppercase tracking-wide">3. Commercial Outputs</span>
-            </div>
-            <span class="text-[9px] font-mono px-1.5 py-0.5 rounded bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
-              End Customers / Revenue
-            </span>
-          </div>
-
-          <div class="space-y-2 pt-2.5">
-            ${outputs.map(out => {
-              const custConc = out.customerConcentration || 'Diversified';
-              const concColor = custConc.includes('High') || custConc.includes('Top 3') || custConc.includes('Top 5') ? 'amber' : 'emerald';
-
-              return `
-                <div class="supply-node-card p-2.5 bg-[#0a1222] rounded-lg border border-[#16233d] hover:border-emerald-500/40 transition space-y-1 text-[11px]">
-                  <div class="flex items-start justify-between gap-1.5">
-                    <span class="font-bold text-white flex items-center leading-snug">
-                      <i class="fa-solid fa-arrow-up-right-from-square text-emerald-400 mr-1.5 text-[9px] flex-shrink-0"></i>
-                      ${out.productOrService}
-                    </span>
-                    <span class="text-[9px] font-mono px-1.5 py-0.5 rounded bg-emerald-500/15 text-emerald-300 border border-emerald-500/25 whitespace-nowrap">
-                      ${out.revenueContribution}
-                    </span>
-                  </div>
-
-                  <div class="text-slate-400 text-[10px]">
-                    <strong class="text-slate-300">Target Buyers:</strong> ${out.customerSegment}
-                  </div>
-
-                  <div class="text-slate-400 text-[10px]">
-                    <strong class="text-emerald-400/90">Growth Catalyst:</strong> ${out.demandDrivers}
-                  </div>
-
-                  <!-- Customer Concentration Pill -->
-                  <div class="pt-1 flex items-center justify-between text-[9px] font-mono">
-                    <span class="text-slate-500">Concentration:</span>
-                    <span class="px-1.5 py-0.2 rounded bg-${concColor}-500/10 text-${concColor}-300 border border-${concColor}-500/20">
-                      ${custConc}
-                    </span>
-                  </div>
-                </div>
-              `;
-            }).join('')}
-          </div>
-        </div>
-
-        <div class="mt-2 pt-2 border-t border-[#16233d] text-[10px] text-slate-500 flex items-center justify-between">
-          <span>Revenue Engine</span>
-          <span class="text-emerald-400/90 font-mono">End-Market Demand</span>
-        </div>
-      </div>
-    </div>
-  `;
-}
-
 // ----------------------------------------------------------------------------
-// TAB 2: COST BREAKDOWN (COGS) TREE (Hierarchical Sourcing Vulnerability)
-// ----------------------------------------------------------------------------
-function renderCogsTreeTab(supplyChain, ticker) {
-  const inputs = supplyChain.keyInputs || [];
-
-  return `
-    <div class="space-y-3.5">
-      <!-- Section Briefing -->
-      <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 p-3 rounded-xl bg-[#060c18] border border-amber-500/25">
-        <div>
-          <span class="text-xs font-bold text-white uppercase tracking-wider flex items-center">
-            <i class="fa-solid fa-layer-group text-amber-400 mr-1.5"></i> Upstream Cost Structure &amp; Sourcing Security Tree
-          </span>
-          <p class="text-[11px] text-slate-400 mt-0.5">
-            Evaluate bill-of-materials (BOM) concentration, supplier pricing power, and pass-through margin lag.
-          </p>
-        </div>
-        <div class="flex items-center space-x-2 text-[10px] font-mono">
-          <span class="px-2 py-1 rounded bg-amber-500/15 text-amber-300 border border-amber-500/30">
-            ${inputs.length} Cost Centers Tracked
-          </span>
-        </div>
-      </div>
-
-      <!-- COGS Hierarchy Cards -->
-      <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
-        ${inputs.map((inp, idx) => {
-          const bPower = inp.supplierBargainingPower || 'Moderate';
-          const bPowerBadge = bPower.includes('High') || bPower.includes('Oligopol')
-            ? '<span class="px-1.5 py-0.5 rounded text-[9px] font-mono bg-rose-500/15 text-rose-300 border border-rose-500/30">High (Oligopoly Risk)</span>'
-            : (bPower.includes('Low')
-              ? '<span class="px-1.5 py-0.5 rounded text-[9px] font-mono bg-emerald-500/15 text-emerald-300 border border-emerald-500/30">Low (Commoditized)</span>'
-              : '<span class="px-1.5 py-0.5 rounded text-[9px] font-mono bg-amber-500/15 text-amber-300 border border-amber-500/30">Moderate (Competitive)</span>');
-
-          const lag = inp.passThroughLagDays || '30-45 Days';
-
-          return `
-            <div class="supply-node-card p-3.5 bg-[#0a1222] rounded-xl border border-[#16233d] hover:border-amber-500/40 space-y-2.5 transition text-[11px]">
-              <div class="flex items-start justify-between gap-2">
-                <div>
-                  <div class="flex items-center space-x-2">
-                    <span class="w-2 h-2 rounded-full bg-amber-400"></span>
-                    <span class="font-bold text-white text-xs">${inp.name}</span>
-                  </div>
-                  <span class="text-[9px] font-mono text-slate-400 block mt-0.5 ml-4">
-                    Category: <strong class="text-slate-300">${inp.category}</strong>
-                  </span>
-                </div>
-                <span class="px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-amber-500/15 text-amber-300 border border-amber-500/30">
-                  ${inp.costWeightEstimate}
-                </span>
-              </div>
-
-              <!-- Visual Progress Bar for Cost Weight -->
-              <div class="w-full bg-[#060c18] h-1.5 rounded-full overflow-hidden border border-[#16233d]">
-                <div class="bg-gradient-to-r from-amber-500 to-orange-500 h-1.5 rounded-full" style="width: ${inp.costWeightEstimate.includes('High') ? '75%' : (inp.costWeightEstimate.includes('Medium') ? '45%' : '25%')}"></div>
-              </div>
-
-              <!-- Supplier Geographies & Sourcing Partners -->
-              <div class="p-2 rounded-lg bg-[#060c18] border border-[#16233d] space-y-1 text-[10px]">
-                <div class="flex items-center justify-between text-slate-400">
-                  <span>Sourcing Hubs &amp; Vendors:</span>
-                  <span class="font-semibold text-slate-200 truncate ml-2 text-right">${inp.typicalSourceOrSuppliers}</span>
-                </div>
-                <div class="flex items-center justify-between text-slate-400">
-                  <span>Supplier Bargaining Leverage:</span>
-                  ${bPowerBadge}
-                </div>
-                <div class="flex items-center justify-between text-slate-400">
-                  <span>Pricing Pass-Through Lag:</span>
-                  <span class="font-mono text-indigo-300 font-semibold">${lag}</span>
-                </div>
-              </div>
-
-              <!-- Sourcing Vulnerability Note -->
-              <div class="text-[10px] text-slate-400 leading-snug">
-                <strong class="text-amber-400/90">Sensitivity Mechanism:</strong> ${inp.riskOrVolatilityNote}
-              </div>
-            </div>
-          `;
-        }).join('')}
-      </div>
-
-      <!-- Institutional Takeaway -->
-      <div class="p-3 bg-[#060c18] rounded-xl border border-slate-800 text-xs text-slate-300 flex items-start space-x-2.5">
-        <i class="fa-solid fa-shield-halved text-cyan-400 text-sm mt-0.5 flex-shrink-0"></i>
-        <div class="space-y-1">
-          <strong class="text-white block text-[11px] uppercase tracking-wide">Gross Margin Protection &amp; Pass-Through Dynamics:</strong>
-          <p class="text-[11px] text-slate-400 leading-relaxed">
-            Companies with diversified domestic vendor pools and contractual quarterly indexation clauses can absorb raw material price surges with minimal structural margin dilution. Long-term contractual pass-through lag under 45 days indicates strong gross margin defensibility.
-          </p>
-        </div>
-      </div>
-    </div>
-  `;
-}
-
-// ----------------------------------------------------------------------------
-// TAB 3: CUSTOMER & REVENUE MIX (Segmental Waterfall & Concentration Risk)
+// TAB 3: REVENUE MIX & CLIENT SEGMENTS
 // ----------------------------------------------------------------------------
 function renderRevenueMixTab(supplyChain, ticker) {
   const outputs = supplyChain.keyOutputs || [];
 
   return `
-    <div class="space-y-3.5">
-      <!-- Section Briefing -->
-      <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 p-3 rounded-xl bg-[#060c18] border border-emerald-500/25">
-        <div>
-          <span class="text-xs font-bold text-white uppercase tracking-wider flex items-center">
-            <i class="fa-solid fa-chart-pie text-emerald-400 mr-1.5"></i> Downstream Customer &amp; Revenue Concentration Mix
-          </span>
-          <p class="text-[11px] text-slate-400 mt-0.5">
-            Identify core revenue drivers, buyer diversification, single-client exposure, and long-term demand drivers.
-          </p>
-        </div>
-        <div class="flex items-center space-x-2 text-[10px] font-mono">
-          <span class="px-2 py-1 rounded bg-emerald-500/15 text-emerald-300 border border-emerald-500/30">
-            ${outputs.length} Revenue Streams Tracked
-          </span>
-        </div>
+    <div class="space-y-3">
+      <div class="p-3 bg-slate-950/60 themed-elevated rounded-xl border border-slate-800 themed-border text-xs text-slate-300 flex items-center justify-between">
+        <span><i class="fa-solid fa-chart-pie text-emerald-400 mr-1.5"></i> <strong>Commercial Monetization &amp; Client Mix</strong> &bull; Revenue contribution, pricing power score, and primary end markets</span>
+        <span class="text-[10px] font-mono text-slate-400">${outputs.length} Core Segments</span>
       </div>
 
-      <!-- Revenue Mix Cards -->
-      <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
-        ${outputs.map(out => {
-          const custConc = out.customerConcentration || 'Diversified';
-          const isHighConc = custConc.includes('High') || custConc.includes('Top 3') || custConc.includes('Top 5');
-
-          return `
-            <div class="supply-node-card p-3.5 bg-[#0a1222] rounded-xl border border-[#16233d] hover:border-emerald-500/40 space-y-2.5 transition text-[11px] flex flex-col justify-between">
-              <div class="space-y-2">
-                <div class="flex items-start justify-between gap-1.5">
-                  <div class="font-bold text-white text-xs flex items-center">
-                    <i class="fa-solid fa-circle-dot text-emerald-400 mr-1.5 text-[8px] flex-shrink-0"></i>
-                    ${out.productOrService}
-                  </div>
-                  <span class="px-1.5 py-0.5 rounded text-[9px] font-mono font-bold bg-emerald-500/15 text-emerald-300 border border-emerald-500/30 whitespace-nowrap">
-                    ${out.revenueContribution}
-                  </span>
-                </div>
-
-                <!-- Visual Bar for Revenue Contribution -->
-                <div class="w-full bg-[#060c18] h-1.5 rounded-full overflow-hidden border border-[#16233d]">
-                  <div class="bg-gradient-to-r from-emerald-500 to-teal-400 h-1.5 rounded-full" style="width: ${out.revenueContribution.includes('80%') || out.revenueContribution.includes('75%') || out.revenueContribution.includes('72%') ? '75%' : (out.revenueContribution.includes('40%') || out.revenueContribution.includes('42%') || out.revenueContribution.includes('32%') ? '40%' : '20%')}"></div>
-                </div>
-
-                <!-- Target Client Segment -->
-                <div class="p-2 rounded-lg bg-[#060c18] border border-[#16233d] space-y-1 text-[10px]">
-                  <div class="text-slate-400">
-                    <span class="text-slate-500 block text-[9px] uppercase font-mono">End Buyer Base</span>
-                    <strong class="text-slate-200">${out.customerSegment}</strong>
-                  </div>
-                  <div class="pt-1 flex items-center justify-between text-slate-400 border-t border-[#16233d]/60">
-                    <span>Concentration:</span>
-                    <span class="font-mono text-[9px] font-semibold ${isHighConc ? 'text-amber-300' : 'text-emerald-300'}">
-                      ${custConc}
-                    </span>
-                  </div>
-                </div>
-
-                <div class="text-[10px] text-slate-400 leading-snug">
-                  <strong class="text-emerald-400/90">Growth Catalyst:</strong> ${out.demandDrivers}
-                </div>
-              </div>
-
-              <div class="mt-2 pt-2 border-t border-[#16233d] text-[9px] text-slate-500 font-mono flex items-center justify-between">
-                <span>Contract Type</span>
-                <span class="text-emerald-400">Multi-Year Anchor</span>
-              </div>
-            </div>
-          `;
-        }).join('')}
-      </div>
-
-      <!-- Concentration Risk Verdict -->
-      <div class="p-3 bg-[#060c18] rounded-xl border border-slate-800 text-xs text-slate-300 flex items-start space-x-2.5">
-        <i class="fa-solid fa-users-viewfinder text-emerald-400 text-sm mt-0.5 flex-shrink-0"></i>
-        <div class="space-y-1">
-          <strong class="text-white block text-[11px] uppercase tracking-wide">Downstream Customer Diversification Verdict:</strong>
-          <p class="text-[11px] text-slate-400 leading-relaxed">
-            Revenue resilience depends heavily on customer fragmentation. Highly granular consumer retail revenue carries near-zero client cancellation risk, whereas enterprise B2B models with >50% concentration in top-5 clients require sticky IP and multi-year master service agreements to defend enterprise valuation multiples.
-          </p>
-        </div>
+      <div class="overflow-x-auto rounded-xl border border-slate-800 themed-border">
+        <table class="w-full text-left text-xs font-mono">
+          <thead class="bg-slate-950/80 themed-elevated text-[10px] uppercase text-slate-400 border-b border-slate-800 themed-border">
+            <tr>
+              <th class="py-2.5 px-3">Product / Business Division</th>
+              <th class="py-2.5 px-3 text-right">Revenue Contribution</th>
+              <th class="py-2.5 px-3">Customer Segment</th>
+              <th class="py-2.5 px-3 text-center">Pricing Power</th>
+              <th class="py-2.5 px-3">Key Growth Drivers</th>
+              <th class="py-2.5 px-3 text-center">Risk Tier</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-slate-800/60 themed-border bg-slate-900/60 themed-card">
+            ${outputs.map(out => `
+              <tr class="hover:bg-slate-800/40 transition">
+                <td class="py-2.5 px-3 font-semibold text-white font-sans">${out.productOrService}</td>
+                <td class="py-2.5 px-3 text-right font-bold text-emerald-300">${out.revenueContribution}</td>
+                <td class="py-2.5 px-3 text-slate-300 text-[11px] font-sans">${out.customerSegment}</td>
+                <td class="py-2.5 px-3 text-center font-bold text-cyan-400">${out.pricingPowerScore || 8} / 10</td>
+                <td class="py-2.5 px-3 text-slate-300 text-[11px] font-sans">${out.demandDrivers || 'Capex & Secular Volume'}</td>
+                <td class="py-2.5 px-3 text-center text-slate-400 text-[10px]">${out.counterpartyRiskTier || 'Investment Grade'}</td>
+              </tr>
+            `).join('')}
+          </tbody>
+        </table>
       </div>
     </div>
   `;
 }
 
-// ----------------------------------------------------------------------------
-// TAB 4: MACRO SHOCK STRESS TEST (Interactive Scenario Simulator)
-// ----------------------------------------------------------------------------
-function renderStressTestTab(supplyChain, ticker, activeShockIdx) {
-  const sensitivities = supplyChain.macroCostSensitivities || [];
-  const currentSensitivity = sensitivities[activeShockIdx] || sensitivities[0] || {
-    factorName: 'Macro Inflation / Squeeze',
-    impactDirection: 'Negative',
-    mechanism: 'Tests operational pass-through agility and pricing discipline.',
-    elasticityMetric: '-80 to -120 bps margin compression'
-  };
-
-  const isNeg = currentSensitivity.impactDirection === 'Negative';
-  const themeColor = isNeg ? 'rose' : 'emerald';
-  const icon = isNeg ? 'fa-arrow-trend-down' : 'fa-arrow-trend-up';
-
-  return `
-    <div class="space-y-3.5">
-      <!-- Section Briefing & Shock Scenario Switcher -->
-      <div class="p-3.5 rounded-xl bg-[#060c18] border border-cyan-500/25 space-y-2.5">
-        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-          <span class="text-xs font-bold text-white uppercase tracking-wider flex items-center">
-            <i class="fa-solid fa-bolt-lightning text-rose-400 mr-1.5"></i> Macro Shock &amp; Elasticity Stress Test Lab
-          </span>
-          <span class="text-[10px] text-slate-400 font-mono">
-            Interactive Scenario Simulator
-          </span>
-        </div>
-        <p class="text-[11px] text-slate-400 leading-relaxed">
-          Simulate macroeconomic stress events (raw material spikes, currency moves, capex cycles) to quantify their impact on gross margins and earnings power.
-        </p>
-
-        <!-- Scenario Selection Chips -->
-        <div class="flex flex-wrap gap-1.5 pt-1">
-          ${sensitivities.map((s, idx) => {
-            const sIsNeg = s.impactDirection === 'Negative';
-            const sActive = idx === activeShockIdx;
-            const btnColor = sIsNeg ? 'rose' : 'emerald';
-
-            return `
-              <button type="button" onclick="selectSupplyChainShock(${idx}, '${ticker}')"
-                class="supply-pill-tab px-2.5 py-1.5 rounded-lg text-[10px] font-semibold flex items-center space-x-1.5 transition ${sActive ? `bg-${btnColor}-500/20 text-${btnColor}-200 border border-${btnColor}-500/40 shadow-sm shadow-${btnColor}-500/10` : 'bg-[#0a1222] text-slate-400 hover:text-slate-200 border border-[#16233d]'}" title="Test scenario: ${s.factorName}">
-                <i class="fa-solid ${sIsNeg ? 'fa-triangle-exclamation text-rose-400' : 'fa-circle-arrow-up text-emerald-400'} text-[10px]"></i>
-                <span class="truncate max-w-[200px]">${s.factorName}</span>
-              </button>
-            `;
-          }).join('')}
-        </div>
-      </div>
-
-      <!-- Active Scenario Telemetry Dashboard -->
-      <div class="supply-node-card p-4 rounded-xl bg-[#0a1222] border border-${themeColor}-500/35 space-y-3 shadow-xl supply-glow-${themeColor}">
-        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-2.5 border-b border-[#16233d]">
-          <div class="flex items-center space-x-2">
-            <span class="w-7 h-7 rounded-lg bg-${themeColor}-500/15 border border-${themeColor}-500/30 flex items-center justify-center text-${themeColor}-400 text-xs">
-              <i class="fa-solid ${icon}"></i>
-            </span>
-            <div>
-              <span class="text-xs font-bold text-white block">
-                ${currentSensitivity.factorName}
-              </span>
-              <span class="text-[9px] font-mono text-slate-400">
-                Stress Vector &bull; Direct Financial Transmission
-              </span>
-            </div>
-          </div>
-
-          <div class="flex items-center space-x-2 self-start sm:self-center">
-            <span class="px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-${themeColor}-500/15 text-${themeColor}-300 border border-${themeColor}-500/30">
-              ${currentSensitivity.impactDirection === 'Negative' ? 'MARGIN SQUEEZE' : 'MARGIN EXPANSION'}
-            </span>
-          </div>
-        </div>
-
-        <!-- Telemetry Numbers -->
-        <div class="grid grid-cols-1 sm:grid-cols-3 gap-2 text-[10px]">
-          <div class="p-2.5 rounded-lg bg-[#060c18] border border-[#16233d] space-y-1">
-            <span class="text-slate-500 uppercase font-mono tracking-wider text-[9px] block">Estimated Impact Metric</span>
-            <div class="font-bold text-white text-xs font-mono text-${themeColor}-300">
-              ${currentSensitivity.elasticityMetric || (isNeg ? '-110 to -160 bps Margin' : '+90 to +140 bps EBITDA')}
-            </div>
-          </div>
-          <div class="p-2.5 rounded-lg bg-[#060c18] border border-[#16233d] space-y-1">
-            <span class="text-slate-500 uppercase font-mono tracking-wider text-[9px] block">Transmission Speed</span>
-            <div class="font-bold text-indigo-300 font-mono text-xs">
-              30 - 60 Days (Working Capital Lag)
-            </div>
-          </div>
-          <div class="p-2.5 rounded-lg bg-[#060c18] border border-[#16233d] space-y-1">
-            <span class="text-slate-500 uppercase font-mono tracking-wider text-[9px] block">Moat Protection Buffer</span>
-            <div class="font-bold text-emerald-300 font-mono text-xs">
-              ${supplyChain.valueChain?.moatRating || 'High Switching Moat'}
-            </div>
-          </div>
-        </div>
-
-        <!-- Mechanism Explanation -->
-        <div class="p-2.5 rounded-lg bg-[#060c18] border border-[#16233d] space-y-1 text-xs">
-          <strong class="text-white text-[11px] block">Transmission Mechanism &amp; Value Chain Vulnerability:</strong>
-          <p class="text-[11px] text-slate-300 leading-relaxed">
-            ${currentSensitivity.mechanism}
-          </p>
-        </div>
-      </div>
-
-      <!-- Sensitivity Matrix Overview -->
-      <div class="p-3 bg-[#060c18] rounded-xl border border-slate-800 space-y-2">
-        <div class="flex items-center justify-between text-xs">
-          <span class="font-bold text-slate-200 flex items-center text-[11px]">
-            <i class="fa-solid fa-list-check text-cyan-400 mr-1.5"></i> All Profiled Macro Sensitivities (${sensitivities.length})
-          </span>
-          <span class="text-[9px] text-slate-500 font-mono">Elasticity Multipliers</span>
-        </div>
-        <div class="grid grid-cols-1 sm:grid-cols-3 gap-2 pt-0.5">
-          ${sensitivities.map((s, idx) => {
-            const sIsNeg = s.impactDirection === 'Negative';
-            const sColor = sIsNeg ? 'rose' : 'emerald';
-            const sIcon = sIsNeg ? 'fa-arrow-trend-down' : 'fa-arrow-trend-up';
-
-            return `
-              <div class="p-2 rounded-lg bg-[#0a1222] border border-[#16233d] hover:border-${sColor}-500/40 transition space-y-1 text-[10px]">
-                <div class="flex items-center justify-between">
-                  <span class="font-bold text-white flex items-center truncate">
-                    <i class="fa-solid ${sIcon} text-${sColor}-400 mr-1 text-[9px]"></i>
-                    ${s.factorName}
-                  </span>
-                  <span class="px-1 py-0.2 rounded text-[8px] font-mono bg-${sColor}-500/10 text-${sColor}-300">
-                    ${s.impactDirection}
-                  </span>
-                </div>
-                <p class="text-[9px] text-slate-400 line-clamp-2 leading-tight">
-                  ${s.mechanism}
-                </p>
-              </div>
-            `;
-          }).join('')}
-        </div>
-      </div>
-    </div>
-  `;
-}
-
-// Global Tab & Scenario Controllers
+// Global Tab Controller
 window.switchSupplyChainTab = function(tabId, ticker) {
+  window._scStateMap = window._scStateMap || {};
   if (!window._scStateMap[ticker]) {
-    window._scStateMap[ticker] = { activeTab: 'pipeline', activeShockIndex: 0, expandedNodes: {} };
+    window._scStateMap[ticker] = { activeTab: 'chain', expandedNodes: {} };
   }
   window._scStateMap[ticker].activeTab = tabId;
   const container = document.getElementById(`sc-component-${ticker}`);
-  if (container && window._scDataMap[ticker]) {
+  if (container && window._scDataMap && window._scDataMap[ticker]) {
     const { supplyChain, companyName } = window._scDataMap[ticker];
     container.outerHTML = renderInstitutionalSupplyChainEcosystem(supplyChain, ticker, companyName);
   }
 };
 
-window.selectSupplyChainShock = function(shockIdx, ticker) {
-  if (!window._scStateMap[ticker]) {
-    window._scStateMap[ticker] = { activeTab: 'stress', activeShockIndex: 0, expandedNodes: {} };
-  }
-  window._scStateMap[ticker].activeShockIndex = shockIdx;
-  const container = document.getElementById(`sc-component-${ticker}`);
-  if (container && window._scDataMap[ticker]) {
-    const { supplyChain, companyName } = window._scDataMap[ticker];
-    container.outerHTML = renderInstitutionalSupplyChainEcosystem(supplyChain, ticker, companyName);
-  }
-};
-
-window.toggleSupplyChainNodeDetail = function(nodeId, ticker) {
-  const el = document.getElementById(nodeId);
-  if (el) {
-    el.classList.toggle('hidden');
-  }
-};
 
 function renderShareholdingPatternAndWhaleAlerts(pattern, ticker, companyName, price) {
   if (!pattern) return '';
@@ -8185,33 +7157,7 @@ function renderPortfolioAuditTable() {
 let currentTheoryHubTab = 'AUDIT';
 
 function switchTheoryHubTab(tab) {
-  currentTheoryHubTab = tab;
-  const deskAudit = document.getElementById("deskTheoryAudit");
-  const deskCorr = document.getElementById("deskCorrelationMatrix");
-  const deskMacro = document.getElementById("deskMacroStress");
-
-  const btnAudit = document.getElementById("hubTabAudit");
-  const btnCorr = document.getElementById("hubTabCorrelation");
-  const btnMacro = document.getElementById("hubTabMacro");
-
-  const activeAudit = "bg-teal-500/20 text-teal-300 border border-teal-500/30 font-semibold";
-  const activeCorr = "bg-cyan-500/20 text-cyan-300 border border-cyan-500/30 font-semibold";
-  const activeMacro = "bg-amber-500/20 text-amber-300 border border-amber-500/30 font-semibold";
-  const inactive = "text-slate-400 hover:text-white border-transparent";
-
-  if (deskAudit) deskAudit.classList.toggle("hidden", tab !== 'AUDIT');
-  if (deskCorr) deskCorr.classList.toggle("hidden", tab !== 'CORRELATION');
-  if (deskMacro) deskMacro.classList.toggle("hidden", tab !== 'MACRO');
-
-  if (btnAudit) btnAudit.className = `hub-tab-btn px-3 py-1.5 rounded-md text-xs transition ${tab === 'AUDIT' ? activeAudit : inactive}`;
-  if (btnCorr) btnCorr.className = `hub-tab-btn px-3 py-1.5 rounded-md text-xs transition ${tab === 'CORRELATION' ? activeCorr : inactive}`;
-  if (btnMacro) btnMacro.className = `hub-tab-btn px-3 py-1.5 rounded-md text-xs transition ${tab === 'MACRO' ? activeMacro : inactive}`;
-
-  if (tab === 'CORRELATION') {
-    loadCorrelationMatrix();
-  } else if (tab === 'MACRO') {
-    runMacroStressScenario('crude_surge');
-  }
+  // Consolidates Theory Lab into single streamlined view
 }
 
 // -------------------------------------------------------------
@@ -8432,226 +7378,13 @@ function executeSwapInTradeModal() {
 }
 
 // -------------------------------------------------------------
-// Full-Time Investor Correlation Matrix Desk (Feature 3)
-// -------------------------------------------------------------
+// Full-Time Investor Risk & Stress Desks (Cleanly Streamlined)
 let currentCorrelationData = null;
-
-async function loadCorrelationMatrix(forceRefresh = false) {
-  const container = document.getElementById("correlationHeatmapContainer");
-  const clustersContainer = document.getElementById("correlationClustersContainer");
-  if (!container) return;
-
-  const portfolioId = currentPortfolioId || (currentAuditData ? currentAuditData.portfolioId : null);
-  if (!portfolioId) {
-    container.innerHTML = `<div class="text-xs text-slate-400 p-4 text-center">Please select an active portfolio to compute the correlation matrix.</div>`;
-    return;
-  }
-
-  if (currentCorrelationData && !forceRefresh) {
-    renderCorrelationMatrix(currentCorrelationData);
-    return;
-  }
-
-  container.innerHTML = `<div class="text-xs text-slate-400 p-6 text-center flex items-center justify-center space-x-2"><i class="fa-solid fa-circle-notch fa-spin text-cyan-400"></i><span>Computing cross-asset return covariance and diversification ratio...</span></div>`;
-
-  try {
-    const res = await fetch(`/api/theory-portfolios/correlation-matrix/${portfolioId}?topN=10`);
-    if (!res.ok) throw new Error("Failed to load correlation matrix");
-    const data = await res.json();
-    currentCorrelationData = data;
-    renderCorrelationMatrix(data);
-  } catch (err) {
-    console.error("Error fetching correlation matrix:", err);
-    container.innerHTML = `<div class="text-xs text-rose-400 p-4 text-center">Error computing correlation matrix: ${escapeHtml(err.message)}</div>`;
-  }
-}
-
-function renderCorrelationMatrix(data) {
-  const divRatioEl = document.getElementById("corrDivRatio");
-  const divRatingEl = document.getElementById("corrDivRating");
-  const clusterCountEl = document.getElementById("corrClusterCount");
-  const commentaryEl = document.getElementById("corrCommentary");
-
-  if (divRatioEl) divRatioEl.textContent = `${data.diversificationRatio.toFixed(2)}x`;
-  if (divRatingEl) {
-    divRatingEl.textContent = data.diversificationRating;
-    divRatingEl.className = data.diversificationRatio >= 1.35
-      ? "text-[10px] text-emerald-400 font-semibold"
-      : data.diversificationRatio >= 1.20
-        ? "text-[10px] text-cyan-400 font-semibold"
-        : "text-[10px] text-rose-400 font-semibold";
-  }
-  if (clusterCountEl) {
-    const count = data.highRiskClusters ? data.highRiskClusters.length : 0;
-    clusterCountEl.textContent = count;
-    clusterCountEl.className = count > 0 ? "text-2xl font-bold font-mono text-amber-400" : "text-2xl font-bold font-mono text-emerald-400";
-  }
-  if (commentaryEl) commentaryEl.textContent = data.institutionalCommentary;
-
-  // Render Heatmap Matrix Table
-  const container = document.getElementById("correlationHeatmapContainer");
-  if (!container || !data.tickers || data.tickers.length === 0) return;
-
-  const n = data.tickers.length;
-  let html = `<table class="w-full text-center text-[11px] font-mono border-collapse"><thead><tr><th class="p-2 text-left text-slate-400 font-sans text-xs">Ticker</th>`;
-
-  for (let j = 0; j < n; j++) {
-    html += `<th class="p-2 text-slate-300 font-bold border-b border-slate-800" title="${escapeHtml(data.names[j])} (${escapeHtml(data.sectors[j])})">${escapeHtml(data.tickers[j])}</th>`;
-  }
-  html += `</tr></thead><tbody>`;
-
-  for (let i = 0; i < n; i++) {
-    html += `<tr class="border-b border-slate-800/60"><td class="p-2 text-left font-bold text-white font-sans flex items-center justify-between border-r border-slate-800"><span title="${escapeHtml(data.names[i])}">${escapeHtml(data.tickers[i])}</span><span class="text-[9px] text-slate-400 font-mono ml-1">${data.weightsPercent[i].toFixed(1)}%</span></td>`;
-
-    for (let j = 0; j < n; j++) {
-      const val = data.matrix[i][j];
-      let cellClass = "p-2 transition ";
-      if (i === j) {
-        cellClass += "bg-slate-800/80 text-slate-400 font-bold";
-      } else if (val >= 0.75) {
-        cellClass += "bg-rose-950/70 text-rose-300 font-bold hover:bg-rose-900/80";
-      } else if (val >= 0.50) {
-        cellClass += "bg-amber-950/60 text-amber-300 font-semibold hover:bg-amber-900/70";
-      } else if (val >= 0.30) {
-        cellClass += "bg-cyan-950/40 text-cyan-300 hover:bg-cyan-900/50";
-      } else {
-        cellClass += "bg-emerald-950/40 text-emerald-300 hover:bg-emerald-900/50";
-      }
-
-      html += `<td class="${cellClass}" title="${escapeHtml(data.tickers[i])} ↔ ${escapeHtml(data.tickers[j])}: ${val.toFixed(2)} correlation">${val.toFixed(2)}</td>`;
-    }
-    html += `</tr>`;
-  }
-  html += `</tbody></table>`;
-  container.innerHTML = html;
-
-  // Render High Risk Clusters
-  const clustersContainer = document.getElementById("correlationClustersContainer");
-  if (clustersContainer) {
-    if (!data.highRiskClusters || data.highRiskClusters.length === 0) {
-      clustersContainer.innerHTML = `<div class="p-4 rounded-xl bg-emerald-950/20 border border-emerald-500/30 text-emerald-300 text-xs flex items-center space-x-2 md:col-span-2"><i class="fa-solid fa-check-circle text-emerald-400"></i><span>No severe cluster risks detected among top positions. Assets exhibit healthy factor dispersion.</span></div>`;
-    } else {
-      clustersContainer.innerHTML = data.highRiskClusters.map(c => `
-        <div class="p-3.5 rounded-xl bg-rose-950/20 border border-rose-500/30 text-xs space-y-1.5">
-          <div class="flex items-center justify-between font-bold">
-            <span class="text-white font-mono flex items-center">
-              <span class="text-rose-400 mr-1">${escapeHtml(c.stockA)}</span> ↔ <span class="text-rose-400 ml-1 mr-2">${escapeHtml(c.stockB)}</span>
-              <span class="text-[10px] px-1.5 py-0.5 rounded bg-rose-500/20 text-rose-300 border border-rose-500/30">Correlation: ${c.correlation.toFixed(2)}</span>
-            </span>
-            <span class="text-[10px] font-mono text-slate-300">₹${formatINR(c.combinedCapital)} (${c.combinedWeightPercent.toFixed(1)}%)</span>
-          </div>
-          <div class="text-[11px] text-slate-300 leading-relaxed">${escapeHtml(c.riskWarning)}</div>
-        </div>
-      `).join('');
-    }
-  }
-}
-
-// -------------------------------------------------------------
-// Supply Chain & Commodity Macro Shock Simulator (Feature 4)
-// -------------------------------------------------------------
+async function loadCorrelationMatrix(forceRefresh = false) {}
+function renderCorrelationMatrix(data) {}
 let activeMacroScenario = 'crude_surge';
-
-async function runMacroStressScenario(scenarioKey) {
-  activeMacroScenario = scenarioKey;
-
-  // Update button active states
-  const btnCrude = document.getElementById("macroScenarioBtnCrude");
-  const btnInr = document.getElementById("macroScenarioBtnInr");
-  const btnRate = document.getElementById("macroScenarioBtnRate");
-
-  const activeStyle = "bg-amber-500/20 border border-amber-500/40 text-white font-bold";
-  const inactiveStyle = "bg-slate-950/70 border border-slate-800 text-slate-300 hover:text-white";
-
-  if (btnCrude) btnCrude.className = `macro-scenario-btn p-3.5 rounded-xl text-left transition space-y-1 ${scenarioKey === 'crude_surge' ? activeStyle : inactiveStyle}`;
-  if (btnInr) btnInr.className = `macro-scenario-btn p-3.5 rounded-xl text-left transition space-y-1 ${scenarioKey === 'inr_depreciation' ? activeStyle : inactiveStyle}`;
-  if (btnRate) btnRate.className = `macro-scenario-btn p-3.5 rounded-xl text-left transition space-y-1 ${scenarioKey === 'rbi_rate_hike' ? activeStyle : inactiveStyle}`;
-
-  const portfolioId = currentPortfolioId || (currentAuditData ? currentAuditData.portfolioId : null);
-  if (!portfolioId) return;
-
-  try {
-    const res = await fetch(`/api/theory-portfolios/macro-stress-test/${portfolioId}?scenario=${scenarioKey}`);
-    if (!res.ok) throw new Error("Failed to load macro stress test");
-    const data = await res.json();
-    renderMacroStressResult(data);
-  } catch (err) {
-    console.error("Error simulating macro stress test:", err);
-  }
-}
-
-function renderMacroStressResult(data) {
-  const titleEl = document.getElementById("macroStressTitle");
-  const descEl = document.getElementById("macroStressDesc");
-  const pnlDeltaEl = document.getElementById("macroPnlDelta");
-  const impactPctEl = document.getElementById("macroImpactPct");
-  const defensiveTextEl = document.getElementById("macroDefensiveText");
-  const beneficiariesListEl = document.getElementById("macroBeneficiariesList");
-  const squeezedListEl = document.getElementById("macroSqueezedList");
-
-  if (titleEl) titleEl.textContent = data.scenarioTitle;
-  if (descEl) descEl.textContent = `${data.scenarioDescription} (${data.macroTrigger})`;
-
-  if (pnlDeltaEl) {
-    const sign = data.portfolioEstimatedPnlImpact >= 0 ? '+' : '';
-    pnlDeltaEl.textContent = `${sign}₹${formatINR(Math.abs(data.portfolioEstimatedPnlImpact))}`;
-    pnlDeltaEl.className = data.portfolioEstimatedPnlImpact >= 0 ? "text-lg font-mono font-bold text-emerald-400" : "text-lg font-mono font-bold text-rose-400";
-  }
-
-  if (impactPctEl) {
-    const sign = data.portfolioEstimatedImpactPercent >= 0 ? '+' : '';
-    impactPctEl.textContent = `${sign}${data.portfolioEstimatedImpactPercent.toFixed(2)}%`;
-    impactPctEl.className = data.portfolioEstimatedImpactPercent >= 0 ? "text-lg font-mono font-bold text-emerald-400" : "text-lg font-mono font-bold text-rose-400";
-  }
-
-  if (defensiveTextEl) defensiveTextEl.textContent = data.defensiveActionRecommendation;
-
-  // Render Beneficiaries
-  if (beneficiariesListEl) {
-    if (!data.beneficiaries || data.beneficiaries.length === 0) {
-      beneficiariesListEl.innerHTML = `<div class="text-slate-400 text-[11px] p-2 text-center">No major beneficiaries in this scenario.</div>`;
-    } else {
-      beneficiariesListEl.innerHTML = data.beneficiaries.map(b => `
-        <div class="p-2.5 rounded-lg bg-slate-900 border border-emerald-500/20 flex flex-col sm:flex-row sm:items-center justify-between gap-1 text-[11px]">
-          <div>
-            <div class="font-bold text-white font-mono flex items-center space-x-1.5">
-              <span>${escapeHtml(b.ticker)}</span>
-              <span class="text-[10px] text-slate-400 font-sans font-normal">(${escapeHtml(b.sector)})</span>
-              <span class="text-[10px] px-1.5 py-0.2 rounded bg-emerald-500/20 text-emerald-300 font-bold">+${b.estimatedImpactPercent.toFixed(1)}%</span>
-            </div>
-            <div class="text-slate-400 text-[10px] mt-0.5">${escapeHtml(b.transmissionMechanism)}</div>
-          </div>
-          <div class="text-right flex-shrink-0 font-mono text-emerald-400 font-bold">
-            +₹${formatINR(b.estimatedPnlDelta)}
-          </div>
-        </div>
-      `).join('');
-    }
-  }
-
-  // Render Squeezed Holdings
-  if (squeezedListEl) {
-    if (!data.squeezedHoldings || data.squeezedHoldings.length === 0) {
-      squeezedListEl.innerHTML = `<div class="text-slate-400 text-[11px] p-2 text-center">No severe gross margin squeeze detected.</div>`;
-    } else {
-      squeezedListEl.innerHTML = data.squeezedHoldings.map(s => `
-        <div class="p-2.5 rounded-lg bg-slate-900 border border-rose-500/20 flex flex-col sm:flex-row sm:items-center justify-between gap-1 text-[11px]">
-          <div>
-            <div class="font-bold text-white font-mono flex items-center space-x-1.5">
-              <span>${escapeHtml(s.ticker)}</span>
-              <span class="text-[10px] text-slate-400 font-sans font-normal">(${escapeHtml(s.sector)})</span>
-              <span class="text-[10px] px-1.5 py-0.2 rounded bg-rose-500/20 text-rose-300 font-bold">${s.estimatedImpactPercent.toFixed(1)}%</span>
-            </div>
-            <div class="text-slate-400 text-[10px] mt-0.5">${escapeHtml(s.transmissionMechanism)}</div>
-          </div>
-          <div class="text-right flex-shrink-0 font-mono text-rose-400 font-bold">
-            -₹${formatINR(Math.abs(s.estimatedPnlDelta))}
-          </div>
-        </div>
-      `).join('');
-    }
-  }
-}
+async function runMacroStressScenario(scenarioKey) {}
+function renderMacroStressResult(data) {}
 
 window.loadPortfolioTheoryAudit = loadPortfolioTheoryAudit;
 window.renderPortfolioTheoryAudit = renderPortfolioTheoryAudit;

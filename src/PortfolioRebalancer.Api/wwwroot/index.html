@@ -2028,36 +2028,6 @@
         </div>
       </div>
 
-      <!-- Master Quant Research & News Scenario Stress Testing Section -->
-    <div id="researchReportSection" class="hidden bg-slate-900/95 border border-teal-500/30 rounded-2xl p-6 backdrop-blur shadow-2xl space-y-6">
-      <div class="flex items-center justify-between border-b border-slate-800 pb-4">
-        <div>
-          <h3 class="text-lg font-bold text-white flex items-center">
-            <i class="fa-solid fa-flask text-teal-400 mr-2"></i> Quantitative Investment Research & News Stress-Testing Report
-          </h3>
-          <p class="text-xs text-slate-400">Backtested Factor Theories (2018&ndash;2024 Nifty 500) &bull; Policy Scenario Resilience</p>
-        </div>
-        <button id="btnCloseResearch" class="text-slate-400 hover:text-white text-xs bg-slate-800 hover:bg-slate-700 px-3 py-1.5 rounded-lg transition">
-          <i class="fa-solid fa-times mr-1"></i> Close Report
-        </button>
-      </div>
-
-      <!-- Strategy Grid -->
-      <div>
-        <h4 class="text-xs font-semibold uppercase tracking-wider text-teal-400 mb-3 flex items-center">
-          <i class="fa-solid fa-chart-line mr-1.5"></i> 3 Proven Quantitative Market Theories (Backtested Alpha Models)
-        </h4>
-        <div id="quantStrategiesContainer" class="grid grid-cols-1 md:grid-cols-3 gap-4"></div>
-      </div>
-
-      <!-- Macro & News Flow Scenarios -->
-      <div class="pt-4 border-t border-slate-800">
-        <h4 class="text-xs font-semibold uppercase tracking-wider text-teal-400 mb-3 flex items-center">
-          <i class="fa-solid fa-newspaper mr-1.5"></i> Forward-Looking Corporate News & Macro Policy Scenarios
-        </h4>
-        <div id="scenariosContainer" class="grid grid-cols-1 md:grid-cols-3 gap-4"></div>
-      </div>
-    </div>
     </div>
 
     <!-- ======================================================== -->
@@ -2132,29 +2102,38 @@
         </div>
       </div>
 
-      <!-- ========================================================================= -->
-      <!-- INSTITUTIONAL DECISION HUB: TABS (AUDIT, CORRELATION, MACRO SHOCK)         -->
-      <!-- ========================================================================= -->
-      <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-2 rounded-xl bg-slate-900/60 themed-elevated border border-slate-800/80">
+      <!-- Theory Strategy Selector & Filters -->
+      <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-1.5 rounded-xl bg-slate-900/60 themed-elevated border border-slate-800/80">
         <div class="inline-flex p-1 rounded-lg bg-slate-950/60 themed-card border border-slate-800/80 space-x-1 flex-wrap gap-y-1">
-          <button id="hubTabAudit" onclick="switchTheoryHubTab('AUDIT')" class="hub-tab-btn px-3 py-1.5 rounded-md text-xs font-semibold bg-teal-500/20 text-teal-300 border border-teal-500/30 transition">
-            <i class="fa-solid fa-clipboard-check mr-1 text-teal-400"></i> 1. Portfolio Health &amp; Pruning Audit
+          <button id="theoryFilterAll" onclick="filterTheoryView('ALL')" class="theory-filter-btn px-3 py-1.5 rounded-md text-xs font-semibold bg-purple-500/20 text-purple-300 border border-purple-500/30 transition">
+            <i class="fa-solid fa-layer-group text-[10px] mr-1"></i> All 3 Indian Theories
           </button>
-          <button id="hubTabCorrelation" onclick="switchTheoryHubTab('CORRELATION')" class="hub-tab-btn px-3 py-1.5 rounded-md text-xs font-semibold text-slate-400 hover:text-white transition">
-            <i class="fa-solid fa-network-wired mr-1 text-cyan-400"></i> 2. Full-Time Investor Correlation Matrix
+          <button id="theoryFilterPiotroski" onclick="filterTheoryView('GRAHAM_PIOTROSKI_VALUE')" class="theory-filter-btn px-3 py-1.5 rounded-md text-xs font-semibold text-slate-400 hover:text-white transition" title="10-Yr ROCE >= 15% & Sales >= 10% Every Year | Zero Debt">
+            <i class="fa-solid fa-mug-hot text-[10px] mr-1 text-emerald-400"></i> Strategy 1: Coffee Can Compounding
           </button>
-          <button id="hubTabMacro" onclick="switchTheoryHubTab('MACRO')" class="hub-tab-btn px-3 py-1.5 rounded-md text-xs font-semibold text-slate-400 hover:text-white transition">
-            <i class="fa-solid fa-bolt-lightning mr-1 text-amber-400"></i> 3. Supply Chain Macro Stress-Tester
+          <button id="theoryFilterMagic" onclick="filterTheoryView('MAGIC_FORMULA')" class="theory-filter-btn px-3 py-1.5 rounded-md text-xs font-semibold text-slate-400 hover:text-white transition" title="Quality (ROE > 20%) + Growth (PAT CAGR > 22%) + Longevity + Fair Price (PEG <= 1.25)">
+            <i class="fa-solid fa-chart-line text-[10px] mr-1 text-cyan-400"></i> Strategy 2: Motilal Oswal QGLP
+          </button>
+          <button id="theoryFilterSepa" onclick="filterTheoryView('SEPA_MOMENTUM')" class="theory-filter-btn px-3 py-1.5 rounded-md text-xs font-semibold text-slate-400 hover:text-white transition" title="Relative Strength (RS >= 80) + Stage 2 Uptrend + DII/FPI Accumulation + 7% Stop Loss">
+            <i class="fa-solid fa-bolt-lightning text-[10px] mr-1 text-amber-400"></i> Strategy 3: Stage 2 Policy Momentum
           </button>
         </div>
-        <div class="text-[11px] text-slate-400 px-3 flex items-center space-x-2">
-          <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
-          <span>Institutional Quant Engine Active</span>
+        <div class="text-xs text-slate-400 px-3 flex items-center space-x-2">
+          <i class="fa-solid fa-circle-info text-purple-400"></i>
+          <span>Click on any theory to isolate constituent forensics &amp; simulate swaps</span>
         </div>
       </div>
 
-      <!-- DESK 1: Portfolio Theory Health Audit (Feature 1 & 2) -->
-      <div id="deskTheoryAudit" class="space-y-5">
+      <!-- Strategy Leaderboard Cards (3 Theories Comparison) -->
+      <div id="theoryLeaderboardCards" class="grid grid-cols-1 md:grid-cols-3 gap-5">
+        <!-- Rendered dynamically -->
+      </div>
+
+      <!-- Theory Deep Dives & Mock Portfolios Container -->
+      <div id="theoryPortfoliosContainer" class="space-y-8">
+        <!-- Strategy 1, 2, 3 details rendered here -->
+      </div>
+
       <!-- ========================================================================= -->
       <!-- ACTIONABLE DECISION DESK: AUDIT MY PORTFOLIO AGAINST THE 3 THEORIES      -->
       <!-- ========================================================================= -->
@@ -2279,232 +2258,6 @@
             </tbody>
           </table>
         </div>
-      </div>
-      </div>
-
-      <!-- DESK 2: Full-Time Investor Correlation Matrix & Cluster Stress (Feature 3) -->
-      <div id="deskCorrelationMatrix" class="hidden space-y-5">
-        <div class="bg-slate-900/90 themed-card border border-cyan-500/30 rounded-2xl p-6 shadow-xl space-y-5">
-          <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-4 pb-4 border-b border-slate-800/80 themed-border">
-            <div class="flex items-start sm:items-center space-x-3.5">
-              <div class="w-11 h-11 rounded-xl bg-gradient-to-tr from-cyan-500/20 to-blue-500/20 border border-cyan-500/35 flex items-center justify-center text-cyan-400 text-lg shadow-md flex-shrink-0">
-                <i class="fa-solid fa-network-wired"></i>
-              </div>
-              <div>
-                <div class="flex items-center space-x-2.5 flex-wrap gap-y-1">
-                  <h3 class="text-base sm:text-lg font-bold text-white tracking-tight">
-                    Cross-Asset Correlation Matrix &amp; Cluster Stress Desk
-                  </h3>
-                  <span class="px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-cyan-500/15 text-cyan-300 border border-cyan-500/30">
-                    FULL-TIME INVESTOR RISK DESK
-                  </span>
-                </div>
-                <p class="text-xs text-slate-400 mt-1 max-w-3xl">
-                  Calculates cross-holding return covariance and factor co-movement across your core portfolio assets. Detects hidden cluster concentration where multiple stocks move in lockstep during market drawdowns.
-                </p>
-              </div>
-            </div>
-            <div class="flex items-center space-x-2 flex-shrink-0">
-              <button onclick="loadCorrelationMatrix(true)" class="px-3.5 py-2 bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 text-slate-950 font-bold rounded-xl text-xs shadow-md transition flex items-center space-x-1.5">
-                <i class="fa-solid fa-arrows-rotate text-xs"></i>
-                <span>Re-Compute Matrix</span>
-              </button>
-            </div>
-          </div>
-
-          <!-- Diversification Ratio & Factor Resilience KPI -->
-          <div class="grid grid-cols-1 md:grid-cols-3 gap-3 text-xs">
-            <div class="p-4 rounded-xl bg-slate-950/70 border border-cyan-500/30 space-y-1">
-              <div class="text-[11px] text-slate-400 flex items-center justify-between">
-                <span>Diversification Ratio (DR)</span>
-                <i class="fa-solid fa-shield text-cyan-400"></i>
-              </div>
-              <div id="corrDivRatio" class="text-2xl font-bold font-mono text-cyan-300">--</div>
-              <div id="corrDivRating" class="text-[10px] text-slate-400 font-semibold">Calculating...</div>
-            </div>
-
-            <div class="p-4 rounded-xl bg-slate-950/70 border border-amber-500/30 space-y-1">
-              <div class="text-[11px] text-slate-400 flex items-center justify-between">
-                <span>High-Risk Correlated Clusters</span>
-                <i class="fa-solid fa-triangle-exclamation text-amber-400"></i>
-              </div>
-              <div id="corrClusterCount" class="text-2xl font-bold font-mono text-amber-400">--</div>
-              <div class="text-[10px] text-slate-400">Pairs with correlation &gt; 0.70</div>
-            </div>
-
-            <div class="p-4 rounded-xl bg-slate-950/70 border border-slate-800 space-y-1">
-              <div class="text-[11px] text-slate-400 flex items-center justify-between">
-                <span>Institutional Risk Insight</span>
-                <i class="fa-solid fa-brain text-purple-400"></i>
-              </div>
-              <div id="corrCommentary" class="text-xs text-slate-300 line-clamp-2 leading-relaxed">Loading matrix...</div>
-            </div>
-          </div>
-
-          <!-- Correlation Heatmap -->
-          <div class="space-y-2">
-            <div class="flex items-center justify-between text-xs">
-              <span class="font-bold text-white uppercase tracking-wider text-[11px]"><i class="fa-solid fa-table-cells mr-1.5 text-cyan-400"></i> Pairwise Correlation Heatmap (Top Holdings)</span>
-              <div class="flex items-center space-x-3 text-[10px] font-mono">
-                <span class="flex items-center"><span class="w-2.5 h-2.5 rounded-full bg-rose-500/80 mr-1"></span> &gt;0.75 High Co-movement</span>
-                <span class="flex items-center"><span class="w-2.5 h-2.5 rounded-full bg-amber-500/80 mr-1"></span> 0.50-0.75 Moderate</span>
-                <span class="flex items-center"><span class="w-2.5 h-2.5 rounded-full bg-emerald-500/80 mr-1"></span> &lt;0.50 Low / Non-Correlated</span>
-              </div>
-            </div>
-            <div id="correlationHeatmapContainer" class="overflow-x-auto rounded-xl border border-slate-800/80 bg-slate-950/60 p-3">
-              <!-- Rendered dynamically -->
-            </div>
-          </div>
-
-          <!-- High Risk Cluster Alerts -->
-          <div class="space-y-2">
-            <div class="text-xs font-bold text-white uppercase tracking-wider text-[11px] flex items-center">
-              <i class="fa-solid fa-radiation mr-1.5 text-rose-400"></i> Systemic Cluster Risk Warnings
-            </div>
-            <div id="correlationClustersContainer" class="grid grid-cols-1 md:grid-cols-2 gap-3">
-              <!-- Rendered dynamically -->
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- DESK 3: Supply Chain & Commodity Macro Shock Simulator (Feature 4) -->
-      <div id="deskMacroStress" class="hidden space-y-5">
-        <div class="bg-slate-900/90 themed-card border border-amber-500/30 rounded-2xl p-6 shadow-xl space-y-5">
-          <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-4 pb-4 border-b border-slate-800/80 themed-border">
-            <div class="flex items-start sm:items-center space-x-3.5">
-              <div class="w-11 h-11 rounded-xl bg-gradient-to-tr from-amber-500/20 to-orange-500/20 border border-amber-500/35 flex items-center justify-center text-amber-400 text-lg shadow-md flex-shrink-0">
-                <i class="fa-solid fa-bolt-lightning"></i>
-              </div>
-              <div>
-                <div class="flex items-center space-x-2.5 flex-wrap gap-y-1">
-                  <h3 class="text-base sm:text-lg font-bold text-white tracking-tight">
-                    Supply Chain &amp; Commodity Macro Shock Simulator
-                  </h3>
-                  <span class="px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-amber-500/15 text-amber-300 border border-amber-500/30">
-                    MACRO FACTOR SENSITIVITY
-                  </span>
-                </div>
-                <p class="text-xs text-slate-400 mt-1 max-w-3xl">
-                  Stress-tests your active portfolio against exogenous macroeconomic shocks. Maps input-output cost structures (petrochemicals, semiconductor import dependencies, FX exposure, interest rate burdens) to simulate real P&amp;L transmission.
-                </p>
-              </div>
-            </div>
-          </div>
-
-          <!-- Scenario Selector Buttons -->
-          <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
-            <button id="macroScenarioBtnCrude" onclick="runMacroStressScenario('crude_surge')" class="macro-scenario-btn p-3.5 rounded-xl text-left bg-amber-500/20 border border-amber-500/40 text-white transition space-y-1 hover:border-amber-400">
-              <div class="flex items-center justify-between">
-                <span class="text-xs font-bold flex items-center"><i class="fa-solid fa-oil-well text-amber-400 mr-1.5"></i> Global Crude Spike</span>
-                <span class="text-[10px] font-mono text-amber-300 font-bold">+15% to $90/bbl</span>
-              </div>
-              <p class="text-[11px] text-slate-300">Hormuz supply bottlenecks; crude surges, testing input costs.</p>
-            </button>
-
-            <button id="macroScenarioBtnInr" onclick="runMacroStressScenario('inr_depreciation')" class="macro-scenario-btn p-3.5 rounded-xl text-left bg-slate-950/70 border border-slate-800 text-slate-300 transition space-y-1 hover:text-white hover:border-slate-700">
-              <div class="flex items-center justify-between">
-                <span class="text-xs font-bold flex items-center"><i class="fa-solid fa-money-bill-transfer text-cyan-400 mr-1.5"></i> Rupee Devaluation</span>
-                <span class="text-[10px] font-mono text-cyan-300 font-bold">+3.0% USD/INR</span>
-              </div>
-              <p class="text-[11px] text-slate-400">USD strengthens to ₹86.50; tests exporters vs component importers.</p>
-            </button>
-
-            <button id="macroScenarioBtnRate" onclick="runMacroStressScenario('rbi_rate_hike')" class="macro-scenario-btn p-3.5 rounded-xl text-left bg-slate-950/70 border border-slate-800 text-slate-300 transition space-y-1 hover:text-white hover:border-slate-700">
-              <div class="flex items-center justify-between">
-                <span class="text-xs font-bold flex items-center"><i class="fa-solid fa-building-columns text-emerald-400 mr-1.5"></i> RBI Repo Rate Hike</span>
-                <span class="text-[10px] font-mono text-emerald-300 font-bold">+25 bps</span>
-              </div>
-              <p class="text-[11px] text-slate-400">Monetary policy tightening tests bank NIMs vs levered balance sheets.</p>
-            </button>
-          </div>
-
-          <!-- Scenario Impact Summary Scorecard -->
-          <div class="p-4 rounded-xl bg-slate-950/80 border border-slate-800 space-y-3">
-            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-800 pb-3">
-              <div>
-                <h4 id="macroStressTitle" class="text-sm font-bold text-white">Global Crude Oil Shock (+15% to $90/bbl)</h4>
-                <p id="macroStressDesc" class="text-xs text-slate-400">Simulates Brent crude spiking from $78 to $90/barrel</p>
-              </div>
-              <div class="flex items-baseline space-x-3 text-right">
-                <div>
-                  <div class="text-[10px] text-slate-400">Estimated Portfolio P&amp;L Delta</div>
-                  <div id="macroPnlDelta" class="text-lg font-mono font-bold text-white">&#8377;--</div>
-                </div>
-                <div class="pl-3 border-l border-slate-800">
-                  <div class="text-[10px] text-slate-400">Net Impact %</div>
-                  <div id="macroImpactPct" class="text-lg font-mono font-bold text-white">--%</div>
-                </div>
-              </div>
-            </div>
-
-            <!-- Defensive Recommendation Banner -->
-            <div class="p-3 rounded-lg bg-slate-900 border border-amber-500/20 text-xs text-slate-300 flex items-start space-x-2.5">
-              <i class="fa-solid fa-chess-knight text-amber-400 mt-0.5 flex-shrink-0"></i>
-              <div>
-                <span class="font-bold text-white">Institutional Defensive Action:</span>
-                <span id="macroDefensiveText" class="ml-1 text-slate-300">Loading scenario recommendation...</span>
-              </div>
-            </div>
-          </div>
-
-          <!-- Impact Breakdown: Beneficiaries vs Margin Squeezed -->
-          <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
-            <!-- Beneficiaries -->
-            <div class="p-4 rounded-xl bg-emerald-950/20 border border-emerald-500/30 space-y-3">
-              <div class="text-xs font-bold text-emerald-400 uppercase tracking-wider flex items-center justify-between">
-                <span><i class="fa-solid fa-arrow-trend-up mr-1.5"></i> Top Beneficiaries (Margin Expansion)</span>
-                <span class="text-[10px] font-mono text-slate-400">Supply Chain Tailwinds</span>
-              </div>
-              <div id="macroBeneficiariesList" class="space-y-2 text-xs">
-                <!-- Dynamically populated -->
-              </div>
-            </div>
-
-            <!-- Squeezed -->
-            <div class="p-4 rounded-xl bg-rose-950/20 border border-rose-500/30 space-y-3">
-              <div class="text-xs font-bold text-rose-400 uppercase tracking-wider flex items-center justify-between">
-                <span><i class="fa-solid fa-arrow-trend-down mr-1.5"></i> Top Squeezed Holdings (Input Cost Headwinds)</span>
-                <span class="text-[10px] font-mono text-slate-400">Gross Margin Contraction</span>
-              </div>
-              <div id="macroSqueezedList" class="space-y-2 text-xs">
-                <!-- Dynamically populated -->
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- Theory Strategy Selector & Filters -->
-      <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-1.5 rounded-xl bg-slate-900/60 themed-elevated border border-slate-800/80">
-        <div class="inline-flex p-1 rounded-lg bg-slate-950/60 themed-card border border-slate-800/80 space-x-1 flex-wrap gap-y-1">
-          <button id="theoryFilterAll" onclick="filterTheoryView('ALL')" class="theory-filter-btn px-3 py-1.5 rounded-md text-xs font-semibold bg-purple-500/20 text-purple-300 border border-purple-500/30 transition">
-            <i class="fa-solid fa-layer-group text-[10px] mr-1"></i> All 3 Indian Theories
-          </button>
-          <button id="theoryFilterPiotroski" onclick="filterTheoryView('GRAHAM_PIOTROSKI_VALUE')" class="theory-filter-btn px-3 py-1.5 rounded-md text-xs font-semibold text-slate-400 hover:text-white transition" title="10-Yr ROCE >= 15% & Sales >= 10% Every Year | Zero Debt">
-            <i class="fa-solid fa-mug-hot text-[10px] mr-1 text-emerald-400"></i> Strategy 1: Coffee Can Compounding
-          </button>
-          <button id="theoryFilterMagic" onclick="filterTheoryView('MAGIC_FORMULA')" class="theory-filter-btn px-3 py-1.5 rounded-md text-xs font-semibold text-slate-400 hover:text-white transition" title="Quality (ROE > 20%) + Growth (PAT CAGR > 22%) + Longevity + Fair Price (PEG <= 1.25)">
-            <i class="fa-solid fa-chart-line text-[10px] mr-1 text-cyan-400"></i> Strategy 2: Motilal Oswal QGLP
-          </button>
-          <button id="theoryFilterSepa" onclick="filterTheoryView('SEPA_MOMENTUM')" class="theory-filter-btn px-3 py-1.5 rounded-md text-xs font-semibold text-slate-400 hover:text-white transition" title="Relative Strength (RS >= 80) + Stage 2 Uptrend + DII/FPI Accumulation + 7% Stop Loss">
-            <i class="fa-solid fa-bolt-lightning text-[10px] mr-1 text-amber-400"></i> Strategy 3: Stage 2 Policy Momentum
-          </button>
-        </div>
-        <div class="text-xs text-slate-400 px-3 flex items-center space-x-2">
-          <i class="fa-solid fa-circle-info text-purple-400"></i>
-          <span>Click on any theory to isolate constituent forensics &amp; simulate swaps</span>
-        </div>
-      </div>
-
-      <!-- Strategy Leaderboard Cards (3 Theories Comparison) -->
-      <div id="theoryLeaderboardCards" class="grid grid-cols-1 md:grid-cols-3 gap-5">
-        <!-- Rendered dynamically -->
-      </div>
-
-      <!-- Theory Deep Dives & Mock Portfolios Container -->
-      <div id="theoryPortfoliosContainer" class="space-y-8">
-        <!-- Strategy 1, 2, 3 details rendered here -->
       </div>
     </div>
 
