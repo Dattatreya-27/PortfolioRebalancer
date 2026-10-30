@@ -493,6 +493,182 @@ public sealed class PortfolioService(
             TotalDayPnLPercent: portfolio.TotalDayPnLPercent);
     }
 
+    public async Task<TradeAnalyticsDto?> GetTradeAnalyticsAsync(Guid portfolioId)
+    {
+        var portfolio = await repository.GetByIdAsync(portfolioId);
+        if (portfolio is null) return null;
+
+        var trades = portfolio.Trades.OrderByDescending(t => t.TradeDate).ToList();
+        var tradeDtos = trades.Select(MapToTradeDto).ToList();
+
+        var buyTrades = trades.Where(t => t.Action.Equals("BUY", StringComparison.OrdinalIgnoreCase)).ToList();
+        var sellTrades = trades.Where(t => t.Action.Equals("SELL", StringComparison.OrdinalIgnoreCase)).ToList();
+
+        decimal totalRealizedPnL = 0m;
+        decimal realizedProfit = 0m;
+        decimal realizedLoss = 0m;
+        int winCount = 0;
+        int lossCount = 0;
+        decimal stcg = 0m;
+        decimal ltcg = 0m;
+        double totalHoldingDaysSum = 0;
+        int closedTradesWithDays = 0;
+
+        foreach (var s in sellTrades)
+        {
+            if (s.RealizedPnL.HasValue)
+            {
+                var val = s.RealizedPnL.Value.Amount;
+                totalRealizedPnL += val;
+                if (val > 0)
+                {
+                    realizedProfit += val;
+                    winCount++;
+                }
+                else if (val < 0)
+                {
+                    realizedLoss += Math.Abs(val);
+                    lossCount++;
+                }
+
+                if (s.HoldingDays.HasValue)
+                {
+                    totalHoldingDaysSum += s.HoldingDays.Value;
+                    closedTradesWithDays++;
+
+                    if (s.HoldingDays.Value >= 365) ltcg += val;
+                    else stcg += val;
+                }
+            }
+        }
+
+        int closedTrades = winCount + lossCount;
+        decimal winRate = closedTrades > 0 ? Math.Round(((decimal)winCount / closedTrades) * 100m, 1) : 0m;
+        decimal profitFactor = realizedLoss > 0 ? Math.Round(realizedProfit / realizedLoss, 2) : (realizedProfit > 0 ? 99.9m : 0m);
+        decimal avgHoldingDays = closedTradesWithDays > 0 ? Math.Round((decimal)(totalHoldingDaysSum / closedTradesWithDays), 1) : 0m;
+
+        // Top Traded Stocks
+        var topStocks = trades
+            .GroupBy(t => t.Ticker.Value, StringComparer.OrdinalIgnoreCase)
+            .Select(g =>
+            {
+                var ticker = g.Key;
+                var stockName = g.First().StockName;
+                var count = g.Count();
+                var volume = g.Sum(x => x.Quantity);
+                var pnl = g.Where(x => x.RealizedPnL.HasValue).Sum(x => x.RealizedPnL!.Value.Amount);
+                var wins = g.Count(x => (x.RealizedPnL?.Amount ?? 0m) > 0m);
+                var closes = g.Count(x => x.RealizedPnL.HasValue);
+                var tickerWinRate = closes > 0 ? Math.Round(((decimal)wins / closes) * 100m, 1) : 0m;
+
+                return new TopTradedStockDto(
+                    Ticker: ticker,
+                    StockName: stockName,
+                    TradeCount: count,
+                    TotalVolume: volume,
+                    TotalRealizedPnL: Math.Round(pnl, 2),
+                    WinRatePercent: tickerWinRate
+                );
+            })
+            .OrderByDescending(x => x.TradeCount)
+            .Take(10)
+            .ToList();
+
+        return new TradeAnalyticsDto(
+            PortfolioId: portfolio.Id,
+            PortfolioName: portfolio.Name,
+            TotalTradesCount: trades.Count,
+            BuyTradesCount: buyTrades.Count,
+            SellTradesCount: sellTrades.Count,
+            TotalRealizedPnL: Math.Round(totalRealizedPnL, 2),
+            RealizedProfitOnly: Math.Round(realizedProfit, 2),
+            RealizedLossOnly: Math.Round(realizedLoss, 2),
+            WinningTradesCount: winCount,
+            LosingTradesCount: lossCount,
+            WinRatePercent: winRate,
+            ProfitFactor: profitFactor,
+            AverageHoldingDays: avgHoldingDays,
+            ShortTermCapitalGainsPnL: Math.Round(stcg, 2),
+            LongTermCapitalGainsPnL: Math.Round(ltcg, 2),
+            RecentTrades: tradeDtos,
+            TopTradedStocks: topStocks
+        );
+    }
+
+    public async Task<BrokerTradebookImportResultDto?> ImportBrokerTradebookAsync(
+        Guid portfolioId,
+        Stream fileStream,
+        string fileName,
+        string? password = null,
+        bool clearExistingTrades = false)
+    {
+        var portfolio = await repository.GetByIdAsync(portfolioId);
+        if (portfolio is null) return null;
+
+        var ext = Path.GetExtension(fileName).ToLowerInvariant();
+        string fileFormat = (ext == ".csv" || ext == ".txt") ? "CSV" : "Excel";
+
+        var parsedTrades = BrokerTradebookParser.ParseAndMatchTrades(fileStream, fileName, password);
+        if (parsedTrades.Count == 0)
+        {
+            throw new InvalidOperationException($"No valid buy/sell trades found in '{fileName}'. Please verify tradebook format.");
+        }
+
+        string broker = parsedTrades.FirstOrDefault()?.TradeSource ?? "Broker Tradebook";
+
+        if (clearExistingTrades)
+        {
+            portfolio.ReplaceTrades(parsedTrades);
+        }
+        else
+        {
+            portfolio.AddTrades(parsedTrades);
+        }
+
+        await repository.SaveAsync(portfolio);
+
+        int buyCount = parsedTrades.Count(t => t.Action.Equals("BUY", StringComparison.OrdinalIgnoreCase));
+        int sellCount = parsedTrades.Count(t => t.Action.Equals("SELL", StringComparison.OrdinalIgnoreCase));
+        int matchedTrips = parsedTrades.Count(t => t.RealizedPnL.HasValue);
+        decimal netPnl = parsedTrades.Where(t => t.RealizedPnL.HasValue).Sum(t => t.RealizedPnL!.Value.Amount);
+
+        return new BrokerTradebookImportResultDto(
+            PortfolioId: portfolio.Id,
+            PortfolioName: portfolio.Name,
+            BrokerDetected: broker,
+            FileFormat: fileFormat,
+            TotalTradesParsed: parsedTrades.Count,
+            BuysImported: buyCount,
+            SellsImported: sellCount,
+            MatchedRoundTrips: matchedTrips,
+            NetRealizedPnL: Math.Round(netPnl, 2),
+            Trades: parsedTrades.Select(MapToTradeDto).ToList()
+        );
+    }
+
+    public static TradeRecordDto MapToTradeDto(TradeRecord t)
+    {
+        return new TradeRecordDto(
+            Id: t.Id,
+            Ticker: t.Ticker.Value,
+            StockName: t.StockName,
+            Action: t.Action,
+            Quantity: t.Quantity,
+            Price: Math.Round(t.Price.Amount, 2),
+            TradeDate: t.TradeDate,
+            TradeValue: Math.Round(t.TradeValue.Amount, 2),
+            OrderId: t.OrderId,
+            Exchange: t.Exchange,
+            TradeSource: t.TradeSource,
+            RealizedPnL: t.RealizedPnL.HasValue ? Math.Round(t.RealizedPnL.Value.Amount, 2) : null,
+            RealizedPnLPercent: t.RealizedPnLPercent,
+            CostBasisPrice: t.CostBasisPrice,
+            HoldingDays: t.HoldingDays,
+            TaxClassification: t.TaxClassification,
+            Notes: t.Notes
+        );
+    }
+
     private static RebalanceRecommendationDto MapToRecommendation(RebalanceResult result)
     {
         var trades = result.Trades.Select(t => new TradeRecommendationDto(

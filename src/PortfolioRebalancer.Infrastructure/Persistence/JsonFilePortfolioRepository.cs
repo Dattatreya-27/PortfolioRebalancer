@@ -171,6 +171,33 @@ public sealed class JsonFilePortfolioRepository : IPortfolioRepository
             catch {}
         }
 
+        if (model.Trades != null && model.Trades.Count > 0)
+        {
+            try
+            {
+                var trades = model.Trades.Select(t => new TradeRecord
+                {
+                    Id = t.Id != Guid.Empty ? t.Id : Guid.NewGuid(),
+                    Ticker = new Ticker(t.Ticker),
+                    StockName = t.StockName,
+                    Action = t.Action,
+                    Quantity = t.Quantity,
+                    Price = Money.INR(t.Price),
+                    TradeDate = t.TradeDate,
+                    OrderId = t.OrderId,
+                    Exchange = t.Exchange,
+                    TradeSource = t.TradeSource,
+                    RealizedPnL = t.RealizedPnL.HasValue ? Money.INR(t.RealizedPnL.Value) : null,
+                    RealizedPnLPercent = t.RealizedPnLPercent,
+                    CostBasisPrice = t.CostBasisPrice,
+                    HoldingDays = t.HoldingDays,
+                    Notes = t.Notes
+                });
+                portfolio.AddTrades(trades);
+            }
+            catch {}
+        }
+
         return portfolio;
     }
 
@@ -198,6 +225,24 @@ public sealed class JsonFilePortfolioRepository : IPortfolioRepository
             {
                 Sector = t.Sector.ToString(),
                 TargetWeight = t.TargetWeight.Value
+            }).ToList(),
+            Trades = domain.Trades.Select(t => new TradeRecordStorageModel
+            {
+                Id = t.Id,
+                Ticker = t.Ticker.Value,
+                StockName = t.StockName,
+                Action = t.Action,
+                Quantity = t.Quantity,
+                Price = t.Price.Amount,
+                TradeDate = t.TradeDate,
+                OrderId = t.OrderId,
+                Exchange = t.Exchange,
+                TradeSource = t.TradeSource,
+                RealizedPnL = t.RealizedPnL?.Amount,
+                RealizedPnLPercent = t.RealizedPnLPercent,
+                CostBasisPrice = t.CostBasisPrice,
+                HoldingDays = t.HoldingDays,
+                Notes = t.Notes
             }).ToList()
         };
     }
@@ -210,6 +255,26 @@ public sealed class JsonFilePortfolioRepository : IPortfolioRepository
         public DateTime? LastSyncedAt { get; set; }
         public List<HoldingStorageModel> Holdings { get; set; } = [];
         public List<SectorAllocationStorageModel> TargetAllocations { get; set; } = [];
+        public List<TradeRecordStorageModel> Trades { get; set; } = [];
+    }
+
+    private sealed class TradeRecordStorageModel
+    {
+        public Guid Id { get; set; }
+        public string Ticker { get; set; } = string.Empty;
+        public string StockName { get; set; } = string.Empty;
+        public string Action { get; set; } = string.Empty;
+        public decimal Quantity { get; set; }
+        public decimal Price { get; set; }
+        public DateTime TradeDate { get; set; }
+        public string? OrderId { get; set; }
+        public string? Exchange { get; set; }
+        public string? TradeSource { get; set; }
+        public decimal? RealizedPnL { get; set; }
+        public decimal? RealizedPnLPercent { get; set; }
+        public decimal? CostBasisPrice { get; set; }
+        public int? HoldingDays { get; set; }
+        public string? Notes { get; set; }
     }
 
     private sealed class HoldingStorageModel

@@ -475,7 +475,7 @@ function escapeHtml(str) {
 // ==========================================
 // SPA Client-Side View Router (Hash-Based)
 // ==========================================
-const APP_VIEWS = ['portfolio', 'manage', 'discover', 'theories'];
+const APP_VIEWS = ['portfolio', 'manage', 'discover', 'theories', 'trades'];
 let activeView = 'portfolio';
 
 function navigateTo(viewName, updateHash = true) {
@@ -500,7 +500,8 @@ function navigateTo(viewName, updateHash = true) {
     { id: 'navTabPortfolio', view: 'portfolio' },
     { id: 'navTabManage', view: 'manage' },
     { id: 'navTabDiscover', view: 'discover' },
-    { id: 'navTabTheories', view: 'theories' }
+    { id: 'navTabTheories', view: 'theories' },
+    { id: 'navTabTrades', view: 'trades' }
   ];
 
   tabs.forEach(t => {
@@ -526,6 +527,8 @@ function navigateTo(viewName, updateHash = true) {
   } else if (viewName === 'theories') {
     loadTheoryPortfolios();
     loadPortfolioTheoryAudit();
+  } else if (viewName === 'trades') {
+    loadTradeAnalytics();
   }
 
   window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -7399,4 +7402,365 @@ window.switchTheoryHubTab = switchTheoryHubTab;
 window.loadCorrelationMatrix = loadCorrelationMatrix;
 window.runMacroStressScenario = runMacroStressScenario;
 
+
+// ========================================================
+// TRADE ANALYTICS, REALIZED P&L & TRADEBOOK IMPORT DESK
+// ========================================================
+let currentTradeAnalyticsData = null;
+let currentTradesFilter = 'ALL';
+let currentTradesSearch = '';
+let selectedTradebookFile = null;
+
+async function loadTradeAnalytics(forceRefresh = false) {
+  if (!currentPortfolioId) return;
+
+  if (currentTradeAnalyticsData && !forceRefresh) {
+    renderTradeAnalytics(currentTradeAnalyticsData);
+    return;
+  }
+
+  try {
+    const res = await fetch(`/api/portfolios/${currentPortfolioId}/trade-analytics`);
+    if (!res.ok) return;
+    const data = await res.json();
+    currentTradeAnalyticsData = data;
+    renderTradeAnalytics(data);
+  } catch (err) {
+    console.error("Error loading trade analytics:", err);
+  }
+}
+
+function refreshTradeAnalytics() {
+  loadTradeAnalytics(true);
+  showToast("🔄 Trade analytics refreshed.");
+}
+
+function renderTradeAnalytics(data) {
+  // Update badge on navbar
+  const navBadge = document.getElementById("navTradesCountBadge");
+  if (navBadge) navBadge.textContent = data.totalTradesCount || 0;
+
+  const countBadge = document.getElementById("tradesCountBadge");
+  if (countBadge) countBadge.textContent = `${data.totalTradesCount || 0} Trades (${data.sellTradesCount || 0} Closed)`;
+
+  // Stat Cards
+  const pnlEl = document.getElementById("statTradeRealizedPnL");
+  const pnlSub = document.getElementById("statTradeRealizedSub");
+  if (pnlEl) {
+    const pnl = data.totalRealizedPnL || 0;
+    pnlEl.textContent = `${pnl >= 0 ? '+' : '-'}₹${formatINR(Math.abs(pnl))}`;
+    pnlEl.className = `text-xl sm:text-2xl font-bold font-mono ${pnl >= 0 ? 'text-emerald-400' : 'text-rose-400'} mt-1`;
+  }
+  if (pnlSub) {
+    const wins = data.winningTradesCount || 0;
+    const losses = data.losingTradesCount || 0;
+    pnlSub.textContent = `${wins} Winners • ${losses} Losses`;
+  }
+
+  const winRateEl = document.getElementById("statTradeWinRate");
+  const winLossRatioEl = document.getElementById("statTradeWinLossRatio");
+  if (winRateEl) {
+    winRateEl.textContent = `${(data.winRatePercent || 0).toFixed(1)}%`;
+    winRateEl.className = `text-xl sm:text-2xl font-bold font-mono ${data.winRatePercent >= 50 ? 'text-emerald-400' : 'text-amber-400'} mt-1`;
+  }
+  if (winLossRatioEl) {
+    winLossRatioEl.textContent = `${data.winningTradesCount || 0}W / ${data.losingTradesCount || 0}L`;
+  }
+
+  const pfEl = document.getElementById("statTradeProfitFactor");
+  if (pfEl) {
+    pfEl.textContent = `${(data.profitFactor || 0).toFixed(2)}x`;
+  }
+
+  const stcgEl = document.getElementById("statTradeStcg");
+  if (stcgEl) {
+    const stcg = data.shortTermCapitalGainsPnL || 0;
+    stcgEl.textContent = `${stcg >= 0 ? '+' : '-'}₹${formatINR(Math.abs(stcg))}`;
+    stcgEl.className = `text-xl sm:text-2xl font-bold font-mono ${stcg >= 0 ? 'text-emerald-300' : 'text-rose-300'} mt-1`;
+  }
+
+  const ltcgEl = document.getElementById("statTradeLtcg");
+  if (ltcgEl) {
+    const ltcg = data.longTermCapitalGainsPnL || 0;
+    ltcgEl.textContent = `${ltcg >= 0 ? '+' : '-'}₹${formatINR(Math.abs(ltcg))}`;
+    ltcgEl.className = `text-xl sm:text-2xl font-bold font-mono ${ltcg >= 0 ? 'text-emerald-300' : 'text-rose-300'} mt-1`;
+  }
+
+  const avgDaysEl = document.getElementById("statTradeAvgDays");
+  if (avgDaysEl) {
+    avgDaysEl.textContent = data.averageHoldingDays > 0 ? `${data.averageHoldingDays.toFixed(0)} Days` : "Intraday / Swing";
+  }
+
+  // Visual Ratio Bar
+  const grossWins = data.realizedProfitOnly || 0;
+  const grossLosses = data.realizedLossOnly || 0;
+  const grossWinsEl = document.getElementById("statGrossGainsVal");
+  const grossLossesEl = document.getElementById("statGrossLossesVal");
+  if (grossWinsEl) grossWinsEl.textContent = `+₹${formatINR(grossWins)}`;
+  if (grossLossesEl) grossLossesEl.textContent = `-₹${formatINR(grossLosses)}`;
+
+  const totalGross = grossWins + grossLosses;
+  const winBar = document.getElementById("barGainsRatio");
+  const lossBar = document.getElementById("barLossesRatio");
+  if (winBar && lossBar) {
+    if (totalGross > 0) {
+      const winPct = Math.round((grossWins / totalGross) * 100);
+      winBar.style.width = `${winPct}%`;
+      lossBar.style.width = `${100 - winPct}%`;
+    } else {
+      winBar.style.width = "50%";
+      lossBar.style.width = "50%";
+    }
+  }
+
+  // Render Top Traded Stocks
+  renderTopTradedStocks(data.topTradedStocks || []);
+
+  // Render Trades Table
+  renderTradesTable();
+}
+
+function renderTopTradedStocks(stocks) {
+  const container = document.getElementById("topTradedStocksContainer");
+  if (!container) return;
+
+  if (stocks.length === 0) {
+    container.innerHTML = `
+      <div class="p-3 rounded-xl bg-slate-950/60 text-slate-400 text-center italic col-span-2">
+        No closed trade records logged yet. Import a Zerodha or Angel One tradebook to generate analytics.
+      </div>`;
+    return;
+  }
+
+  container.innerHTML = stocks.slice(0, 6).map(s => {
+    const isProfit = s.totalRealizedPnL >= 0;
+    return `
+      <div class="p-3 rounded-xl bg-slate-950/70 border border-slate-800/80 hover:border-slate-700 transition flex items-center justify-between">
+        <div>
+          <div class="font-bold text-white font-mono flex items-center space-x-1.5">
+            <span>${escapeHtml(s.ticker)}</span>
+            <span class="text-[10px] px-1.5 py-0.2 rounded bg-slate-800 text-slate-300 font-sans">${s.tradeCount} trades</span>
+          </div>
+          <div class="text-[10px] text-slate-400 mt-0.5 truncate max-w-[140px]">${escapeHtml(s.stockName || s.ticker)}</div>
+          <div class="text-[10px] font-mono text-cyan-400 mt-0.5">Win Rate: ${s.winRatePercent.toFixed(0)}%</div>
+        </div>
+        <div class="text-right">
+          <div class="font-mono font-bold text-xs ${isProfit ? 'text-emerald-400' : 'text-rose-400'}">
+            ${isProfit ? '+' : '-'}₹${formatINR(Math.abs(s.totalRealizedPnL))}
+          </div>
+          <div class="text-[9px] text-slate-500 font-mono">Vol: ${formatINR(s.totalVolume)} shs</div>
+        </div>
+      </div>
+    `;
+  }).join('');
+}
+
+function filterTradesTable(filter) {
+  currentTradesFilter = filter;
+  ['All', 'Buy', 'Sell', 'Wins'].forEach(f => {
+    const btn = document.getElementById(`filterTrade${f}`);
+    if (btn) {
+      if (f.toUpperCase() === filter) {
+        btn.className = "px-2.5 py-1 rounded text-teal-300 bg-teal-500/20 font-bold transition";
+      } else {
+        btn.className = "px-2.5 py-1 rounded text-slate-400 hover:text-white transition";
+      }
+    }
+  });
+  renderTradesTable();
+}
+
+function searchTradesTable() {
+  currentTradesSearch = (document.getElementById("txtSearchTrades")?.value || "").trim().toLowerCase();
+  renderTradesTable();
+}
+
+function renderTradesTable() {
+  const tbody = document.getElementById("tradesTableBody");
+  if (!tbody) return;
+
+  const allTrades = currentTradeAnalyticsData?.recentTrades || [];
+  if (allTrades.length === 0) {
+    tbody.innerHTML = `
+      <tr>
+        <td colspan="11" class="text-center py-8 text-slate-400 italic">
+          No trades recorded yet. Upload a Zerodha Tradebook or Angel One export above to see historical P&L.
+        </td>
+      </tr>`;
+    return;
+  }
+
+  let filtered = allTrades.filter(t => {
+    if (currentTradesFilter === 'BUY' && t.action !== 'BUY') return false;
+    if (currentTradesFilter === 'SELL' && t.action !== 'SELL') return false;
+    if (currentTradesFilter === 'WINS' && (t.realizedPnL == null || t.realizedPnL <= 0)) return false;
+
+    if (currentTradesSearch) {
+      const matchTicker = t.ticker.toLowerCase().includes(currentTradesSearch);
+      const matchName = (t.stockName || "").toLowerCase().includes(currentTradesSearch);
+      const matchOrder = (t.orderId || "").toLowerCase().includes(currentTradesSearch);
+      if (!matchTicker && !matchName && !matchOrder) return false;
+    }
+
+    return true;
+  });
+
+  if (filtered.length === 0) {
+    tbody.innerHTML = `
+      <tr>
+        <td colspan="11" class="text-center py-6 text-slate-400 italic">
+          No trades match the current filter or search criteria.
+        </td>
+      </tr>`;
+    return;
+  }
+
+  tbody.innerHTML = filtered.map(t => {
+    const isBuy = t.action === 'BUY';
+    const actionBadge = isBuy
+      ? `<span class="px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-emerald-500/15 text-emerald-300 border border-emerald-500/30">BUY</span>`
+      : `<span class="px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-rose-500/15 text-rose-300 border border-rose-500/30">SELL</span>`;
+
+    let pnlDisplay = '<span class="text-slate-500 font-mono">--</span>';
+    if (t.realizedPnL != null) {
+      const isPos = t.realizedPnL >= 0;
+      const color = isPos ? 'text-emerald-400' : 'text-rose-400';
+      const pct = t.realizedPnLPercent != null ? `(${isPos ? '+' : ''}${t.realizedPnLPercent.toFixed(1)}%)` : '';
+      pnlDisplay = `<span class="font-mono font-bold ${color}">${isPos ? '+' : '-'}₹${formatINR(Math.abs(t.realizedPnL))} <span class="text-[10px] font-normal">${pct}</span></span>`;
+    }
+
+    const holdingDisplay = t.holdingDays != null
+      ? `<span class="font-mono text-slate-300 text-[11px]">${t.holdingDays}d</span>`
+      : '<span class="text-slate-500 font-mono">--</span>';
+
+    const taxDisplay = t.taxClassification
+      ? `<span class="px-1.5 py-0.2 rounded text-[9px] font-mono font-semibold ${t.taxClassification.startsWith('LTCG') ? 'bg-emerald-500/10 text-emerald-300 border border-emerald-500/20' : 'bg-amber-500/10 text-amber-300 border border-amber-500/20'}">${t.taxClassification.split(' ')[0]}</span>`
+      : '<span class="text-slate-500 font-mono">--</span>';
+
+    const dateStr = t.tradeDate ? new Date(t.tradeDate).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' }) : '--';
+
+    return `
+      <tr class="hover:bg-slate-800/40 transition">
+        <td class="px-4 py-3 font-mono text-slate-400 whitespace-nowrap">${dateStr}</td>
+        <td class="px-4 py-3">
+          <div class="font-bold text-white font-mono">${escapeHtml(t.ticker)}</div>
+          <div class="text-[10px] text-slate-400 truncate max-w-[140px]">${escapeHtml(t.stockName || t.ticker)}</div>
+        </td>
+        <td class="px-3 py-3 text-center">${actionBadge}</td>
+        <td class="px-3 py-3 text-right font-mono text-slate-200 font-semibold">${t.quantity}</td>
+        <td class="px-3 py-3 text-right font-mono text-white font-semibold">₹${t.price.toFixed(2)}</td>
+        <td class="px-3 py-3 text-right font-mono text-slate-300">₹${formatINR(t.tradeValue)}</td>
+        <td class="px-3 py-3 text-right font-mono text-slate-400">${t.costBasisPrice ? `₹${t.costBasisPrice.toFixed(2)}` : '--'}</td>
+        <td class="px-3 py-3 text-right">${pnlDisplay}</td>
+        <td class="px-3 py-3 text-center">${holdingDisplay}</td>
+        <td class="px-3 py-3 text-center">${taxDisplay}</td>
+        <td class="px-3 py-3 text-[10px] text-slate-400 font-mono truncate max-w-[120px]" title="${escapeHtml(t.tradeSource || '')} ${escapeHtml(t.orderId || '')}">
+          ${escapeHtml(t.tradeSource || 'Manual')}
+        </td>
+      </tr>
+    `;
+  }).join('');
+}
+
+// -------------------------------------------------------------
+// Broker Tradebook Import Modal Operations
+// -------------------------------------------------------------
+function openTradebookImportModal() {
+  const modal = document.getElementById("modalTradebookImport");
+  if (!modal) return;
+  modal.classList.remove("hidden");
+  selectedTradebookFile = null;
+
+  const banner = document.getElementById("tradebookDetectedBanner");
+  if (banner) banner.classList.add("hidden");
+  const label = document.getElementById("tradebookDropLabel");
+  if (label) label.textContent = "Click or drag your Tradebook file here";
+  const sub = document.getElementById("tradebookDropSub");
+  if (sub) sub.textContent = "Supports Zerodha Console CSV/Excel and Angel One Exports";
+  const pwdInput = document.getElementById("txtTradebookPassword");
+  if (pwdInput) pwdInput.value = "";
+}
+
+function closeTradebookImportModal() {
+  const modal = document.getElementById("modalTradebookImport");
+  if (modal) modal.classList.add("hidden");
+  selectedTradebookFile = null;
+}
+
+function handleTradebookFileSelected(event) {
+  const file = event.target.files?.[0];
+  if (!file) return;
+  selectedTradebookFile = file;
+
+  const banner = document.getElementById("tradebookDetectedBanner");
+  const icon = document.getElementById("tradebookDetectedIcon");
+  const text = document.getElementById("tradebookDetectedText");
+  const size = document.getElementById("tradebookDetectedFileSize");
+
+  if (banner) banner.classList.remove("hidden");
+  if (text) text.textContent = file.name;
+  if (size) size.textContent = `${(file.size / 1024).toFixed(1)} KB`;
+
+  if (icon) {
+    if (file.name.toLowerCase().endsWith(".csv") || file.name.toLowerCase().endsWith(".txt")) {
+      icon.className = "fa-solid fa-file-csv text-emerald-400 text-base";
+    } else {
+      icon.className = "fa-solid fa-file-excel text-emerald-400 text-base";
+    }
+  }
+
+  const dropLabel = document.getElementById("tradebookDropLabel");
+  if (dropLabel) dropLabel.textContent = `Selected: ${file.name}`;
+}
+
+async function submitTradebookImport() {
+  if (!currentPortfolioId) return alert("Please select an active portfolio first.");
+  if (!selectedTradebookFile) return alert("Please select a Zerodha or Angel One tradebook file to upload.");
+
+  const btn = document.getElementById("btnSubmitTradebookImport");
+  const btnText = document.getElementById("btnSubmitTradebookText");
+  if (btn) btn.disabled = true;
+  if (btnText) btnText.textContent = "Matching FIFO Trades...";
+
+  const formData = new FormData();
+  formData.append("file", selectedTradebookFile);
+
+  const pwd = (document.getElementById("txtTradebookPassword")?.value || "").trim();
+  if (pwd) formData.append("password", pwd);
+
+  const clearExisting = document.getElementById("chkClearExistingTrades")?.checked || false;
+  formData.append("clearExisting", clearExisting.toString());
+
+  try {
+    const res = await fetch(`/api/portfolios/${currentPortfolioId}/import-tradebook`, {
+      method: "POST",
+      body: formData
+    });
+
+    if (res.ok) {
+      const data = await res.json();
+      closeTradebookImportModal();
+      await loadTradeAnalytics(true);
+      showToast(`🎉 Imported ${data.totalTradesParsed} trades from ${data.brokerDetected}! Matched ${data.matchedRoundTrips} closed sales with Net Realized P&L of ₹${formatINR(data.netRealizedPnL)}.`);
+    } else {
+      const err = await res.json();
+      alert(`Tradebook import failed: ${err.error || "Please verify file format."}`);
+    }
+  } catch (err) {
+    console.error("Tradebook upload error:", err);
+    alert("Network error uploading tradebook.");
+  } finally {
+    if (btn) btn.disabled = false;
+    if (btnText) btnText.textContent = "Parse & Import Trades";
+  }
+}
+
+window.loadTradeAnalytics = loadTradeAnalytics;
+window.refreshTradeAnalytics = refreshTradeAnalytics;
+window.filterTradesTable = filterTradesTable;
+window.searchTradesTable = searchTradesTable;
+window.openTradebookImportModal = openTradebookImportModal;
+window.closeTradebookImportModal = closeTradebookImportModal;
+window.handleTradebookFileSelected = handleTradebookFileSelected;
+window.submitTradebookImport = submitTradebookImport;
 

@@ -692,6 +692,11 @@
           <span>Theory Lab</span>
           <span class="ml-1 px-1.5 py-0.2 text-[9px] bg-purple-500/20 text-purple-300 rounded font-mono border border-purple-500/30">MOCK</span>
         </button>
+        <button id="navTabTrades" onclick="navigateTo('trades')" class="nav-tab px-3.5 py-1 rounded-lg text-xs font-semibold flex items-center space-x-1.5 transition text-slate-400 hover:text-slate-200 hover:bg-slate-800/50 border border-transparent">
+          <i class="fa-solid fa-chart-line-up text-[11px]"></i>
+          <span>Trade Analytics</span>
+          <span id="navTradesCountBadge" class="ml-1 px-1.5 py-0.2 text-[9px] bg-emerald-500/20 text-emerald-300 rounded font-mono border border-emerald-500/30">0</span>
+        </button>
       </nav>
 
       <!-- Right Utility Actions Cluster -->
@@ -2252,7 +2257,236 @@
     <!-- GLOBAL MODALS (Globally accessible across all views)      -->
     <!-- ======================================================== -->
 
-    <!-- What-If Trade & Strategy Swap Simulator Modal -->
+    <!-- ======================================================== -->
+    <!-- VIEW 5: TRADE ANALYTICS & JOURNAL (#/trades)              -->
+    <!-- Historical Broker Trades, Realized P&L, Win Rate & Tax   -->
+    <!-- ======================================================== -->
+    <div id="viewTrades" class="view-panel space-y-6 hidden">
+      <!-- Top Header Cockpit & Tradebook Import Banner -->
+      <div class="bg-slate-900/80 themed-card border border-slate-800 rounded-2xl p-6 backdrop-blur shadow-xl space-y-5">
+        <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-4 pb-4 border-b border-slate-800/80 themed-border">
+          <div class="flex items-center space-x-3.5">
+            <div class="w-12 h-12 rounded-2xl bg-gradient-to-tr from-emerald-500/20 to-teal-500/20 border border-emerald-500/35 flex items-center justify-center text-emerald-400 text-xl shadow-lg shadow-emerald-500/10 flex-shrink-0">
+              <i class="fa-solid fa-chart-line-up"></i>
+            </div>
+            <div>
+              <div class="flex items-center space-x-2.5 flex-wrap gap-y-1">
+                <h2 class="text-base sm:text-xl font-bold text-white tracking-tight">
+                  Trade Analytics &amp; Realized P&amp;L Journal
+                </h2>
+                <span class="px-2.5 py-0.5 rounded text-[10px] font-mono font-bold bg-emerald-500/15 text-emerald-300 border border-emerald-500/30">
+                  REALIZED GAINS &amp; LOSSES
+                </span>
+                <span class="px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-cyan-500/15 text-cyan-300 border border-cyan-500/30">
+                  TAX AUDIT READY
+                </span>
+              </div>
+              <p class="text-xs text-slate-400 mt-1 max-w-4xl">
+                Automatic trade execution journal. Upload your Zerodha Tradebook (CSV/XLSX) or Angel One Trade History to instantly analyse historical realized profits, losses, win rates, holding periods, and capital gains tax (STCG vs LTCG) without entering trades twice.
+              </p>
+            </div>
+          </div>
+
+          <div class="flex items-center space-x-2.5 flex-wrap gap-y-2">
+            <!-- Open Broker Tradebook Import Modal -->
+            <button onclick="openTradebookImportModal()" class="px-4 py-2 bg-gradient-to-r from-emerald-600 via-teal-600 to-cyan-600 hover:from-emerald-500 hover:to-cyan-500 text-slate-950 font-bold rounded-xl text-xs shadow-md transition flex items-center space-x-1.5">
+              <i class="fa-solid fa-file-import text-xs"></i>
+              <span>Import Broker Tradebook</span>
+            </button>
+            <button onclick="openTradeModal(null, 'BUY')" class="text-xs bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white px-3.5 py-2 rounded-xl border border-slate-700 transition flex items-center space-x-1.5 shadow-sm">
+              <i class="fa-solid fa-plus text-xs text-cyan-400"></i>
+              <span>Log In-App Trade</span>
+            </button>
+            <button onclick="refreshTradeAnalytics()" class="text-xs bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white px-3 py-2 rounded-xl border border-slate-700 transition flex items-center space-x-1 shadow-sm" title="Refresh trade analytics">
+              <i class="fa-solid fa-rotate text-xs"></i>
+            </button>
+          </div>
+        </div>
+
+        <!-- 6 KPI Metric Cards for Realized Performance -->
+        <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 pt-1">
+          <!-- Total Realized P&L -->
+          <div class="p-3.5 bg-slate-950/70 themed-elevated rounded-xl border border-slate-800/80 shadow-sm">
+            <div class="flex items-center justify-between text-[11px] text-slate-400 font-medium">
+              <span>Total Realized P&amp;L</span>
+              <i class="fa-solid fa-receipt text-cyan-400 text-xs"></i>
+            </div>
+            <div id="statTradeRealizedPnL" class="text-xl sm:text-2xl font-bold font-mono text-white mt-1">&#8377;0</div>
+            <div id="statTradeRealizedSub" class="text-[10px] text-slate-400 mt-0.5">Net closed profits</div>
+          </div>
+
+          <!-- Win Rate % -->
+          <div class="p-3.5 bg-slate-950/70 themed-elevated rounded-xl border border-slate-800/80 shadow-sm">
+            <div class="flex items-center justify-between text-[11px] text-slate-400 font-medium">
+              <span>Win Rate</span>
+              <span id="statTradeWinLossRatio" class="text-[10px] font-mono text-emerald-400">0W / 0L</span>
+            </div>
+            <div id="statTradeWinRate" class="text-xl sm:text-2xl font-bold font-mono text-emerald-400 mt-1">0.0%</div>
+            <div class="text-[10px] text-slate-400 mt-0.5">Profitable closed trades</div>
+          </div>
+
+          <!-- Profit Factor -->
+          <div class="p-3.5 bg-slate-950/70 themed-elevated rounded-xl border border-slate-800/80 shadow-sm">
+            <div class="flex items-center justify-between text-[11px] text-slate-400 font-medium">
+              <span>Profit Factor</span>
+              <span class="text-[9px] font-mono text-cyan-400">Wins/Losses</span>
+            </div>
+            <div id="statTradeProfitFactor" class="text-xl sm:text-2xl font-bold font-mono text-cyan-300 mt-1">0.00x</div>
+            <div class="text-[10px] text-slate-400 mt-0.5">Risk-adjusted return ratio</div>
+          </div>
+
+          <!-- Short-Term Gains (STCG) -->
+          <div class="p-3.5 bg-slate-950/70 themed-elevated rounded-xl border border-slate-800/80 shadow-sm">
+            <div class="flex items-center justify-between text-[11px] text-slate-400 font-medium">
+              <span>STCG P&amp;L (&lt;1 Yr)</span>
+              <span class="text-[9px] font-mono text-amber-400">20% Tax</span>
+            </div>
+            <div id="statTradeStcg" class="text-xl sm:text-2xl font-bold font-mono text-white mt-1">&#8377;0</div>
+            <div class="text-[10px] text-slate-400 mt-0.5">Short-term capital gain</div>
+          </div>
+
+          <!-- Long-Term Gains (LTCG) -->
+          <div class="p-3.5 bg-slate-950/70 themed-elevated rounded-xl border border-slate-800/80 shadow-sm">
+            <div class="flex items-center justify-between text-[11px] text-slate-400 font-medium">
+              <span>LTCG P&amp;L (&gt;1 Yr)</span>
+              <span class="text-[9px] font-mono text-emerald-400">12.5% Tax</span>
+            </div>
+            <div id="statTradeLtcg" class="text-xl sm:text-2xl font-bold font-mono text-white mt-1">&#8377;0</div>
+            <div class="text-[10px] text-slate-400 mt-0.5">Long-term capital gain</div>
+          </div>
+
+          <!-- Average Holding Days -->
+          <div class="p-3.5 bg-slate-950/70 themed-elevated rounded-xl border border-slate-800/80 shadow-sm">
+            <div class="flex items-center justify-between text-[11px] text-slate-400 font-medium">
+              <span>Avg Holding Period</span>
+              <i class="fa-solid fa-hourglass-half text-amber-400 text-xs"></i>
+            </div>
+            <div id="statTradeAvgDays" class="text-xl sm:text-2xl font-bold font-mono text-white mt-1">-- Days</div>
+            <div class="text-[10px] text-slate-400 mt-0.5">Average closed duration</div>
+          </div>
+        </div>
+
+        <!-- Profit vs Loss Visual Bar -->
+        <div class="p-3 rounded-xl bg-slate-950/60 themed-elevated border border-slate-800/80 space-y-1.5">
+          <div class="flex items-center justify-between text-[11px] font-mono">
+            <span class="text-emerald-400 font-bold flex items-center">
+              <i class="fa-solid fa-arrow-trend-up mr-1 text-[10px]"></i> Total Gross Gains: <span id="statGrossGainsVal" class="ml-1 text-white">&#8377;0</span>
+            </span>
+            <span class="text-rose-400 font-bold flex items-center">
+              <i class="fa-solid fa-arrow-trend-down mr-1 text-[10px]"></i> Total Gross Losses: <span id="statGrossLossesVal" class="ml-1 text-white">&#8377;0</span>
+            </span>
+          </div>
+          <div class="w-full h-2 rounded-full bg-slate-800 overflow-hidden flex">
+            <div id="barGainsRatio" class="h-full bg-emerald-500 transition-all duration-500" style="width: 50%;"></div>
+            <div id="barLossesRatio" class="h-full bg-rose-500 transition-all duration-500" style="width: 50%;"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 2-Column Split: Top Traded Stocks & Tax Harvesting Insight -->
+      <div class="grid grid-cols-1 lg:grid-cols-3 gap-5">
+        <!-- Left: Top 5 Traded Stocks by Frequency -->
+        <div class="lg:col-span-2 bg-slate-900/80 themed-card border border-slate-800 rounded-2xl p-5 space-y-3 shadow-lg">
+          <div class="flex items-center justify-between pb-2 border-b border-slate-800/80">
+            <h3 class="text-sm font-bold text-white flex items-center">
+              <i class="fa-solid fa-fire text-amber-400 mr-2"></i> Most Actively Traded Equities
+            </h3>
+            <span class="text-[10px] text-slate-400 font-mono">Volume &amp; Win Rate by Stock</span>
+          </div>
+          <div id="topTradedStocksContainer" class="grid grid-cols-1 sm:grid-cols-2 gap-2.5 text-xs">
+            <div class="p-3 rounded-xl bg-slate-950/60 text-slate-400 text-center italic col-span-2">
+              No closed trade records logged yet. Import a Zerodha or Angel One tradebook to generate analytics.
+            </div>
+          </div>
+        </div>
+
+        <!-- Right: Tax & Behavioral Insight Card -->
+        <div class="bg-slate-900/80 themed-card border border-cyan-500/30 rounded-2xl p-5 space-y-3 shadow-lg flex flex-col justify-between">
+          <div>
+            <div class="flex items-center space-x-2 pb-2 border-b border-slate-800/80">
+              <i class="fa-solid fa-scale-balanced text-cyan-400"></i>
+              <h3 class="text-sm font-bold text-white">Tax &amp; Capital Efficiency</h3>
+            </div>
+            <div class="space-y-2.5 mt-3 text-xs leading-relaxed text-slate-300">
+              <p>
+                <strong class="text-emerald-400">FIFO Matching:</strong> Every trade is matched against historical purchase lots on a First-In-First-Out basis compliant with Indian Income Tax rules.
+              </p>
+              <p>
+                <strong class="text-cyan-400">Zero Manual Duplication:</strong> Uploading your tradebook auto-calculates profit/loss without needing to manually re-enter buys and sells.
+              </p>
+              <div class="p-2.5 rounded-xl bg-slate-950/70 border border-slate-800 text-[11px] space-y-1">
+                <div class="flex justify-between">
+                  <span class="text-slate-400">STCG Bracket (&lt;365d):</span>
+                  <span class="font-mono text-amber-300 font-bold">20.0%</span>
+                </div>
+                <div class="flex justify-between">
+                  <span class="text-slate-400">LTCG Bracket (&ge;365d):</span>
+                  <span class="font-mono text-emerald-300 font-bold">12.5% (Above &#8377;1.25L)</span>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="pt-2 border-t border-slate-800 text-[11px] text-slate-500">
+            Exports match official Demat trade confirmations.
+          </div>
+        </div>
+      </div>
+
+      <!-- Full Tradebook Journal Table -->
+      <div class="bg-slate-900/90 themed-card border border-slate-800 rounded-2xl p-6 shadow-xl space-y-4">
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-slate-800/80">
+          <div>
+            <h3 class="text-base font-bold text-white flex items-center">
+              <i class="fa-solid fa-book-bookmark text-emerald-400 mr-2"></i> Executed Trades &amp; Realized P&amp;L Ledger
+              <span id="tradesCountBadge" class="ml-2.5 px-2 py-0.5 rounded-full text-[10px] font-mono font-bold bg-emerald-500/15 text-emerald-400 border border-emerald-500/30">0 Trades</span>
+            </h3>
+            <p class="text-xs text-slate-400 mt-0.5">Chronological trade records with execution price, cost basis, realized gains, and holding duration</p>
+          </div>
+
+          <!-- Table Filter & Search Controls -->
+          <div class="flex items-center space-x-2 flex-wrap gap-y-2">
+            <div class="inline-flex p-0.5 rounded-lg bg-slate-950/70 border border-slate-800 text-xs">
+              <button id="filterTradeAll" onclick="filterTradesTable('ALL')" class="px-2.5 py-1 rounded text-teal-300 bg-teal-500/20 font-bold transition">All</button>
+              <button id="filterTradeBuy" onclick="filterTradesTable('BUY')" class="px-2.5 py-1 rounded text-slate-400 hover:text-white transition">Buys</button>
+              <button id="filterTradeSell" onclick="filterTradesTable('SELL')" class="px-2.5 py-1 rounded text-slate-400 hover:text-white transition">Sells (Closed)</button>
+              <button id="filterTradeWins" onclick="filterTradesTable('WINS')" class="px-2.5 py-1 rounded text-slate-400 hover:text-white transition">Profits Only</button>
+            </div>
+            <input id="txtSearchTrades" oninput="searchTradesTable()" type="text" placeholder="Search ticker or order ID..." class="bg-slate-950/70 border border-slate-800 rounded-lg px-2.5 py-1 text-xs text-slate-200 placeholder-slate-500 focus:outline-none focus:border-cyan-500 w-44" />
+          </div>
+        </div>
+
+        <!-- Scrollable Table -->
+        <div class="overflow-x-auto rounded-xl border border-slate-800 themed-border shadow-inner max-h-[560px]">
+          <table class="w-full text-left border-collapse text-xs">
+            <thead class="sticky top-0 z-10 bg-slate-950 themed-elevated">
+              <tr class="border-b border-slate-800 text-[10px] uppercase font-mono tracking-wider text-slate-400">
+                <th class="px-4 py-3">Date &amp; Time</th>
+                <th class="px-4 py-3">Symbol / Name</th>
+                <th class="px-3 py-3 text-center">Action</th>
+                <th class="px-3 py-3 text-right">Qty</th>
+                <th class="px-3 py-3 text-right">Exec Price (₹)</th>
+                <th class="px-3 py-3 text-right">Trade Value (₹)</th>
+                <th class="px-3 py-3 text-right">Cost Basis (₹)</th>
+                <th class="px-3 py-3 text-right">Realized P&amp;L (₹)</th>
+                <th class="px-3 py-3 text-center">Holding Period</th>
+                <th class="px-3 py-3 text-center">Tax Class</th>
+                <th class="px-3 py-3">Source / Order</th>
+              </tr>
+            </thead>
+            <tbody id="tradesTableBody" class="divide-y divide-slate-800/80 themed-border bg-slate-900/40">
+              <tr>
+                <td colspan="11" class="text-center py-8 text-slate-400 italic">
+                  No trades recorded yet. Upload a Zerodha Tradebook or Angel One export above to see historical P&amp;L.
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+
+        <!-- What-If Trade & Strategy Swap Simulator Modal -->
     <div id="modalWhatIfSwap" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/85 backdrop-blur-md">
       <div class="relative w-full max-w-2xl bg-slate-900 themed-card border border-cyan-500/40 rounded-2xl p-6 shadow-2xl text-slate-100 space-y-5">
         <div class="flex items-center justify-between border-b border-slate-800 pb-3">
@@ -3391,6 +3625,84 @@
       </div>
     </div>
   </main>
+      <!-- Broker Tradebook & Historical P&L Import Wizard Modal -->
+    <div id="modalTradebookImport" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/85 backdrop-blur-md">
+      <div class="relative w-full max-w-xl bg-slate-900 themed-card border border-emerald-500/40 rounded-2xl p-6 shadow-2xl text-slate-100 space-y-5">
+        <div class="flex items-center justify-between border-b border-slate-800 pb-3">
+          <div class="flex items-center space-x-2.5">
+            <div class="w-9 h-9 rounded-xl bg-emerald-500/15 border border-emerald-500/30 flex items-center justify-center text-emerald-400">
+              <i class="fa-solid fa-file-invoice-dollar"></i>
+            </div>
+            <div>
+              <h3 class="text-base font-bold text-white">Import Broker Tradebook &amp; P&amp;L</h3>
+              <p class="text-xs text-slate-400">Zerodha Console (.csv/.xlsx) or Angel One Trade History</p>
+            </div>
+          </div>
+          <button onclick="closeTradebookImportModal()" class="text-slate-400 hover:text-white p-1 rounded-lg">
+            <i class="fa-solid fa-xmark text-base"></i>
+          </button>
+        </div>
+
+        <!-- Explainer Banner -->
+        <div class="p-3 rounded-xl bg-emerald-950/20 border border-emerald-500/30 text-xs text-slate-300 space-y-1">
+          <div class="font-bold text-emerald-400 flex items-center">
+            <i class="fa-solid fa-wand-magic-sparkles mr-1.5"></i> No Double Entry Required!
+          </div>
+          <p class="text-[11px] text-slate-300 leading-relaxed">
+            Download your tradebook from Zerodha Console (Reports &rarr; Tradebook) or Angel One, and upload it here. The engine matches every Buy and Sell automatically via FIFO to calculate realized profits, losses, win rates, and holding duration.
+          </p>
+        </div>
+
+        <!-- Drag & Drop Zone -->
+        <div id="tradebookDropzone" onclick="document.getElementById('inputTradebookFile').click()" class="border-2 border-dashed border-slate-700 hover:border-emerald-500 rounded-xl p-6 text-center cursor-pointer transition bg-slate-950/50 space-y-2">
+          <input type="file" id="inputTradebookFile" accept=".csv,.xlsx,.xls,.txt" class="hidden" onchange="handleTradebookFileSelected(event)" />
+          <div class="w-12 h-12 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 flex items-center justify-center mx-auto text-xl">
+            <i class="fa-solid fa-cloud-arrow-up"></i>
+          </div>
+          <div>
+            <div id="tradebookDropLabel" class="text-xs font-semibold text-white">Click or drag your Tradebook file here</div>
+            <div id="tradebookDropSub" class="text-[11px] text-slate-400 mt-0.5">Supports Zerodha Console CSV/Excel and Angel One Exports</div>
+          </div>
+        </div>
+
+        <!-- File Detected Banner -->
+        <div id="tradebookDetectedBanner" class="hidden p-3 rounded-xl bg-slate-950 border border-slate-800 text-xs flex items-center justify-between">
+          <div class="flex items-center space-x-2.5">
+            <i id="tradebookDetectedIcon" class="fa-solid fa-file-csv text-emerald-400 text-base"></i>
+            <div>
+              <div id="tradebookDetectedText" class="font-bold text-white">tradebook.csv</div>
+              <div id="tradebookDetectedFileSize" class="text-[10px] text-slate-400 font-mono">0 KB</div>
+            </div>
+          </div>
+          <span class="px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">Ready</span>
+        </div>
+
+        <!-- Password input (Optional for encrypted Demat statements) -->
+        <div id="tradebookPasswordRow" class="space-y-1">
+          <label class="block text-xs font-medium text-slate-400">File Password <span class="text-slate-500 text-[10px]">(Only if file is encrypted, e.g. Angel One PAN)</span></label>
+          <input id="txtTradebookPassword" type="password" placeholder="e.g. PAN in uppercase" class="w-full bg-[#060c18] border border-slate-800 rounded-xl px-3 py-2 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-emerald-500" />
+        </div>
+
+        <!-- Checkbox: Append vs Replace -->
+        <div class="flex items-center space-x-2 text-xs text-slate-300 pt-1">
+          <input type="checkbox" id="chkClearExistingTrades" class="rounded border-slate-700 text-emerald-600 focus:ring-emerald-500 bg-slate-950" />
+          <label for="chkClearExistingTrades" class="cursor-pointer">Replace existing trade records in this portfolio (uncheck to append)</label>
+        </div>
+
+        <!-- Action Buttons -->
+        <div class="flex items-center justify-end space-x-3 pt-3 border-t border-slate-800">
+          <button type="button" onclick="closeTradebookImportModal()" class="px-4 py-2 rounded-xl text-xs font-medium text-slate-400 hover:text-white transition">
+            Cancel
+          </button>
+          <button id="btnSubmitTradebookImport" type="button" onclick="submitTradebookImport()" class="px-5 py-2.5 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-slate-950 font-bold text-xs shadow-lg transition flex items-center space-x-2">
+            <i class="fa-solid fa-arrow-up-from-bracket"></i>
+            <span id="btnSubmitTradebookText">Parse &amp; Import Trades</span>
+          </button>
+        </div>
+      </div>
+    </div>
+
+
   <script src="/app.js?v=2.6.0"></script>
 </body>
 </html>

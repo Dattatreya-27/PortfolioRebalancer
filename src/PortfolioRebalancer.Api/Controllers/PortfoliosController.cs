@@ -159,6 +159,44 @@ public class PortfoliosController(
         }
     }
 
+    [HttpGet("{id:guid}/trade-analytics")]
+    public async Task<ActionResult<TradeAnalyticsDto>> GetTradeAnalytics(Guid id)
+    {
+        var analytics = await portfolioService.GetTradeAnalyticsAsync(id);
+        if (analytics is null)
+            return NotFound(new { error = $"Portfolio with ID '{id}' not found." });
+
+        return Ok(analytics);
+    }
+
+    [HttpPost("{id:guid}/import-tradebook")]
+    public async Task<ActionResult<BrokerTradebookImportResultDto>> ImportTradebookFile(
+        Guid id,
+        IFormFile file,
+        [FromForm] string? password = null,
+        [FromForm] bool clearExisting = false)
+    {
+        if (file is null || file.Length == 0)
+            return BadRequest(new { error = "Please select a valid Zerodha or Angel One tradebook file." });
+
+        try
+        {
+            using var stream = file.OpenReadStream();
+            var result = await portfolioService.ImportBrokerTradebookAsync(
+                id, stream, file.FileName, password, clearExisting);
+
+            if (result is null)
+                return NotFound(new { error = $"Portfolio with ID '{id}' not found." });
+
+            InvalidatePortfolioCache(id);
+            return Ok(result);
+        }
+        catch (Exception ex)
+        {
+            return BadRequest(new { error = ex.Message });
+        }
+    }
+
     [HttpPut("{id:guid}/holdings/{ticker}")]
     public async Task<ActionResult<PortfolioSummaryDto>> UpdateHolding(Guid id, string ticker, [FromBody] UpdateHoldingRequest request)
     {

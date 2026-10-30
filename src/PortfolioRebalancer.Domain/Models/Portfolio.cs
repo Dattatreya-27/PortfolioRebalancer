@@ -20,6 +20,9 @@ public sealed class Portfolio
     private readonly List<SectorAllocation> _targetAllocations = [];
     public IReadOnlyList<SectorAllocation> TargetAllocations => _targetAllocations.AsReadOnly();
 
+    private readonly List<TradeRecord> _trades = [];
+    public IReadOnlyList<TradeRecord> Trades => _trades.AsReadOnly();
+
     /// <summary>Total market value of all holdings.</summary>
     public Money TotalValue
     {
@@ -128,6 +131,17 @@ public sealed class Portfolio
 
         if (normalizedType == "BUY")
         {
+            _trades.Add(new TradeRecord
+            {
+                Ticker = stock.Ticker,
+                StockName = stock.Name,
+                Action = "BUY",
+                Quantity = cleanQty,
+                Price = Money.INR(Math.Round(tradePrice, 2)),
+                TradeDate = DateTime.UtcNow,
+                TradeSource = "Manual / In-App"
+            });
+
             if (existingIndex >= 0)
             {
                 var existing = _holdings[existingIndex];
@@ -158,6 +172,24 @@ public sealed class Portfolio
             if (existingIndex >= 0)
             {
                 var existing = _holdings[existingIndex];
+                var costBasis = existing.AverageBuyPrice?.Amount ?? stock.CurrentPrice.Amount;
+                var pnlAmount = Math.Round((tradePrice - costBasis) * cleanQty, 2);
+                var pnlPercent = costBasis > 0 ? Math.Round(((tradePrice - costBasis) / costBasis) * 100m, 2) : 0m;
+
+                _trades.Add(new TradeRecord
+                {
+                    Ticker = stock.Ticker,
+                    StockName = stock.Name,
+                    Action = "SELL",
+                    Quantity = cleanQty,
+                    Price = Money.INR(Math.Round(tradePrice, 2)),
+                    TradeDate = DateTime.UtcNow,
+                    TradeSource = "Manual / In-App",
+                    CostBasisPrice = costBasis,
+                    RealizedPnL = Money.INR(pnlAmount),
+                    RealizedPnLPercent = pnlPercent
+                });
+
                 if (cleanQty >= existing.Quantity)
                 {
                     _holdings.RemoveAt(existingIndex);
@@ -218,6 +250,37 @@ public sealed class Portfolio
         ArgumentNullException.ThrowIfNull(holdings);
         _holdings.Clear();
         _holdings.AddRange(holdings);
+        LastSyncedAt = DateTime.UtcNow;
+    }
+
+    /// <summary>
+    /// Adds a trade record to the portfolio's trade log.
+    /// </summary>
+    public void AddTrade(TradeRecord trade)
+    {
+        ArgumentNullException.ThrowIfNull(trade);
+        _trades.Add(trade);
+        LastSyncedAt = DateTime.UtcNow;
+    }
+
+    /// <summary>
+    /// Adds multiple trade records in bulk (e.g. from Zerodha Tradebook or Angel One Trade History import).
+    /// </summary>
+    public void AddTrades(IEnumerable<TradeRecord> trades)
+    {
+        ArgumentNullException.ThrowIfNull(trades);
+        _trades.AddRange(trades);
+        LastSyncedAt = DateTime.UtcNow;
+    }
+
+    /// <summary>
+    /// Clears and replaces all trade records.
+    /// </summary>
+    public void ReplaceTrades(IEnumerable<TradeRecord> trades)
+    {
+        ArgumentNullException.ThrowIfNull(trades);
+        _trades.Clear();
+        _trades.AddRange(trades);
         LastSyncedAt = DateTime.UtcNow;
     }
 
