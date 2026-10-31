@@ -735,6 +735,22 @@
           <span id="headerAlertsCountBadge" class="hidden px-1.5 py-0.2 rounded-full text-[9px] font-mono font-bold bg-amber-500/20 text-amber-300 border border-amber-500/30">0</span>
         </button>
 
+        <!-- User Authentication & Account Pill -->
+        <div id="headerAuthContainer" class="flex items-center">
+          <button id="btnHeaderLogin" onclick="openAuthLoginModal()" class="px-3 py-1 rounded-lg bg-teal-500/15 hover:bg-teal-500/25 border border-teal-500/30 text-teal-300 hover:text-white text-xs font-semibold flex items-center space-x-1.5 transition shadow-sm">
+            <i class="fa-solid fa-user-lock text-[11px]"></i>
+            <span>Login</span>
+          </button>
+          <div id="headerUserBadge" class="hidden flex items-center space-x-1.5 px-2.5 py-1 rounded-lg bg-slate-900/80 themed-card border border-teal-500/30 text-xs text-white">
+            <span class="w-2 h-2 rounded-full bg-emerald-400"></span>
+            <i class="fa-solid fa-circle-user text-teal-400 text-xs"></i>
+            <span id="headerUsernameText" class="font-bold text-teal-300 font-mono">Dattatreya</span>
+            <button onclick="handleAuthLogout()" class="ml-1 text-slate-400 hover:text-rose-400 p-0.5" title="Logout securely">
+              <i class="fa-solid fa-arrow-right-from-bracket text-[10px]"></i>
+            </button>
+          </div>
+        </div>
+
         <!-- More Options Dropdown Menu (⋮) -->
         <div class="relative">
           <button id="btnHeaderMore" onclick="toggleHeaderMoreDropdown()" class="p-2 rounded-lg bg-slate-900/80 themed-card hover:bg-slate-800/80 border border-slate-800 text-slate-300 hover:text-white transition" title="More Options">
@@ -3699,6 +3715,68 @@
             <span id="btnSubmitTradebookText">Parse &amp; Import Trades</span>
           </button>
         </div>
+      </div>
+    </div>
+
+
+      <!-- Secure Account Authentication Modal (OAuth 2.0 / Password) -->
+    <div id="modalAuthLogin" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/90 backdrop-blur-md">
+      <div class="relative w-full max-w-md bg-slate-900 themed-card border border-teal-500/40 rounded-2xl p-6 shadow-2xl text-slate-100 space-y-5">
+        <div class="flex items-center justify-between border-b border-slate-800 pb-3">
+          <div class="flex items-center space-x-2.5">
+            <div class="w-9 h-9 rounded-xl bg-gradient-to-tr from-teal-500/20 to-cyan-500/20 border border-teal-500/40 flex items-center justify-center text-teal-400">
+              <i class="fa-solid fa-lock"></i>
+            </div>
+            <div>
+              <h3 class="text-base font-bold text-white">Investor Authentication</h3>
+              <p class="text-[11px] text-slate-400">OAuth 2.0 / PBKDF2 Encrypted Login</p>
+            </div>
+          </div>
+          <button onclick="closeAuthLoginModal()" class="text-slate-400 hover:text-white p-1 rounded-lg">
+            <i class="fa-solid fa-xmark text-base"></i>
+          </button>
+        </div>
+
+        <!-- Security Banner -->
+        <div class="p-3 rounded-xl bg-teal-950/20 border border-teal-500/30 text-xs text-slate-300 space-y-1">
+          <div class="font-bold text-teal-400 flex items-center">
+            <i class="fa-solid fa-shield-check mr-1.5"></i> High-Grade Account Security
+          </div>
+          <p class="text-[11px] text-slate-300 leading-relaxed">
+            Secured with NIST-recommended 100,000-iteration PBKDF2 cryptographic hashing and signed JWT bearer tokens.
+          </p>
+        </div>
+
+        <!-- Login Form -->
+        <form id="formAuthLogin" onsubmit="handleAuthLogin(event)" class="space-y-4 text-xs">
+          <div>
+            <label class="block font-medium text-slate-300 mb-1">Username</label>
+            <div class="relative">
+              <i class="fa-solid fa-user absolute left-3 top-3 text-slate-500"></i>
+              <input id="inputAuthUsername" type="text" required placeholder="Enter username (e.g. Dattatreya)" class="w-full bg-[#060c18] border border-slate-800 rounded-xl pl-9 pr-3 py-2.5 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-teal-500" value="Dattatreya" />
+            </div>
+          </div>
+
+          <div>
+            <label class="block font-medium text-slate-300 mb-1">Password</label>
+            <div class="relative">
+              <i class="fa-solid fa-key absolute left-3 top-3 text-slate-500"></i>
+              <input id="inputAuthPassword" type="password" required placeholder="Enter your secure password" class="w-full bg-[#060c18] border border-slate-800 rounded-xl pl-9 pr-10 py-2.5 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-teal-500" />
+              <button type="button" onclick="toggleAuthPasswordVisibility()" class="absolute right-3 top-2.5 text-slate-500 hover:text-white text-xs">
+                <i id="iconToggleAuthPwd" class="fa-solid fa-eye"></i>
+              </button>
+            </div>
+          </div>
+
+          <div id="authErrorMessage" class="hidden p-2.5 rounded-lg bg-rose-950/30 border border-rose-500/40 text-rose-300 text-[11px]"></div>
+
+          <div class="pt-2">
+            <button id="btnSubmitAuthLogin" type="submit" class="w-full py-2.5 bg-gradient-to-r from-teal-600 via-cyan-600 to-blue-600 hover:from-teal-500 hover:to-blue-500 text-slate-950 font-bold rounded-xl text-xs shadow-lg transition flex items-center justify-center space-x-1.5">
+              <i class="fa-solid fa-arrow-right-to-bracket text-xs"></i>
+              <span id="btnSubmitAuthLoginText">Sign In to Portfolio</span>
+            </button>
+          </div>
+        </form>
       </div>
     </div>
 

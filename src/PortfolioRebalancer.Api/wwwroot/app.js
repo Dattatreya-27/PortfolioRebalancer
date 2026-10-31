@@ -560,6 +560,7 @@ document.addEventListener("DOMContentLoaded", async () => {
   applyPrivacyModeUI();
   updateWorkShieldUI();
   initRouter();
+  initAuthSession();
   renderSectorTargetInputs();
   setupEventListeners();
 
@@ -7763,4 +7764,189 @@ window.openTradebookImportModal = openTradebookImportModal;
 window.closeTradebookImportModal = closeTradebookImportModal;
 window.handleTradebookFileSelected = handleTradebookFileSelected;
 window.submitTradebookImport = submitTradebookImport;
+
+
+// ========================================================
+// USER AUTHENTICATION & OAUTH 2.0 / JWT SECURITY DESK
+// ========================================================
+let currentUserSession = null;
+
+function initAuthSession() {
+  const token = localStorage.getItem("mc_access_token");
+  const userJson = localStorage.getItem("mc_user_profile");
+
+  if (token && userJson) {
+    try {
+      currentUserSession = {
+        token: token,
+        user: JSON.parse(userJson)
+      };
+      updateAuthUI(true);
+    } catch {
+      handleAuthLogout();
+    }
+  } else {
+    updateAuthUI(false);
+  }
+}
+
+function updateAuthUI(isLoggedIn) {
+  const btnLogin = document.getElementById("btnHeaderLogin");
+  const userBadge = document.getElementById("headerUserBadge");
+  const usernameText = document.getElementById("headerUsernameText");
+
+  if (isLoggedIn && currentUserSession) {
+    if (btnLogin) btnLogin.classList.add("hidden");
+    if (userBadge) userBadge.classList.remove("hidden");
+    if (usernameText) usernameText.textContent = currentUserSession.user?.username || "Dattatreya";
+  } else {
+    if (btnLogin) btnLogin.classList.remove("hidden");
+    if (userBadge) userBadge.classList.add("hidden");
+  }
+}
+
+function openAuthLoginModal() {
+  const modal = document.getElementById("modalAuthLogin");
+  if (!modal) return;
+  modal.classList.remove("hidden");
+  const errBox = document.getElementById("authErrorMessage");
+  if (errBox) errBox.classList.add("hidden");
+  const pwdInput = document.getElementById("inputAuthPassword");
+  if (pwdInput) {
+    pwdInput.value = "";
+    pwdInput.focus();
+  }
+}
+
+function closeAuthLoginModal() {
+  const modal = document.getElementById("modalAuthLogin");
+  if (modal) modal.classList.add("hidden");
+}
+
+function toggleAuthPasswordVisibility() {
+  const pwdInput = document.getElementById("inputAuthPassword");
+  const icon = document.getElementById("iconToggleAuthPwd");
+  if (!pwdInput || !icon) return;
+
+  if (pwdInput.type === "password") {
+    pwdInput.type = "text";
+    icon.className = "fa-solid fa-eye-slash";
+  } else {
+    pwdInput.type = "password";
+    icon.className = "fa-solid fa-eye";
+  }
+}
+
+async function handleAuthLogin(event) {
+  event.preventDefault();
+  const username = (document.getElementById("inputAuthUsername")?.value || "").trim();
+  const password = document.getElementById("inputAuthPassword")?.value || "";
+  const errBox = document.getElementById("authErrorMessage");
+  const btnText = document.getElementById("btnSubmitAuthLoginText");
+  const btn = document.getElementById("btnSubmitAuthLogin");
+
+  if (!username || !password) {
+    if (errBox) {
+      errBox.textContent = "Please enter both username and password.";
+      errBox.classList.remove("hidden");
+    }
+    return;
+  }
+
+  if (btn) btn.disabled = true;
+  if (btnText) btnText.textContent = "Verifying Credentials...";
+
+  try {
+    const res = await fetch("/api/auth/login", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ username, password })
+    });
+
+    if (res.ok) {
+      const data = await res.json();
+      currentUserSession = {
+        token: data.access_token,
+        user: data.user
+      };
+      localStorage.setItem("mc_access_token", data.access_token);
+      localStorage.setItem("mc_user_profile", JSON.stringify(data.user));
+
+      updateAuthUI(true);
+      closeAuthLoginModal();
+      showToast(`🔐 Welcome, ${data.user.fullName || data.user.username}! Secure session established.`);
+
+      // If user has specific allowed portfolios, select Dattatreya Portfolio if available
+      if (data.user.allowedPortfolioIds && data.user.allowedPortfolioIds.length > 0) {
+        const targetId = data.user.allowedPortfolioIds.find(id => id === "c2a566a2-3948-4441-9a9c-c0089136eacb") || data.user.allowedPortfolioIds[0];
+        if (targetId && typeof selectPortfolio === "function") {
+          selectPortfolio(targetId);
+        }
+      }
+    } else {
+      const err = await res.json();
+      if (errBox) {
+        errBox.textContent = err.error || "Authentication failed. Invalid username or password.";
+        errBox.classList.remove("hidden");
+      }
+    }
+  } catch (err) {
+    console.error("Login request error:", err);
+    if (errBox) {
+      errBox.textContent = "Network error connecting to authentication service.";
+      errBox.classList.remove("hidden");
+    }
+  } finally {
+    if (btn) btn.disabled = false;
+    if (btnText) btnText.textContent = "Sign In to Portfolio";
+  }
+}
+
+function handleAuthLogout() {
+  currentUserSession = null;
+  localStorage.removeItem("mc_access_token");
+  localStorage.removeItem("mc_user_profile");
+  updateAuthUI(false);
+  showToast("🔒 Securely logged out. Session closed.");
+}
+
+// Global fetch interceptor to append JWT Bearer Authorization header to API calls
+const originalFetch = window.fetch;
+window.fetch = async function(...args) {
+  let [resource, config] = args;
+  const token = localStorage.getItem("mc_access_token");
+
+  if (token) {
+    config = config || {};
+    config.headers = config.headers || {};
+    if (config.headers instanceof Headers) {
+      if (!config.headers.has("Authorization")) {
+        config.headers.set("Authorization", `Bearer ${token}`);
+      }
+    } else if (Array.isArray(config.headers)) {
+      if (!config.headers.some(h => h[0].toLowerCase() === "authorization")) {
+        config.headers.push(["Authorization", `Bearer ${token}`]);
+      }
+    } else {
+      if (!config.headers["Authorization"]) {
+        config.headers["Authorization"] = `Bearer ${token}`;
+      }
+    }
+  }
+
+  const response = await originalFetch(resource, config);
+  if (response.status === 401 && token) {
+    // Session expired
+    handleAuthLogout();
+    openAuthLoginModal();
+  }
+  return response;
+};
+
+window.initAuthSession = initAuthSession;
+window.openAuthLoginModal = openAuthLoginModal;
+window.closeAuthLoginModal = closeAuthLoginModal;
+window.toggleAuthPasswordVisibility = toggleAuthPasswordVisibility;
+window.handleAuthLogin = handleAuthLogin;
+window.handleAuthLogout = handleAuthLogout;
 

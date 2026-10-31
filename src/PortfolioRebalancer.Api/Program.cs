@@ -1,9 +1,46 @@
-using Microsoft.AspNetCore.ResponseCompression;
 using System.IO.Compression;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.ResponseCompression;
+using Microsoft.IdentityModel.Tokens;
 using PortfolioRebalancer.Api.Configuration;
+using PortfolioRebalancer.Api.Security;
 using Scalar.AspNetCore;
 
 var builder = WebApplication.CreateBuilder(args);
+
+// Security: User & Token Services
+builder.Services.AddSingleton<IUserService, UserService>();
+builder.Services.AddSingleton<ITokenService, TokenService>();
+
+// Build temporary provider to get TokenService key for JWT configuration
+using (var tempProvider = builder.Services.BuildServiceProvider())
+{
+    var tokenService = tempProvider.GetRequiredService<ITokenService>();
+
+    builder.Services.AddAuthentication(options =>
+    {
+        options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+        options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+    })
+    .AddJwtBearer(options =>
+    {
+        options.RequireHttpsMetadata = false;
+        options.SaveToken = true;
+        options.TokenValidationParameters = new TokenValidationParameters
+        {
+            ValidateIssuer = true,
+            ValidIssuer = tokenService.Issuer,
+            ValidateAudience = true,
+            ValidAudience = tokenService.Audience,
+            ValidateIssuerSigningKey = true,
+            IssuerSigningKey = tokenService.SecurityKey,
+            ValidateLifetime = true,
+            ClockSkew = TimeSpan.FromMinutes(2)
+        };
+    });
+}
+
+builder.Services.AddAuthorization();
 
 // Add API controllers, ProblemDetails, OpenAPI & HealthChecks
 builder.Services.AddControllers();
@@ -100,6 +137,8 @@ app.UseStaticFiles(new StaticFileOptions
     }
 });
 
+// Authentication & Authorization middleware
+app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllers();
