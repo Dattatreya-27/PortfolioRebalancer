@@ -734,9 +734,9 @@ function quickInspectTicker(ticker) {
   const inp = document.getElementById("inspectorTicker");
   if (inp) {
     inp.value = ticker;
-    handleInspectStock();
     inp.scrollIntoView({ behavior: 'smooth', block: 'center' });
   }
+  handleInspectStock(ticker);
 }
 
 async function loadPortfolios() {
@@ -2628,18 +2628,65 @@ async function loadAndRenderStockChart(ticker, range = '1y', mos = 0) {
   }
 }
 
-async function handleInspectStock() {
-  const ticker = document.getElementById("inspectorTicker").value.trim().toUpperCase();
-  if (!ticker) return;
+async function handleInspectStock(targetTicker = null) {
+  const inputEl = document.getElementById("inspectorTicker");
+  let ticker = (targetTicker || inputEl?.value || "").trim().toUpperCase();
+
+  // Strip common suffixes/prefixes like .NS, .BO, NSE:, BSE:
+  ticker = ticker.replace(/\.NS$/i, '').replace(/\.BO$/i, '').replace(/^NSE:/i, '').replace(/^BSE:/i, '').trim();
+
+  if (!ticker) {
+    if (inputEl) inputEl.focus();
+    return;
+  }
+
+  if (inputEl) {
+    inputEl.value = ticker;
+  }
+
+  // Dismiss suggestions dropdown if visible
+  const dropdown = document.getElementById("inspectorTickerSuggestions");
+  if (dropdown) dropdown.classList.add("hidden");
+
+  // Ensure Discover view is visible if user triggered inspection from elsewhere
+  const discoverPanel = document.getElementById("viewDiscover");
+  if (discoverPanel && discoverPanel.classList.contains("hidden")) {
+    navigateTo('discover');
+  }
 
   const resultContainer = document.getElementById("stockInspectorResult");
+  if (!resultContainer) return;
   resultContainer.classList.remove("hidden");
-  resultContainer.innerHTML = `<div class="text-slate-400 py-3 text-center"><i class="fa-solid fa-circle-notch fa-spin text-teal-400 mr-2"></i>Running 5-Pillar Institutional Equity Research Engine for ${ticker}...</div>`;
+  resultContainer.innerHTML = `
+    <div class="text-slate-300 py-8 text-center space-y-2">
+      <div class="flex items-center justify-center space-x-2 text-cyan-400">
+        <i class="fa-solid fa-circle-notch fa-spin text-lg"></i>
+        <span class="font-bold text-sm">Running 5-Pillar Institutional Equity Research Engine for ${ticker}...</span>
+      </div>
+      <p class="text-xs text-slate-400">Evaluating ROCE Quality, Peer PEG Valuation, Sector Cycle, Governance & Union Policy Tailwinds</p>
+    </div>`;
 
   try {
-    const res = await fetch(`/api/stocks/${ticker}`);
+    const res = await fetch(`/api/stocks/${encodeURIComponent(ticker)}`);
     if (!res.ok) {
-      resultContainer.innerHTML = `<div class="text-rose-400 p-3 bg-rose-950/20 border border-rose-500/30 rounded-lg">Stock '${ticker}' not found in registry.</div>`;
+      resultContainer.innerHTML = `
+        <div class="p-4 bg-rose-950/25 border border-rose-500/40 rounded-xl text-rose-300 text-xs space-y-2">
+          <div class="flex items-center space-x-2 text-rose-400 font-bold">
+            <i class="fa-solid fa-triangle-exclamation text-sm"></i>
+            <span>Stock '${ticker}' not found in registry</span>
+          </div>
+          <p class="text-slate-300">
+            Please ensure you have entered a valid NSE symbol. Try quick-inspecting one of these popular stocks:
+          </p>
+          <div class="pt-1 flex flex-wrap items-center gap-1.5 text-[11px]">
+            <button type="button" onclick="handleInspectStock('KPITTECH')" class="px-2.5 py-1 rounded-lg bg-[#060c18] hover:bg-[#0f1b32] text-cyan-300 border border-[#16233d] font-mono font-semibold transition">KPITTECH</button>
+            <button type="button" onclick="handleInspectStock('RELIANCE')" class="px-2.5 py-1 rounded-lg bg-[#060c18] hover:bg-[#0f1b32] text-cyan-300 border border-[#16233d] font-mono font-semibold transition">RELIANCE</button>
+            <button type="button" onclick="handleInspectStock('TRENT')" class="px-2.5 py-1 rounded-lg bg-[#060c18] hover:bg-[#0f1b32] text-cyan-300 border border-[#16233d] font-mono font-semibold transition">TRENT</button>
+            <button type="button" onclick="handleInspectStock('BEL')" class="px-2.5 py-1 rounded-lg bg-[#060c18] hover:bg-[#0f1b32] text-cyan-300 border border-[#16233d] font-mono font-semibold transition">BEL</button>
+            <button type="button" onclick="handleInspectStock('TCS')" class="px-2.5 py-1 rounded-lg bg-[#060c18] hover:bg-[#0f1b32] text-cyan-300 border border-[#16233d] font-mono font-semibold transition">TCS</button>
+            <button type="button" onclick="handleInspectStock('HDFCBANK')" class="px-2.5 py-1 rounded-lg bg-[#060c18] hover:bg-[#0f1b32] text-cyan-300 border border-[#16233d] font-mono font-semibold transition">HDFCBANK</button>
+          </div>
+        </div>`;
       return;
     }
     const data = await res.json();
@@ -4055,6 +4102,7 @@ window.navigateTo = navigateTo;
 window.applySectorPreset = applySectorPreset;
 window.clearDiagnosticFilter = clearDiagnosticFilter;
 window.quickInspectTicker = quickInspectTicker;
+window.handleInspectStock = handleInspectStock;
 window.inspectFromRow = inspectFromRow;
 window.handleRemoveHolding = handleRemoveHolding;
 window.handleTogglePrivacy = handleTogglePrivacy;
@@ -6135,6 +6183,9 @@ function setupStockSearchAutocomplete() {
     });
 
     return {
+      hasActive() {
+        return activeIndex >= 0 && activeIndex < rows.length;
+      },
       navigate(direction) {
         if (rows.length === 0) return;
         rows.forEach(r => r.classList.remove("active"));
@@ -6240,7 +6291,12 @@ function setupStockSearchAutocomplete() {
           activeNav?.navigate("up");
         } else if (e.key === "Enter") {
           e.preventDefault();
-          activeNav?.selectActive();
+          if (activeNav && activeNav.hasActive && activeNav.hasActive()) {
+            activeNav.selectActive();
+          } else {
+            inspectorDropdown.classList.add("hidden");
+            handleInspectStock();
+          }
         } else if (e.key === "Escape") {
           holdingsDropdown.classList.add("hidden");
         }

@@ -32,8 +32,25 @@ public sealed class YahooFinanceLiveStockDataProvider : IStockDataProvider, IDis
         ["AJRINFRA"] = "AJRINFRA.BO",
         ["GUJENERGY"] = "GUJENERGY.NS",
         ["GUJGASLTD"] = "GUJENERGY.NS",
-        ["FRETAIL"] = "FRETAIL.BO"
+        ["FRETAIL"] = "FRETAIL.BO",
+        ["ZOMATO"] = "ETERNAL.NS",
+        ["PAYTM"] = "PAYTM.NS"
     };
+
+    private static string NormalizeTicker(string ticker)
+    {
+        var clean = ticker.Trim().ToUpperInvariant();
+        if (clean.StartsWith("NSE:", StringComparison.OrdinalIgnoreCase))
+            clean = clean[4..];
+        else if (clean.StartsWith("BSE:", StringComparison.OrdinalIgnoreCase))
+            clean = clean[4..];
+
+        if (clean.EndsWith(".NS", StringComparison.OrdinalIgnoreCase))
+            clean = clean[..^3];
+        else if (clean.EndsWith(".BO", StringComparison.OrdinalIgnoreCase))
+            clean = clean[..^3];
+        return clean.Trim();
+    }
 
     private string? _crumb;
     private DateTime _crumbFetchedAt = DateTime.MinValue;
@@ -67,7 +84,8 @@ public sealed class YahooFinanceLiveStockDataProvider : IStockDataProvider, IDis
     public async Task<IReadOnlyList<Stock>> GetStocksAsync(IEnumerable<string> tickers)
     {
         var tickerList = tickers.Where(t => !string.IsNullOrWhiteSpace(t))
-                                .Select(t => t.Trim().ToUpperInvariant())
+                                .Select(NormalizeTicker)
+                                .Where(t => !string.IsNullOrWhiteSpace(t))
                                 .Distinct()
                                 .ToList();
 
