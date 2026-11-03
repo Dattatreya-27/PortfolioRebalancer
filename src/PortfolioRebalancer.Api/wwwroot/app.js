@@ -1927,8 +1927,6 @@ function renderDiagnosticsUI(diag) {
         const pChange = document.getElementById("regimeNiftyChange");
         const pBreadth = document.getElementById("regimeBreadth");
         const pVix = document.getElementById("regimeVix");
-        const pBanner = document.getElementById("briefingPolicyText");
-
         if (pPrice) pPrice.textContent = Number(mr.niftyCurrent).toLocaleString('en-IN');
         if (pChange) {
           pChange.textContent = (mr.niftyChangePercent >= 0 ? '+' : '') + mr.niftyChangePercent.toFixed(2) + '%';
@@ -1938,77 +1936,6 @@ function renderDiagnosticsUI(diag) {
         if (pVix) {
           pVix.textContent = mr.indiaVix.toFixed(1);
           pVix.className = `font-bold font-mono ${mr.indiaVix > 20 ? 'text-rose-400' : 'text-emerald-400'}`;
-        }
-        if (pBanner) pBanner.textContent = mr.rebalancePolicyVerdict;
-      }
-
-      // Column 1: Action Bullets & Noise vs Decay Ratio
-      const bulletListEl = document.getElementById("briefingBulletList");
-      const ratioEl = document.getElementById("briefingSoundRatio");
-      if (ratioEl) {
-        ratioEl.textContent = `${mb.soundHoldingsCount} Noise (Hold) / ${mb.attentionPositionsCount} Decay (Trim)`;
-        ratioEl.title = `Noise vs Decay Audit: ${mb.soundHoldingsCount} stocks are experiencing healthy consolidation (do not sell) vs ${mb.attentionPositionsCount} with true structural drag.`;
-      }
-
-      if (bulletListEl) {
-        bulletListEl.innerHTML = mb.actionBullets.map(b => `
-          <li class="flex items-start space-x-2">
-            <i class="fa-solid fa-circle-check text-emerald-400 text-[10px] mt-1 flex-shrink-0"></i>
-            <span>${b}</span>
-          </li>
-        `).join('');
-      }
-
-      // Column 2: Positions in Red to Hold with Conviction (Dormant Giants)
-      const holdListEl = document.getElementById("briefingHoldList");
-      if (holdListEl) {
-        if (!mb.keyPositionsToHold || mb.keyPositionsToHold.length === 0) {
-          holdListEl.innerHTML = `<div class="text-slate-400 text-xs py-2 italic">Zero positions at a deep drawdown. Capital is intact!</div>`;
-        } else {
-          holdListEl.innerHTML = mb.keyPositionsToHold.map(h => `
-            <div class="p-2 rounded-lg bg-[#0a1222] border border-amber-500/25 space-y-1">
-              <div class="flex items-center justify-between">
-                <span class="font-bold text-white flex items-center">
-                  <span class="text-amber-400 font-mono mr-1.5">${h.ticker}</span>
-                  <span class="text-[10px] text-slate-400 truncate max-w-[120px]">${h.name}</span>
-                </span>
-                <span class="font-mono font-bold text-rose-400 text-[10px]">${h.unrealizedPnLPercent.toFixed(1)}%</span>
-              </div>
-              <div class="text-[10px] text-slate-300 leading-tight">
-                <strong class="text-amber-300">Moat:</strong> ${h.fundamentalMoat}
-              </div>
-              <div class="text-[9px] text-slate-400">
-                ${h.actionRule}
-              </div>
-            </div>
-          `).join('');
-        }
-      }
-
-      // Column 3: The Broken Theses / High-Conviction Swaps
-      const swapListEl = document.getElementById("briefingSwapList");
-      if (swapListEl) {
-        if (!mb.trapsToTrim || mb.trapsToTrim.length === 0) {
-          swapListEl.innerHTML = `<div class="text-slate-400 text-xs py-2 italic flex items-center text-emerald-400"><i class="fa-solid fa-shield-check mr-1.5"></i> Zero structural traps! 100% of holdings are viable businesses.</div>`;
-        } else {
-          swapListEl.innerHTML = mb.trapsToTrim.map(t => `
-            <div class="p-2 rounded-lg bg-[#0a1222] border border-rose-500/30 space-y-1.5">
-              <div class="flex items-center justify-between">
-                <span class="font-bold text-rose-300 font-mono">${t.ticker}</span>
-                <span class="text-[9px] font-mono px-1.5 py-0.2 rounded bg-rose-500/15 text-rose-400 border border-rose-500/30">BROKEN THESIS</span>
-              </div>
-              <p class="text-[10px] text-slate-400 leading-tight">${t.coreDiagnosis}</p>
-              ${t.recommendedSwapTicker ? `
-                <div class="p-1.5 rounded bg-[#060c18] border border-cyan-500/20 text-[9px] space-y-0.5">
-                  <div class="text-cyan-300 font-bold flex items-center justify-between">
-                    <span>Conviction Swap: &rarr; ${t.recommendedSwapTicker} (${t.recommendedSwapName})</span>
-                    <button type="button" onclick="quickInspectTicker('${t.recommendedSwapTicker}')" class="text-[8px] px-1 bg-cyan-500/20 text-cyan-200 rounded hover:bg-cyan-500/30">Inspect</button>
-                  </div>
-                  <div class="text-slate-400">${t.swapAdvantage}</div>
-                </div>
-              ` : ''}
-            </div>
-          `).join('');
         }
       }
     }

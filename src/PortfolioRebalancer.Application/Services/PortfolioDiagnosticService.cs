@@ -484,22 +484,9 @@ public sealed class PortfolioDiagnosticService(
             thesisAudits.Add(new PositionThesisAuditDto(ticker, holding.Stock.Name, holding.Stock.Sector.ToString(), buyPrice, cmp, pnl, pnlPct, weight, classification, badgeClass, diagnosis, moat, actionRule, swapTicker, swapName, swapAdvantage));
         }
 
-        // 13. 1-Click Morning Executive Briefing (Pillar C)
+        // 13. Top Header Investor Greeting & Pulse
         int soundCount = portfolio.Holdings.Count - deadTraps.Count;
         int attentionCount = deadTraps.Count;
-
-        var actionBullets = new List<string>();
-        if (attentionCount == 0)
-        {
-            actionBullets.Add("Your portfolio has 100% fundamentally sound positions. Zero structural traps detected.");
-            actionBullets.Add("Broad market trend is bullish. The single best action today is: DO NOTHING. Let winners compound.");
-        }
-        else
-        {
-            actionBullets.Add($"{soundCount} of {portfolio.Holdings.Count} stocks are solid compounders. DO NOT panic-sell them on red market days.");
-            actionBullets.Add($"Only {attentionCount} holding(s) ({string.Join(", ", deadTraps.Select(d => d.Ticker))}) have broken theses where waiting for breakeven hurts you.");
-            actionBullets.Add("Consider a 1-click Conviction Swap: Move stagnant capital into high-growth leaders to recover faster.");
-        }
 
         var morningBriefing = new MorningBriefingDto(
             Greeting: DateTime.Now.Hour < 12 ? "Good Morning, Investor" : (DateTime.Now.Hour < 17 ? "Good Afternoon, Investor" : "Good Evening, Investor"),
@@ -508,9 +495,9 @@ public sealed class PortfolioDiagnosticService(
             MarketPulseSummary: $"Nifty 50 is in a {regimeTitle.ToLowerInvariant()} at {niftyPrice:N0} (+{niftyChange:F2}%). Volatility is low (India VIX {indiaVix}). Macro liquidity supports domestic equity leaders.",
             SoundHoldingsCount: soundCount,
             AttentionPositionsCount: attentionCount,
-            ActionBullets: actionBullets,
-            KeyPositionsToHold: dormantHoldings.OrderBy(d => d.UnrealizedPnLPercent).Take(4).ToList(),
-            TrapsToTrim: deadTraps
+            ActionBullets: Array.Empty<string>(),
+            KeyPositionsToHold: Array.Empty<PositionThesisAuditDto>(),
+            TrapsToTrim: Array.Empty<PositionThesisAuditDto>()
         );
 
         return new PortfolioDiagnosticsDto(
