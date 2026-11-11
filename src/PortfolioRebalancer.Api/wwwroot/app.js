@@ -477,8 +477,55 @@ function escapeHtml(str) {
 // ==========================================
 const APP_VIEWS = ['portfolio', 'manage', 'discover', 'theories', 'trades'];
 let activeView = 'portfolio';
+let isTradeAnalyticsEnabled = localStorage.getItem("feature_trade_analytics_enabled") === "true"; // default false (hidden)
+
+function updateTradeAnalyticsToggleUI() {
+  const navTab = document.getElementById("navTabTrades");
+  const btn = document.getElementById("btnToggleTradeAnalytics");
+  const icon = document.getElementById("tradeAnalyticsToggleIcon");
+  const label = document.getElementById("tradeAnalyticsToggleLabel");
+
+  if (navTab) {
+    if (isTradeAnalyticsEnabled) {
+      navTab.classList.remove("hidden");
+    } else {
+      navTab.classList.add("hidden");
+    }
+  }
+
+  if (btn && icon && label) {
+    if (isTradeAnalyticsEnabled) {
+      btn.className = "px-3.5 py-1.5 rounded-lg text-xs font-semibold border transition flex items-center space-x-2 shadow-sm whitespace-nowrap bg-emerald-500/15 text-emerald-300 border-emerald-500/40 hover:bg-emerald-500/25";
+      icon.className = "fa-solid fa-toggle-on text-emerald-400 text-sm";
+      label.textContent = "Enabled (Shown in Nav)";
+    } else {
+      btn.className = "px-3.5 py-1.5 rounded-lg text-xs font-semibold border transition flex items-center space-x-2 shadow-sm whitespace-nowrap bg-slate-900 text-slate-400 border-slate-800 hover:bg-slate-800 hover:text-white";
+      icon.className = "fa-solid fa-toggle-off text-slate-500 text-sm";
+      label.textContent = "Disabled (Hidden)";
+    }
+  }
+}
+
+function toggleTradeAnalyticsFeature() {
+  isTradeAnalyticsEnabled = !isTradeAnalyticsEnabled;
+  localStorage.setItem("feature_trade_analytics_enabled", isTradeAnalyticsEnabled ? "true" : "false");
+  updateTradeAnalyticsToggleUI();
+
+  if (isTradeAnalyticsEnabled) {
+    showToast("📊 Trade Analytics tab enabled in top navigation.");
+    navigateTo('trades');
+  } else {
+    showToast("🧹 Trade Analytics tab hidden to keep your workspace uncluttered.");
+    if (activeView === 'trades') {
+      navigateTo('portfolio');
+    }
+  }
+}
 
 function navigateTo(viewName, updateHash = true) {
+  if (viewName === 'trades' && !isTradeAnalyticsEnabled) {
+    viewName = 'portfolio';
+  }
   if (!APP_VIEWS.includes(viewName)) {
     viewName = 'portfolio';
   }
@@ -536,7 +583,10 @@ function navigateTo(viewName, updateHash = true) {
 
 function initRouter() {
   window.addEventListener('hashchange', () => {
-    const hash = window.location.hash.replace(/^#\/?/, '').toLowerCase();
+    let hash = window.location.hash.replace(/^#\/?/, '').toLowerCase();
+    if (hash === 'trades' && !isTradeAnalyticsEnabled) {
+      hash = 'portfolio';
+    }
     if (APP_VIEWS.includes(hash)) {
       navigateTo(hash, false);
     } else {
@@ -544,7 +594,10 @@ function initRouter() {
     }
   });
 
-  const initialHash = window.location.hash.replace(/^#\/?/, '').toLowerCase();
+  let initialHash = window.location.hash.replace(/^#\/?/, '').toLowerCase();
+  if (initialHash === 'trades' && !isTradeAnalyticsEnabled) {
+    initialHash = 'portfolio';
+  }
   if (APP_VIEWS.includes(initialHash)) {
     navigateTo(initialHash, false);
   } else {
@@ -559,6 +612,7 @@ document.addEventListener("DOMContentLoaded", async () => {
   initThemeFromStorage();
   applyPrivacyModeUI();
   updateWorkShieldUI();
+  updateTradeAnalyticsToggleUI();
   initRouter();
   initAuthSession();
   renderSectorTargetInputs();
@@ -4103,6 +4157,8 @@ window.applySectorPreset = applySectorPreset;
 window.clearDiagnosticFilter = clearDiagnosticFilter;
 window.quickInspectTicker = quickInspectTicker;
 window.handleInspectStock = handleInspectStock;
+window.toggleTradeAnalyticsFeature = toggleTradeAnalyticsFeature;
+window.updateTradeAnalyticsToggleUI = updateTradeAnalyticsToggleUI;
 window.inspectFromRow = inspectFromRow;
 window.handleRemoveHolding = handleRemoveHolding;
 window.handleTogglePrivacy = handleTogglePrivacy;

@@ -692,7 +692,7 @@
           <span>Theory Lab</span>
           <span class="ml-1 px-1.5 py-0.2 text-[9px] bg-purple-500/20 text-purple-300 rounded font-mono border border-purple-500/30">MOCK</span>
         </button>
-        <button id="navTabTrades" onclick="navigateTo('trades')" class="nav-tab px-3.5 py-1 rounded-lg text-xs font-semibold flex items-center space-x-1.5 transition text-slate-400 hover:text-slate-200 hover:bg-slate-800/50 border border-transparent">
+        <button id="navTabTrades" onclick="navigateTo('trades')" class="hidden nav-tab px-3.5 py-1 rounded-lg text-xs font-semibold flex items-center space-x-1.5 transition text-slate-400 hover:text-slate-200 hover:bg-slate-800/50 border border-transparent">
           <i class="fa-solid fa-chart-line-up text-[11px]"></i>
           <span>Trade Analytics</span>
           <span id="navTradesCountBadge" class="ml-1 px-1.5 py-0.2 text-[9px] bg-emerald-500/20 text-emerald-300 rounded font-mono border border-emerald-500/30">0</span>
@@ -1628,8 +1628,28 @@
           </div>
         </div>
 
+        <!-- Feature Toggle: Advanced Trade Analytics (Default OFF to keep screen clean & focused) -->
+        <div class="mt-4 p-3.5 rounded-xl bg-slate-950/60 border border-slate-800 flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-inner">
+          <div class="flex items-center space-x-3">
+            <div class="w-8 h-8 rounded-lg bg-emerald-500/10 border border-emerald-500/25 flex items-center justify-center text-emerald-400">
+              <i class="fa-solid fa-chart-line-up text-xs"></i>
+            </div>
+            <div>
+              <div class="flex items-center space-x-2">
+                <span class="text-xs font-bold text-white">Trade Analytics &amp; Realized P&amp;L Journal</span>
+                <span class="text-[9px] font-mono px-1.5 py-0.2 rounded bg-slate-800 text-slate-400 border border-slate-700">Optional Tab</span>
+              </div>
+              <p class="text-[11px] text-slate-400">Keep screen clutter-free. Toggle ON to show the historical broker tradebook &amp; realized P&amp;L tab in the top navigation.</p>
+            </div>
+          </div>
+          <button id="btnToggleTradeAnalytics" onclick="toggleTradeAnalyticsFeature()" class="px-3.5 py-1.5 rounded-lg text-xs font-semibold border transition flex items-center space-x-2 shadow-sm whitespace-nowrap bg-slate-900 text-slate-400 border-slate-800 hover:bg-slate-800 hover:text-white">
+            <i id="tradeAnalyticsToggleIcon" class="fa-solid fa-toggle-off text-slate-500 text-sm"></i>
+            <span id="tradeAnalyticsToggleLabel">Disabled (Hidden)</span>
+          </button>
+        </div>
+
         <!-- 2-Card Operations Hub: Angel One Sync + In-App Trade Logger Desk -->
-        <div class="grid grid-cols-1 lg:grid-cols-2 gap-5 mt-5">
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-5 mt-4">
           <!-- Card 1: Multi-Broker Hub (Zerodha + Angel One) -->
           <div class="bg-slate-950/60 border border-slate-800 rounded-xl p-5 flex flex-col justify-between space-y-4">
             <div>
@@ -2202,6 +2222,10 @@
             </button>
             <button onclick="refreshTradeAnalytics()" class="text-xs bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white px-3 py-2 rounded-xl border border-slate-700 transition flex items-center space-x-1 shadow-sm" title="Refresh trade analytics">
               <i class="fa-solid fa-rotate text-xs"></i>
+            </button>
+            <button onclick="toggleTradeAnalyticsFeature()" class="text-xs bg-slate-800/80 hover:bg-slate-700 text-slate-400 hover:text-rose-300 px-3 py-2 rounded-xl border border-slate-700 transition flex items-center space-x-1.5 shadow-sm" title="Hide Trade Analytics view from top navigation">
+              <i class="fa-solid fa-eye-slash text-xs"></i>
+              <span>Hide Tab</span>
             </button>
           </div>
         </div>
