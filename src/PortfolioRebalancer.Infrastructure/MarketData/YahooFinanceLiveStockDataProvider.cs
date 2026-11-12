@@ -34,7 +34,9 @@ public sealed class YahooFinanceLiveStockDataProvider : IStockDataProvider, IDis
         ["GUJGASLTD"] = "GUJENERGY.NS",
         ["FRETAIL"] = "FRETAIL.BO",
         ["ZOMATO"] = "ETERNAL.NS",
-        ["PAYTM"] = "PAYTM.NS"
+        ["PAYTM"] = "PAYTM.NS",
+        ["SOLAR INDUSTRIES"] = "SOLARINDS.NS",
+        ["SOLAR INDUSTRIES INDIA"] = "SOLARINDS.NS"
     };
 
     private static string NormalizeTicker(string ticker)
@@ -221,9 +223,22 @@ public sealed class YahooFinanceLiveStockDataProvider : IStockDataProvider, IDis
             // Network failure â€” fall through to fallback
         }
 
-        // 3. For any remaining missing tickers, pull from Fallback/Seed provider
+        // 3. For any remaining missing tickers, try crumb-free v8 chart API before falling back to MockStockDataProvider
         var foundTickers = results.Select(s => s.Ticker.Value).ToHashSet(StringComparer.OrdinalIgnoreCase);
         var stillMissing = tickerList.Where(t => !foundTickers.Contains(t)).ToList();
+
+        if (stillMissing.Count > 0)
+        {
+            var chartTasks = stillMissing.Select(t => TryFetchFromChartApiAsync(t));
+            var chartResults = await Task.WhenAll(chartTasks);
+            foreach (var cs in chartResults.Where(s => s is not null))
+            {
+                _cache[cs!.Ticker.Value] = (cs, DateTime.UtcNow);
+                results.Add(cs);
+                foundTickers.Add(cs.Ticker.Value);
+            }
+            stillMissing = tickerList.Where(t => !foundTickers.Contains(t)).ToList();
+        }
 
         if (stillMissing.Count > 0)
         {
@@ -236,6 +251,73 @@ public sealed class YahooFinanceLiveStockDataProvider : IStockDataProvider, IDis
         }
 
         return results;
+    }
+
+    private async Task<Stock?> TryFetchFromChartApiAsync(string originalTicker)
+    {
+        try
+        {
+            string qSymbol = SymbolAliases.TryGetValue(originalTicker, out var alias)
+                ? alias
+                : Uri.EscapeDataString(originalTicker) + ".NS";
+
+            var url = $"https://query1.finance.yahoo.com/v8/finance/chart/{qSymbol}?range=5d&interval=1d";
+            using var req = new HttpRequestMessage(HttpMethod.Get, url);
+            req.Headers.TryAddWithoutValidation("User-Agent", "Mozilla/5.0");
+
+            using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(5));
+            using var res = await _httpClient.SendAsync(req, cts.Token);
+            if (!res.IsSuccessStatusCode) return null;
+
+            using var doc = await JsonDocument.ParseAsync(await res.Content.ReadAsStreamAsync(cts.Token), cancellationToken: cts.Token);
+            var result = doc.RootElement.GetProperty("chart").GetProperty("result")[0];
+            var meta = result.GetProperty("meta");
+
+            if (!meta.TryGetProperty("regularMarketPrice", out var priceElem) || !priceElem.TryGetDecimal(out var livePrice) || livePrice <= 0)
+                return null;
+
+            decimal? prevClose = null;
+            if (result.TryGetProperty("indicators", out var ind) &&
+                ind.TryGetProperty("quote", out var quotes) &&
+                quotes.GetArrayLength() > 0 &&
+                quotes[0].TryGetProperty("close", out var closes))
+            {
+                var validCloses = new List<decimal>();
+                foreach (var c in closes.EnumerateArray())
+                {
+                    if (c.ValueKind == JsonValueKind.Number && c.TryGetDecimal(out var cv) && cv > 0)
+                        validCloses.Add(cv);
+                }
+                if (validCloses.Count >= 2)
+                    prevClose = validCloses[^2];
+            }
+
+            if (!prevClose.HasValue && meta.TryGetProperty("chartPreviousClose", out var cpElem) && cpElem.TryGetDecimal(out var cp) && cp > 0)
+                prevClose = cp;
+
+            var name = meta.TryGetProperty("shortName", out var sn) ? sn.GetString() ?? originalTicker : originalTicker;
+            var fallback = await _fallbackProvider.GetStockAsync(originalTicker);
+            var sector = fallback?.Sector ?? Sector.Industrials;
+
+            var stock = new Stock
+            {
+                Ticker = new Ticker(originalTicker),
+                Name = fallback?.Name ?? name,
+                Sector = sector
+            };
+            stock.UpdateMarketData(
+                Money.INR(livePrice),
+                fallback?.PERatio,
+                fallback?.DividendYield,
+                fallback?.MarketCap,
+                prevClose.HasValue && prevClose.Value > 0 ? Money.INR(prevClose.Value) : Money.INR(livePrice));
+
+            return stock;
+        }
+        catch
+        {
+            return null;
+        }
     }
 
     private async Task<string?> EnsureCrumbAsync()

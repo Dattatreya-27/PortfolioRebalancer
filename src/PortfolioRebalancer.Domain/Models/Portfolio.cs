@@ -99,6 +99,25 @@ public sealed class Portfolio
         }
     }
 
+    /// <summary>Updates live market quotes (including PreviousClose for accurate Daily Gain) for portfolio holdings.</summary>
+    public void UpdateHoldingQuotes(IReadOnlyDictionary<string, Stock> latestStocks)
+    {
+        for (int i = 0; i < _holdings.Count; i++)
+        {
+            var h = _holdings[i];
+            if (latestStocks.TryGetValue(h.Stock.Ticker.Value, out var fresh))
+            {
+                h.Stock.UpdateMarketData(
+                    fresh.CurrentPrice,
+                    fresh.PERatio ?? h.Stock.PERatio,
+                    fresh.DividendYield ?? h.Stock.DividendYield,
+                    fresh.MarketCap ?? h.Stock.MarketCap,
+                    fresh.PreviousClose);
+            }
+        }
+        LastSyncedAt = DateTime.UtcNow;
+    }
+
     public DateTime? LastSyncedAt { get; set; } = DateTime.UtcNow;
 
     public void AddHolding(Holding holding)

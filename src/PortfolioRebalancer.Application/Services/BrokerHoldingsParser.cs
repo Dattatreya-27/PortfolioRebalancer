@@ -158,9 +158,11 @@ public static partial class BrokerHoldingsParser
             var results = new List<BrokerParsedHoldingItem>();
             string broker = "Generic Broker";
 
-            while (reader.Read())
+            do
             {
-                // Find header row in sheet
+                while (reader.Read())
+                {
+                    // Find header row in sheet
                 int fieldCount = reader.FieldCount;
                 int tickerCol = -1, isinCol = -1, qtyCol = -1, avgCol = -1, ltpCol = -1;
 
@@ -182,12 +184,12 @@ public static partial class BrokerHoldingsParser
                         qtyCol = c;
                         if (h == "holding qty") broker = "Angel One";
                     }
-                    else if (h == "avg. cost" || h == "average price" || h == "avg price" || h == "buy price")
+                    else if (h == "avg. cost" || h == "average price" || h == "avg price" || h == "buy price" || h == "avg. cost price" || h == "buy avg" || h == "avg buy price" || h == "cost price")
                     {
                         avgCol = c;
                         if (h == "avg. cost") broker = "Zerodha";
                     }
-                    else if (h == "ltp" || h == "last price" || h == "cmp" || h == "cur. val" || h == "previous closing price")
+                    else if (h == "ltp" || h == "last price" || h == "cmp")
                     {
                         ltpCol = c;
                     }
@@ -240,7 +242,9 @@ public static partial class BrokerHoldingsParser
                     }
                     break;
                 }
-            }
+                }
+                if (results.Count > 0) break;
+            } while (reader.NextResult());
 
             if (results.Count > 0)
             {

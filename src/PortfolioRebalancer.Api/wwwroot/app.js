@@ -3595,6 +3595,14 @@ function openAngelOneModal() {
   if (tokenInput) tokenInput.value = savedToken;
   if (chkAuto) chkAuto.checked = savedAutoSync;
 
+  selectedBrokerFile = null;
+  selectedExcelFile = null;
+  const fileInput = document.getElementById("brokerFileInput");
+  if (fileInput) fileInput.value = "";
+  const banner = document.getElementById("brokerDetectedBanner");
+  if (banner) banner.classList.add("hidden");
+  const dropLabel = document.getElementById("dropzoneLabel");
+  if (dropLabel) dropLabel.innerHTML = 'Click to select or drag &amp; drop <strong>Zerodha Kite (.csv)</strong>, <strong>Console (.csv/.xlsx)</strong>, or <strong>Angel One (.xlsx)</strong>';
   switchAngelTab('excel');
   modal.classList.remove("hidden");
 }
@@ -7876,3 +7884,24 @@ window.switchIntelSubTab = switchIntelSubTab;
 window.loadIntelligenceHub = loadIntelligenceHub;
 window.loadMacroPolicyHub = loadMacroPolicyHub;
 window.filterPolicyScope = filterPolicyScope;
+
+// Wire drag-and-drop on Multi-Broker Import dropzone
+document.addEventListener("DOMContentLoaded", () => {
+  const dz = document.getElementById("excelDropzone");
+  if (!dz) return;
+  dz.addEventListener("dragover", (e) => {
+    e.preventDefault();
+    dz.classList.add("border-cyan-400", "bg-cyan-500/10");
+  });
+  dz.addEventListener("dragleave", () => {
+    dz.classList.remove("border-cyan-400", "bg-cyan-500/10");
+  });
+  dz.addEventListener("drop", (e) => {
+    e.preventDefault();
+    dz.classList.remove("border-cyan-400", "bg-cyan-500/10");
+    const file = e.dataTransfer?.files?.[0];
+    if (file) {
+      handleBrokerFileSelected({ target: { files: [file] } });
+    }
+  });
+});

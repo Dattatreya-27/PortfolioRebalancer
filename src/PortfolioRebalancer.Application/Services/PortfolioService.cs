@@ -96,8 +96,8 @@ public sealed class PortfolioService(
         if (tickers.Count > 0)
         {
             var freshStocks = await stockProvider.GetStocksAsync(tickers);
-            var priceMap = freshStocks.ToDictionary(s => s.Ticker.Value, s => s.CurrentPrice, StringComparer.OrdinalIgnoreCase);
-            portfolio.UpdateHoldingPrices(priceMap);
+            var stockMap = freshStocks.ToDictionary(s => s.Ticker.Value, s => s, StringComparer.OrdinalIgnoreCase);
+            portfolio.UpdateHoldingQuotes(stockMap);
             await repository.SaveAsync(portfolio);
         }
 
@@ -164,9 +164,9 @@ public sealed class PortfolioService(
         {
             if (stockLookup.TryGetValue(item.Ticker, out var stock))
             {
-                if (item.Ltp.HasValue && item.Ltp.Value > 0)
+                if (stock.CurrentPrice.Amount <= 0 && item.Ltp.HasValue && item.Ltp.Value > 0)
                 {
-                    stock.UpdateMarketData(Money.INR(item.Ltp.Value), stock.PERatio, stock.DividendYield, stock.MarketCap);
+                    stock.UpdateMarketData(Money.INR(item.Ltp.Value), stock.PERatio, stock.DividendYield, stock.MarketCap, Money.INR(item.Ltp.Value));
                 }
 
                 newHoldings.Add(new Holding
@@ -230,9 +230,9 @@ public sealed class PortfolioService(
             {
                 if (stockLookup.TryGetValue(item.Ticker, out var stock))
                 {
-                    if (item.Ltp.HasValue && item.Ltp.Value > 0)
+                    if (stock.CurrentPrice.Amount <= 0 && item.Ltp.HasValue && item.Ltp.Value > 0)
                     {
-                        stock.UpdateMarketData(Money.INR(item.Ltp.Value), stock.PERatio, stock.DividendYield, stock.MarketCap);
+                        stock.UpdateMarketData(Money.INR(item.Ltp.Value), stock.PERatio, stock.DividendYield, stock.MarketCap, Money.INR(item.Ltp.Value));
                     }
 
                     var h = new Holding
@@ -274,9 +274,9 @@ public sealed class PortfolioService(
                 {
                     if (stockLookup.TryGetValue(item.Ticker, out var stock))
                     {
-                        if (item.Ltp.HasValue && item.Ltp.Value > 0)
+                        if (stock.CurrentPrice.Amount <= 0 && item.Ltp.HasValue && item.Ltp.Value > 0)
                         {
-                            stock.UpdateMarketData(Money.INR(item.Ltp.Value), stock.PERatio, stock.DividendYield, stock.MarketCap);
+                            stock.UpdateMarketData(Money.INR(item.Ltp.Value), stock.PERatio, stock.DividendYield, stock.MarketCap, Money.INR(item.Ltp.Value));
                         }
 
                         newHoldings.Add(new Holding
@@ -309,9 +309,9 @@ public sealed class PortfolioService(
                 {
                     if (stockLookup.TryGetValue(item.Ticker, out var stock))
                     {
-                        if (item.Ltp.HasValue && item.Ltp.Value > 0)
+                        if (stock.CurrentPrice.Amount <= 0 && item.Ltp.HasValue && item.Ltp.Value > 0)
                         {
-                            stock.UpdateMarketData(Money.INR(item.Ltp.Value), stock.PERatio, stock.DividendYield, stock.MarketCap);
+                            stock.UpdateMarketData(Money.INR(item.Ltp.Value), stock.PERatio, stock.DividendYield, stock.MarketCap, Money.INR(item.Ltp.Value));
                         }
 
                         var existing = targetPortfolio.Holdings.FirstOrDefault(h => h.Stock.Ticker.Value.Equals(item.Ticker, StringComparison.OrdinalIgnoreCase));
