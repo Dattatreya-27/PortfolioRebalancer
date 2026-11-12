@@ -12,6 +12,8 @@ namespace PortfolioRebalancer.Api.Controllers;
 public class StocksController(
     StockEvaluationService stockEvaluationService,
     IChartPatternRecognitionService chartPatternService,
+    QuarterlyEarningsService quarterlyEarningsService,
+    PolicyImpactService policyImpactService,
     IMemoryCache cache) : ControllerBase
 {
     private static string NormalizeTicker(string ticker)
@@ -108,5 +110,27 @@ public class StocksController(
         var results = await stockEvaluationService.SearchStocksAsync(query, portfolioId, ct);
         cache.Set(cacheKey, results, TimeSpan.FromSeconds(30));
         return Ok(results);
+    }
+
+    [HttpGet("{ticker}/earnings")]
+    public async Task<ActionResult<QuarterlyEarningsSummaryDto>> GetStockEarnings(string ticker, CancellationToken ct = default)
+    {
+        var normalizedTicker = NormalizeTicker(ticker);
+        if (string.IsNullOrWhiteSpace(normalizedTicker))
+            return BadRequest(new { error = "Ticker cannot be empty." });
+
+        var result = await quarterlyEarningsService.GetStockEarningsAsync(normalizedTicker, ct);
+        return Ok(result);
+    }
+
+    [HttpGet("{ticker}/policy-impact")]
+    public async Task<ActionResult<IReadOnlyList<PolicyHoldingImpactDto>>> GetStockPolicyImpacts(string ticker, CancellationToken ct = default)
+    {
+        var normalizedTicker = NormalizeTicker(ticker);
+        if (string.IsNullOrWhiteSpace(normalizedTicker))
+            return BadRequest(new { error = "Ticker cannot be empty." });
+
+        var result = await policyImpactService.GetStockPolicyImpactsAsync(normalizedTicker, ct);
+        return Ok(result);
     }
 }

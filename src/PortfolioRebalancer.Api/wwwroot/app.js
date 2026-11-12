@@ -475,57 +475,9 @@ function escapeHtml(str) {
 // ==========================================
 // SPA Client-Side View Router (Hash-Based)
 // ==========================================
-const APP_VIEWS = ['portfolio', 'manage', 'discover', 'theories', 'trades'];
+const APP_VIEWS = ['portfolio', 'intelligence', 'macropolicy', 'manage', 'discover', 'theories'];
 let activeView = 'portfolio';
-let isTradeAnalyticsEnabled = localStorage.getItem("feature_trade_analytics_enabled") === "true"; // default false (hidden)
-
-function updateTradeAnalyticsToggleUI() {
-  const navTab = document.getElementById("navTabTrades");
-  const btn = document.getElementById("btnToggleTradeAnalytics");
-  const icon = document.getElementById("tradeAnalyticsToggleIcon");
-  const label = document.getElementById("tradeAnalyticsToggleLabel");
-
-  if (navTab) {
-    if (isTradeAnalyticsEnabled) {
-      navTab.classList.remove("hidden");
-    } else {
-      navTab.classList.add("hidden");
-    }
-  }
-
-  if (btn && icon && label) {
-    if (isTradeAnalyticsEnabled) {
-      btn.className = "px-3.5 py-1.5 rounded-lg text-xs font-semibold border transition flex items-center space-x-2 shadow-sm whitespace-nowrap bg-emerald-500/15 text-emerald-300 border-emerald-500/40 hover:bg-emerald-500/25";
-      icon.className = "fa-solid fa-toggle-on text-emerald-400 text-sm";
-      label.textContent = "Enabled (Shown in Nav)";
-    } else {
-      btn.className = "px-3.5 py-1.5 rounded-lg text-xs font-semibold border transition flex items-center space-x-2 shadow-sm whitespace-nowrap bg-slate-900 text-slate-400 border-slate-800 hover:bg-slate-800 hover:text-white";
-      icon.className = "fa-solid fa-toggle-off text-slate-500 text-sm";
-      label.textContent = "Disabled (Hidden)";
-    }
-  }
-}
-
-function toggleTradeAnalyticsFeature() {
-  isTradeAnalyticsEnabled = !isTradeAnalyticsEnabled;
-  localStorage.setItem("feature_trade_analytics_enabled", isTradeAnalyticsEnabled ? "true" : "false");
-  updateTradeAnalyticsToggleUI();
-
-  if (isTradeAnalyticsEnabled) {
-    showToast("📊 Trade Analytics tab enabled in top navigation.");
-    navigateTo('trades');
-  } else {
-    showToast("🧹 Trade Analytics tab hidden to keep your workspace uncluttered.");
-    if (activeView === 'trades') {
-      navigateTo('portfolio');
-    }
-  }
-}
-
 function navigateTo(viewName, updateHash = true) {
-  if (viewName === 'trades' && !isTradeAnalyticsEnabled) {
-    viewName = 'portfolio';
-  }
   if (!APP_VIEWS.includes(viewName)) {
     viewName = 'portfolio';
   }
@@ -536,7 +488,7 @@ function navigateTo(viewName, updateHash = true) {
     panel.classList.add('hidden');
   });
 
-  const targetId = 'view' + viewName.charAt(0).toUpperCase() + viewName.slice(1);
+  const targetId = viewName === 'macropolicy' ? 'viewMacroPolicy' : ('view' + viewName.charAt(0).toUpperCase() + viewName.slice(1));
   const targetPanel = document.getElementById(targetId);
   if (targetPanel) {
     targetPanel.classList.remove('hidden');
@@ -545,10 +497,8 @@ function navigateTo(viewName, updateHash = true) {
   // 2. Update active styles on navbar tabs
   const tabs = [
     { id: 'navTabPortfolio', view: 'portfolio' },
-    { id: 'navTabManage', view: 'manage' },
-    { id: 'navTabDiscover', view: 'discover' },
-    { id: 'navTabTheories', view: 'theories' },
-    { id: 'navTabTrades', view: 'trades' }
+    { id: 'navTabIntelligence', view: 'intelligence' },
+    { id: 'navTabMacroPolicy', view: 'macropolicy' }
   ];
 
   tabs.forEach(t => {
@@ -574,8 +524,10 @@ function navigateTo(viewName, updateHash = true) {
   } else if (viewName === 'theories') {
     loadTheoryPortfolios();
     loadPortfolioTheoryAudit();
-  } else if (viewName === 'trades') {
-    loadTradeAnalytics();
+  } else if (viewName === 'intelligence') {
+    loadIntelligenceHub();
+  } else if (viewName === 'macropolicy') {
+    loadMacroPolicyHub();
   }
 
   window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -583,10 +535,7 @@ function navigateTo(viewName, updateHash = true) {
 
 function initRouter() {
   window.addEventListener('hashchange', () => {
-    let hash = window.location.hash.replace(/^#\/?/, '').toLowerCase();
-    if (hash === 'trades' && !isTradeAnalyticsEnabled) {
-      hash = 'portfolio';
-    }
+    const hash = window.location.hash.replace(/^#\/?/, '').toLowerCase();
     if (APP_VIEWS.includes(hash)) {
       navigateTo(hash, false);
     } else {
@@ -594,10 +543,7 @@ function initRouter() {
     }
   });
 
-  let initialHash = window.location.hash.replace(/^#\/?/, '').toLowerCase();
-  if (initialHash === 'trades' && !isTradeAnalyticsEnabled) {
-    initialHash = 'portfolio';
-  }
+  const initialHash = window.location.hash.replace(/^#\/?/, '').toLowerCase();
   if (APP_VIEWS.includes(initialHash)) {
     navigateTo(initialHash, false);
   } else {
@@ -612,7 +558,6 @@ document.addEventListener("DOMContentLoaded", async () => {
   initThemeFromStorage();
   applyPrivacyModeUI();
   updateWorkShieldUI();
-  updateTradeAnalyticsToggleUI();
   initRouter();
   initAuthSession();
   renderSectorTargetInputs();
@@ -4157,8 +4102,6 @@ window.applySectorPreset = applySectorPreset;
 window.clearDiagnosticFilter = clearDiagnosticFilter;
 window.quickInspectTicker = quickInspectTicker;
 window.handleInspectStock = handleInspectStock;
-window.toggleTradeAnalyticsFeature = toggleTradeAnalyticsFeature;
-window.updateTradeAnalyticsToggleUI = updateTradeAnalyticsToggleUI;
 window.inspectFromRow = inspectFromRow;
 window.handleRemoveHolding = handleRemoveHolding;
 window.handleTogglePrivacy = handleTogglePrivacy;
@@ -7443,366 +7386,6 @@ window.loadCorrelationMatrix = loadCorrelationMatrix;
 window.runMacroStressScenario = runMacroStressScenario;
 
 
-// ========================================================
-// TRADE ANALYTICS, REALIZED P&L & TRADEBOOK IMPORT DESK
-// ========================================================
-let currentTradeAnalyticsData = null;
-let currentTradesFilter = 'ALL';
-let currentTradesSearch = '';
-let selectedTradebookFile = null;
-
-async function loadTradeAnalytics(forceRefresh = false) {
-  if (!currentPortfolioId) return;
-
-  if (currentTradeAnalyticsData && !forceRefresh) {
-    renderTradeAnalytics(currentTradeAnalyticsData);
-    return;
-  }
-
-  try {
-    const res = await fetch(`/api/portfolios/${currentPortfolioId}/trade-analytics`);
-    if (!res.ok) return;
-    const data = await res.json();
-    currentTradeAnalyticsData = data;
-    renderTradeAnalytics(data);
-  } catch (err) {
-    console.error("Error loading trade analytics:", err);
-  }
-}
-
-function refreshTradeAnalytics() {
-  loadTradeAnalytics(true);
-  showToast("🔄 Trade analytics refreshed.");
-}
-
-function renderTradeAnalytics(data) {
-  // Update badge on navbar
-  const navBadge = document.getElementById("navTradesCountBadge");
-  if (navBadge) navBadge.textContent = data.totalTradesCount || 0;
-
-  const countBadge = document.getElementById("tradesCountBadge");
-  if (countBadge) countBadge.textContent = `${data.totalTradesCount || 0} Trades (${data.sellTradesCount || 0} Closed)`;
-
-  // Stat Cards
-  const pnlEl = document.getElementById("statTradeRealizedPnL");
-  const pnlSub = document.getElementById("statTradeRealizedSub");
-  if (pnlEl) {
-    const pnl = data.totalRealizedPnL || 0;
-    pnlEl.textContent = `${pnl >= 0 ? '+' : '-'}₹${formatINR(Math.abs(pnl))}`;
-    pnlEl.className = `text-xl sm:text-2xl font-bold font-mono ${pnl >= 0 ? 'text-emerald-400' : 'text-rose-400'} mt-1`;
-  }
-  if (pnlSub) {
-    const wins = data.winningTradesCount || 0;
-    const losses = data.losingTradesCount || 0;
-    pnlSub.textContent = `${wins} Winners • ${losses} Losses`;
-  }
-
-  const winRateEl = document.getElementById("statTradeWinRate");
-  const winLossRatioEl = document.getElementById("statTradeWinLossRatio");
-  if (winRateEl) {
-    winRateEl.textContent = `${(data.winRatePercent || 0).toFixed(1)}%`;
-    winRateEl.className = `text-xl sm:text-2xl font-bold font-mono ${data.winRatePercent >= 50 ? 'text-emerald-400' : 'text-amber-400'} mt-1`;
-  }
-  if (winLossRatioEl) {
-    winLossRatioEl.textContent = `${data.winningTradesCount || 0}W / ${data.losingTradesCount || 0}L`;
-  }
-
-  const pfEl = document.getElementById("statTradeProfitFactor");
-  if (pfEl) {
-    pfEl.textContent = `${(data.profitFactor || 0).toFixed(2)}x`;
-  }
-
-  const stcgEl = document.getElementById("statTradeStcg");
-  if (stcgEl) {
-    const stcg = data.shortTermCapitalGainsPnL || 0;
-    stcgEl.textContent = `${stcg >= 0 ? '+' : '-'}₹${formatINR(Math.abs(stcg))}`;
-    stcgEl.className = `text-xl sm:text-2xl font-bold font-mono ${stcg >= 0 ? 'text-emerald-300' : 'text-rose-300'} mt-1`;
-  }
-
-  const ltcgEl = document.getElementById("statTradeLtcg");
-  if (ltcgEl) {
-    const ltcg = data.longTermCapitalGainsPnL || 0;
-    ltcgEl.textContent = `${ltcg >= 0 ? '+' : '-'}₹${formatINR(Math.abs(ltcg))}`;
-    ltcgEl.className = `text-xl sm:text-2xl font-bold font-mono ${ltcg >= 0 ? 'text-emerald-300' : 'text-rose-300'} mt-1`;
-  }
-
-  const avgDaysEl = document.getElementById("statTradeAvgDays");
-  if (avgDaysEl) {
-    avgDaysEl.textContent = data.averageHoldingDays > 0 ? `${data.averageHoldingDays.toFixed(0)} Days` : "Intraday / Swing";
-  }
-
-  // Visual Ratio Bar
-  const grossWins = data.realizedProfitOnly || 0;
-  const grossLosses = data.realizedLossOnly || 0;
-  const grossWinsEl = document.getElementById("statGrossGainsVal");
-  const grossLossesEl = document.getElementById("statGrossLossesVal");
-  if (grossWinsEl) grossWinsEl.textContent = `+₹${formatINR(grossWins)}`;
-  if (grossLossesEl) grossLossesEl.textContent = `-₹${formatINR(grossLosses)}`;
-
-  const totalGross = grossWins + grossLosses;
-  const winBar = document.getElementById("barGainsRatio");
-  const lossBar = document.getElementById("barLossesRatio");
-  if (winBar && lossBar) {
-    if (totalGross > 0) {
-      const winPct = Math.round((grossWins / totalGross) * 100);
-      winBar.style.width = `${winPct}%`;
-      lossBar.style.width = `${100 - winPct}%`;
-    } else {
-      winBar.style.width = "50%";
-      lossBar.style.width = "50%";
-    }
-  }
-
-  // Render Top Traded Stocks
-  renderTopTradedStocks(data.topTradedStocks || []);
-
-  // Render Trades Table
-  renderTradesTable();
-}
-
-function renderTopTradedStocks(stocks) {
-  const container = document.getElementById("topTradedStocksContainer");
-  if (!container) return;
-
-  if (stocks.length === 0) {
-    container.innerHTML = `
-      <div class="p-3 rounded-xl bg-slate-950/60 text-slate-400 text-center italic col-span-2">
-        No closed trade records logged yet. Import a Zerodha or Angel One tradebook to generate analytics.
-      </div>`;
-    return;
-  }
-
-  container.innerHTML = stocks.slice(0, 6).map(s => {
-    const isProfit = s.totalRealizedPnL >= 0;
-    return `
-      <div class="p-3 rounded-xl bg-slate-950/70 border border-slate-800/80 hover:border-slate-700 transition flex items-center justify-between">
-        <div>
-          <div class="font-bold text-white font-mono flex items-center space-x-1.5">
-            <span>${escapeHtml(s.ticker)}</span>
-            <span class="text-[10px] px-1.5 py-0.2 rounded bg-slate-800 text-slate-300 font-sans">${s.tradeCount} trades</span>
-          </div>
-          <div class="text-[10px] text-slate-400 mt-0.5 truncate max-w-[140px]">${escapeHtml(s.stockName || s.ticker)}</div>
-          <div class="text-[10px] font-mono text-cyan-400 mt-0.5">Win Rate: ${s.winRatePercent.toFixed(0)}%</div>
-        </div>
-        <div class="text-right">
-          <div class="font-mono font-bold text-xs ${isProfit ? 'text-emerald-400' : 'text-rose-400'}">
-            ${isProfit ? '+' : '-'}₹${formatINR(Math.abs(s.totalRealizedPnL))}
-          </div>
-          <div class="text-[9px] text-slate-500 font-mono">Vol: ${formatINR(s.totalVolume)} shs</div>
-        </div>
-      </div>
-    `;
-  }).join('');
-}
-
-function filterTradesTable(filter) {
-  currentTradesFilter = filter;
-  ['All', 'Buy', 'Sell', 'Wins'].forEach(f => {
-    const btn = document.getElementById(`filterTrade${f}`);
-    if (btn) {
-      if (f.toUpperCase() === filter) {
-        btn.className = "px-2.5 py-1 rounded text-teal-300 bg-teal-500/20 font-bold transition";
-      } else {
-        btn.className = "px-2.5 py-1 rounded text-slate-400 hover:text-white transition";
-      }
-    }
-  });
-  renderTradesTable();
-}
-
-function searchTradesTable() {
-  currentTradesSearch = (document.getElementById("txtSearchTrades")?.value || "").trim().toLowerCase();
-  renderTradesTable();
-}
-
-function renderTradesTable() {
-  const tbody = document.getElementById("tradesTableBody");
-  if (!tbody) return;
-
-  const allTrades = currentTradeAnalyticsData?.recentTrades || [];
-  if (allTrades.length === 0) {
-    tbody.innerHTML = `
-      <tr>
-        <td colspan="11" class="text-center py-8 text-slate-400 italic">
-          No trades recorded yet. Upload a Zerodha Tradebook or Angel One export above to see historical P&L.
-        </td>
-      </tr>`;
-    return;
-  }
-
-  let filtered = allTrades.filter(t => {
-    if (currentTradesFilter === 'BUY' && t.action !== 'BUY') return false;
-    if (currentTradesFilter === 'SELL' && t.action !== 'SELL') return false;
-    if (currentTradesFilter === 'WINS' && (t.realizedPnL == null || t.realizedPnL <= 0)) return false;
-
-    if (currentTradesSearch) {
-      const matchTicker = t.ticker.toLowerCase().includes(currentTradesSearch);
-      const matchName = (t.stockName || "").toLowerCase().includes(currentTradesSearch);
-      const matchOrder = (t.orderId || "").toLowerCase().includes(currentTradesSearch);
-      if (!matchTicker && !matchName && !matchOrder) return false;
-    }
-
-    return true;
-  });
-
-  if (filtered.length === 0) {
-    tbody.innerHTML = `
-      <tr>
-        <td colspan="11" class="text-center py-6 text-slate-400 italic">
-          No trades match the current filter or search criteria.
-        </td>
-      </tr>`;
-    return;
-  }
-
-  tbody.innerHTML = filtered.map(t => {
-    const isBuy = t.action === 'BUY';
-    const actionBadge = isBuy
-      ? `<span class="px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-emerald-500/15 text-emerald-300 border border-emerald-500/30">BUY</span>`
-      : `<span class="px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-rose-500/15 text-rose-300 border border-rose-500/30">SELL</span>`;
-
-    let pnlDisplay = '<span class="text-slate-500 font-mono">--</span>';
-    if (t.realizedPnL != null) {
-      const isPos = t.realizedPnL >= 0;
-      const color = isPos ? 'text-emerald-400' : 'text-rose-400';
-      const pct = t.realizedPnLPercent != null ? `(${isPos ? '+' : ''}${t.realizedPnLPercent.toFixed(1)}%)` : '';
-      pnlDisplay = `<span class="font-mono font-bold ${color}">${isPos ? '+' : '-'}₹${formatINR(Math.abs(t.realizedPnL))} <span class="text-[10px] font-normal">${pct}</span></span>`;
-    }
-
-    const holdingDisplay = t.holdingDays != null
-      ? `<span class="font-mono text-slate-300 text-[11px]">${t.holdingDays}d</span>`
-      : '<span class="text-slate-500 font-mono">--</span>';
-
-    const taxDisplay = t.taxClassification
-      ? `<span class="px-1.5 py-0.2 rounded text-[9px] font-mono font-semibold ${t.taxClassification.startsWith('LTCG') ? 'bg-emerald-500/10 text-emerald-300 border border-emerald-500/20' : 'bg-amber-500/10 text-amber-300 border border-amber-500/20'}">${t.taxClassification.split(' ')[0]}</span>`
-      : '<span class="text-slate-500 font-mono">--</span>';
-
-    const dateStr = t.tradeDate ? new Date(t.tradeDate).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' }) : '--';
-
-    return `
-      <tr class="hover:bg-slate-800/40 transition">
-        <td class="px-4 py-3 font-mono text-slate-400 whitespace-nowrap">${dateStr}</td>
-        <td class="px-4 py-3">
-          <div class="font-bold text-white font-mono">${escapeHtml(t.ticker)}</div>
-          <div class="text-[10px] text-slate-400 truncate max-w-[140px]">${escapeHtml(t.stockName || t.ticker)}</div>
-        </td>
-        <td class="px-3 py-3 text-center">${actionBadge}</td>
-        <td class="px-3 py-3 text-right font-mono text-slate-200 font-semibold">${t.quantity}</td>
-        <td class="px-3 py-3 text-right font-mono text-white font-semibold">₹${t.price.toFixed(2)}</td>
-        <td class="px-3 py-3 text-right font-mono text-slate-300">₹${formatINR(t.tradeValue)}</td>
-        <td class="px-3 py-3 text-right font-mono text-slate-400">${t.costBasisPrice ? `₹${t.costBasisPrice.toFixed(2)}` : '--'}</td>
-        <td class="px-3 py-3 text-right">${pnlDisplay}</td>
-        <td class="px-3 py-3 text-center">${holdingDisplay}</td>
-        <td class="px-3 py-3 text-center">${taxDisplay}</td>
-        <td class="px-3 py-3 text-[10px] text-slate-400 font-mono truncate max-w-[120px]" title="${escapeHtml(t.tradeSource || '')} ${escapeHtml(t.orderId || '')}">
-          ${escapeHtml(t.tradeSource || 'Manual')}
-        </td>
-      </tr>
-    `;
-  }).join('');
-}
-
-// -------------------------------------------------------------
-// Broker Tradebook Import Modal Operations
-// -------------------------------------------------------------
-function openTradebookImportModal() {
-  const modal = document.getElementById("modalTradebookImport");
-  if (!modal) return;
-  modal.classList.remove("hidden");
-  selectedTradebookFile = null;
-
-  const banner = document.getElementById("tradebookDetectedBanner");
-  if (banner) banner.classList.add("hidden");
-  const label = document.getElementById("tradebookDropLabel");
-  if (label) label.textContent = "Click or drag your Tradebook file here";
-  const sub = document.getElementById("tradebookDropSub");
-  if (sub) sub.textContent = "Supports Zerodha Console CSV/Excel and Angel One Exports";
-  const pwdInput = document.getElementById("txtTradebookPassword");
-  if (pwdInput) pwdInput.value = "";
-}
-
-function closeTradebookImportModal() {
-  const modal = document.getElementById("modalTradebookImport");
-  if (modal) modal.classList.add("hidden");
-  selectedTradebookFile = null;
-}
-
-function handleTradebookFileSelected(event) {
-  const file = event.target.files?.[0];
-  if (!file) return;
-  selectedTradebookFile = file;
-
-  const banner = document.getElementById("tradebookDetectedBanner");
-  const icon = document.getElementById("tradebookDetectedIcon");
-  const text = document.getElementById("tradebookDetectedText");
-  const size = document.getElementById("tradebookDetectedFileSize");
-
-  if (banner) banner.classList.remove("hidden");
-  if (text) text.textContent = file.name;
-  if (size) size.textContent = `${(file.size / 1024).toFixed(1)} KB`;
-
-  if (icon) {
-    if (file.name.toLowerCase().endsWith(".csv") || file.name.toLowerCase().endsWith(".txt")) {
-      icon.className = "fa-solid fa-file-csv text-emerald-400 text-base";
-    } else {
-      icon.className = "fa-solid fa-file-excel text-emerald-400 text-base";
-    }
-  }
-
-  const dropLabel = document.getElementById("tradebookDropLabel");
-  if (dropLabel) dropLabel.textContent = `Selected: ${file.name}`;
-}
-
-async function submitTradebookImport() {
-  if (!currentPortfolioId) return alert("Please select an active portfolio first.");
-  if (!selectedTradebookFile) return alert("Please select a Zerodha or Angel One tradebook file to upload.");
-
-  const btn = document.getElementById("btnSubmitTradebookImport");
-  const btnText = document.getElementById("btnSubmitTradebookText");
-  if (btn) btn.disabled = true;
-  if (btnText) btnText.textContent = "Matching FIFO Trades...";
-
-  const formData = new FormData();
-  formData.append("file", selectedTradebookFile);
-
-  const pwd = (document.getElementById("txtTradebookPassword")?.value || "").trim();
-  if (pwd) formData.append("password", pwd);
-
-  const clearExisting = document.getElementById("chkClearExistingTrades")?.checked || false;
-  formData.append("clearExisting", clearExisting.toString());
-
-  try {
-    const res = await fetch(`/api/portfolios/${currentPortfolioId}/import-tradebook`, {
-      method: "POST",
-      body: formData
-    });
-
-    if (res.ok) {
-      const data = await res.json();
-      closeTradebookImportModal();
-      await loadTradeAnalytics(true);
-      showToast(`🎉 Imported ${data.totalTradesParsed} trades from ${data.brokerDetected}! Matched ${data.matchedRoundTrips} closed sales with Net Realized P&L of ₹${formatINR(data.netRealizedPnL)}.`);
-    } else {
-      const err = await res.json();
-      alert(`Tradebook import failed: ${err.error || "Please verify file format."}`);
-    }
-  } catch (err) {
-    console.error("Tradebook upload error:", err);
-    alert("Network error uploading tradebook.");
-  } finally {
-    if (btn) btn.disabled = false;
-    if (btnText) btnText.textContent = "Parse & Import Trades";
-  }
-}
-
-window.loadTradeAnalytics = loadTradeAnalytics;
-window.refreshTradeAnalytics = refreshTradeAnalytics;
-window.filterTradesTable = filterTradesTable;
-window.searchTradesTable = searchTradesTable;
-window.openTradebookImportModal = openTradebookImportModal;
-window.closeTradebookImportModal = closeTradebookImportModal;
-window.handleTradebookFileSelected = handleTradebookFileSelected;
-window.submitTradebookImport = submitTradebookImport;
 
 
 // ========================================================
@@ -7989,3 +7572,307 @@ window.toggleAuthPasswordVisibility = toggleAuthPasswordVisibility;
 window.handleAuthLogin = handleAuthLogin;
 window.handleAuthLogout = handleAuthLogout;
 
+// ========================================================
+// 6-PILLAR INTELLIGENCE HUB (EARNINGS, SMART MONEY, MACRO & POLICY)
+// ========================================================
+let activeIntelSubTab = 'earnings';
+let cachedPolicyImpactsData = null;
+let activePolicyScopeFilter = 'ALL';
+
+function switchIntelSubTab(tab) {
+  activeIntelSubTab = tab;
+  const map = {
+    earnings: { btn: 'intelTabEarnings', panel: 'intelPanelEarnings' },
+    institutional: { btn: 'intelTabInstitutional', panel: 'intelPanelInstitutional' },
+    management: { btn: 'intelTabManagement', panel: 'intelPanelManagement' }
+  };
+  Object.entries(map).forEach(([key, ids]) => {
+    const btn = document.getElementById(ids.btn);
+    const panel = document.getElementById(ids.panel);
+    if (btn) {
+      btn.className = key === tab
+        ? 'px-3.5 py-1.5 rounded-lg text-xs font-semibold bg-teal-500/20 text-teal-300 border border-teal-500/35 transition'
+        : 'px-3.5 py-1.5 rounded-lg text-xs font-semibold bg-slate-950/60 text-slate-400 hover:text-white border border-slate-800 transition';
+    }
+    if (panel) {
+      panel.classList.toggle('hidden', key !== tab);
+    }
+  });
+}
+
+async function loadIntelligenceHub() {
+  if (!currentPortfolioId) return;
+  try {
+    const [earnRes, instRes, mgmtRes] = await Promise.all([
+      fetch(`/api/portfolios/${currentPortfolioId}/earnings-digest`),
+      fetch(`/api/portfolios/${currentPortfolioId}/institutional-radar`),
+      fetch(`/api/portfolios/${currentPortfolioId}/management-pulse`)
+    ]);
+    if (earnRes.ok) renderEarningsDigest(await earnRes.json());
+    if (instRes.ok) renderInstitutionalRadar(await instRes.json());
+    if (mgmtRes.ok) renderManagementPulse(await mgmtRes.json());
+  } catch (err) {
+    console.error('Error loading intelligence hub:', err);
+  }
+}
+
+function renderEarningsDigest(data) {
+  const strip = document.getElementById('intelEarningsSummaryStrip');
+  const cards = document.getElementById('intelEarningsCards');
+  if (strip) {
+    strip.innerHTML = `
+      <div class="p-4 rounded-xl bg-slate-900/80 border border-emerald-500/30"><div class="text-[11px] text-slate-400">Quarterly Beats</div><div class="text-2xl font-bold font-mono text-emerald-400 mt-1">${data.beatCount}</div></div>
+      <div class="p-4 rounded-xl bg-slate-900/80 border border-cyan-500/30"><div class="text-[11px] text-slate-400">In-Line Quarters</div><div class="text-2xl font-bold font-mono text-cyan-300 mt-1">${data.inLineCount}</div></div>
+      <div class="p-4 rounded-xl bg-slate-900/80 border border-rose-500/30"><div class="text-[11px] text-slate-400">Earnings Misses</div><div class="text-2xl font-bold font-mono text-rose-400 mt-1">${data.missCount}</div></div>`;
+  }
+  if (!cards) return;
+  if (!data.holdings || data.holdings.length === 0) {
+    cards.innerHTML = '<div class="col-span-full p-8 text-center text-xs text-slate-400 italic bg-slate-900/60 rounded-2xl border border-slate-800">Add holdings to your portfolio to track quarterly reports.</div>';
+    return;
+  }
+  cards.innerHTML = data.holdings.map(h => {
+    const badgeCls = h.surpriseVerdict === 'BEAT'
+      ? 'bg-emerald-500/15 text-emerald-300 border-emerald-500/30'
+      : h.surpriseVerdict === 'MISS'
+      ? 'bg-rose-500/15 text-rose-300 border-rose-500/30'
+      : 'bg-cyan-500/15 text-cyan-300 border-cyan-500/30';
+    return `
+      <div class="p-5 rounded-2xl bg-slate-900/80 themed-card border border-slate-800 hover:border-teal-500/40 transition space-y-3">
+        <div class="flex items-start justify-between gap-2">
+          <div>
+            <div class="flex items-center space-x-2">
+              <button onclick="inspectFromRow('${escapeHtml(h.ticker)}')" class="text-sm font-bold font-mono text-white hover:text-teal-300 transition">${escapeHtml(h.ticker)}</button>
+              <span class="text-[10px] px-2 py-0.5 rounded-full bg-slate-800 text-slate-300 font-mono">${h.weightPercent.toFixed(1)}% wt</span>
+              <span class="text-[10px] px-2 py-0.5 rounded font-mono font-bold border ${badgeCls}">${escapeHtml(h.surpriseVerdict)} &bull; ${escapeHtml(h.latestQuarter)}</span>
+            </div>
+            <div class="text-xs text-slate-400 mt-0.5">${escapeHtml(h.stockName)} &bull; ${escapeHtml(h.sector)}</div>
+          </div>
+          <div class="text-right font-mono text-xs">
+            <div class="${h.patYoYPercent >= 0 ? 'text-emerald-400' : 'text-rose-400'} font-bold">PAT ${h.patYoYPercent >= 0 ? '+' : ''}${h.patYoYPercent.toFixed(1)}% YoY</div>
+            <div class="text-slate-400 text-[11px]">Rev ${h.revenueYoYPercent >= 0 ? '+' : ''}${h.revenueYoYPercent.toFixed(1)}% &bull; OPM ${h.operatingMarginPercent.toFixed(1)}%</div>
+          </div>
+        </div>
+        <p class="text-xs text-slate-300 leading-relaxed">${escapeHtml(h.plainEnglishSummary)}</p>
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 pt-2 border-t border-slate-800/80 text-[11px]">
+          <div class="text-emerald-300/90"><strong class="text-emerald-400">Improved:</strong> ${escapeHtml((h.whatImproved || [])[0] || 'Steady operations')}</div>
+          <div class="text-amber-300/90"><strong class="text-amber-400">Watch:</strong> ${escapeHtml((h.whatDeteriorated || [])[0] || 'Monitor next quarter')}</div>
+        </div>
+      </div>`;
+  }).join('');
+}
+
+function renderInstitutionalRadar(data) {
+  const strip = document.getElementById('intelInstitutionalSummaryStrip');
+  const cards = document.getElementById('intelInstitutionalCards');
+  if (strip) {
+    strip.innerHTML = `
+      <div class="p-4 rounded-xl bg-slate-900/80 border border-emerald-500/30"><div class="text-[11px] text-slate-400">Institutional Accumulation</div><div class="text-2xl font-bold font-mono text-emerald-400 mt-1">${data.accumulationCount}</div></div>
+      <div class="p-4 rounded-xl bg-slate-900/80 border border-rose-500/30"><div class="text-[11px] text-slate-400">Institutional Distribution</div><div class="text-2xl font-bold font-mono text-rose-400 mt-1">${data.distributionCount}</div></div>
+      <div class="p-4 rounded-xl bg-slate-900/80 border border-amber-500/30"><div class="text-[11px] text-slate-400">Promoter Pledge Flags (&gt;5%)</div><div class="text-2xl font-bold font-mono text-amber-400 mt-1">${data.pledgeFlagCount}</div></div>`;
+  }
+  if (!cards) return;
+  cards.innerHTML = (data.holdings || []).map(h => {
+    const sigCls = h.netInstitutionalSignal === 'ACCUMULATION'
+      ? 'bg-emerald-500/15 text-emerald-300 border-emerald-500/30'
+      : h.netInstitutionalSignal === 'DISTRIBUTION'
+      ? 'bg-rose-500/15 text-rose-300 border-rose-500/30'
+      : 'bg-slate-800 text-slate-300 border-slate-700';
+    return `
+      <div class="p-5 rounded-2xl bg-slate-900/80 themed-card border border-slate-800 space-y-3">
+        <div class="flex items-start justify-between">
+          <div>
+            <div class="flex items-center space-x-2">
+              <button onclick="inspectFromRow('${escapeHtml(h.ticker)}')" class="text-sm font-bold font-mono text-white hover:text-teal-300">${escapeHtml(h.ticker)}</button>
+              <span class="text-[10px] px-2 py-0.5 rounded font-mono font-bold border ${sigCls}">${escapeHtml(h.netInstitutionalSignal)}</span>
+            </div>
+            <div class="text-xs text-slate-400 mt-0.5">${escapeHtml(h.stockName)} &bull; ${escapeHtml(h.quarterPeriod)}</div>
+          </div>
+          <span class="text-[11px] font-mono text-slate-400">Pledge: <strong class="${h.promoterPledgePercent > 5 ? 'text-rose-400' : 'text-emerald-400'}">${h.promoterPledgePercent.toFixed(1)}%</strong></span>
+        </div>
+        <div class="grid grid-cols-3 gap-2 text-center p-2.5 rounded-xl bg-slate-950/60 border border-slate-800/80 text-xs font-mono">
+          <div><div class="text-[10px] text-slate-400">FII</div><div class="font-bold text-white">${h.fiiPercent.toFixed(1)}%</div><div class="text-[10px] ${h.qoQFiiChange >= 0 ? 'text-emerald-400' : 'text-rose-400'}">${h.qoQFiiChange >= 0 ? '+' : ''}${h.qoQFiiChange.toFixed(2)}%</div></div>
+          <div><div class="text-[10px] text-slate-400">DII / MF</div><div class="font-bold text-white">${h.diiPercent.toFixed(1)}%</div><div class="text-[10px] ${h.qoQDiiChange >= 0 ? 'text-emerald-400' : 'text-rose-400'}">${h.qoQDiiChange >= 0 ? '+' : ''}${h.qoQDiiChange.toFixed(2)}%</div></div>
+          <div><div class="text-[10px] text-slate-400">Promoter</div><div class="font-bold text-white">${h.promoterPercent.toFixed(1)}%</div><div class="text-[10px] ${h.qoQPromoterChange >= 0 ? 'text-emerald-400' : 'text-amber-400'}">${h.qoQPromoterChange >= 0 ? '+' : ''}${h.qoQPromoterChange.toFixed(2)}%</div></div>
+        </div>
+        <div class="text-[11px] text-slate-300"><strong class="text-cyan-400">Bulk / Block Activity:</strong> ${escapeHtml(h.latestWhaleSummary)}</div>
+      </div>`;
+  }).join('');
+}
+
+function renderManagementPulse(data) {
+  const strip = document.getElementById('intelManagementSummaryStrip');
+  const cards = document.getElementById('intelManagementCards');
+  if (strip) {
+    strip.innerHTML = `
+      <div class="p-4 rounded-xl bg-slate-900/80 border border-teal-500/30"><div class="text-[11px] text-slate-400">Avg Governance Score</div><div class="text-2xl font-bold font-mono text-teal-300 mt-1">${data.averageGovernanceScore}/100</div></div>
+      <div class="p-4 rounded-xl bg-slate-900/80 border border-emerald-500/30"><div class="text-[11px] text-slate-400">Constructive / Bullish Tone</div><div class="text-2xl font-bold font-mono text-emerald-400 mt-1">${data.bullishToneCount}</div></div>
+      <div class="p-4 rounded-xl bg-slate-900/80 border border-amber-500/30"><div class="text-[11px] text-slate-400">Watchlist / Cautious Flags</div><div class="text-2xl font-bold font-mono text-amber-400 mt-1">${data.cautiousOrFlaggedCount}</div></div>`;
+  }
+  if (!cards) return;
+  cards.innerHTML = (data.holdings || []).map(h => `
+    <div class="p-5 rounded-2xl bg-slate-900/80 themed-card border border-slate-800 space-y-2.5">
+      <div class="flex items-start justify-between">
+        <div>
+          <button onclick="inspectFromRow('${escapeHtml(h.ticker)}')" class="text-sm font-bold font-mono text-white hover:text-teal-300">${escapeHtml(h.ticker)}</button>
+          <span class="ml-2 text-[10px] px-2 py-0.5 rounded bg-teal-500/15 text-teal-300 border border-teal-500/30 font-mono">Gov ${h.governanceScore.toFixed(0)}/100</span>
+          <div class="text-xs text-slate-400 mt-0.5">${escapeHtml(h.stockName)} &bull; ${escapeHtml(h.integrityRating)}</div>
+        </div>
+        <span class="text-[10px] px-2 py-0.5 rounded bg-slate-800 text-cyan-300 font-mono">${escapeHtml(h.managementSentiment)}</span>
+      </div>
+      <p class="text-xs text-slate-300 leading-relaxed"><strong class="text-white">Concall Commentary:</strong> ${escapeHtml(h.latestConcallHighlights)}</p>
+      <div class="text-[11px] text-slate-400"><strong class="text-slate-300">Capital Allocation:</strong> ${escapeHtml(h.capitalAllocationTrackRecord)}</div>
+      <div class="text-[11px] text-amber-300/90"><strong class="text-amber-400">Reputation / Events:</strong> ${escapeHtml(h.majorEventsAndUproar)}</div>
+    </div>`).join('');
+}
+
+async function loadMacroPolicyHub() {
+  const q = currentPortfolioId ? `?portfolioId=${currentPortfolioId}` : '';
+  try {
+    const [macroRes, policyRes] = await Promise.all([
+      fetch(`/api/macro/indicators${q}`),
+      fetch(`/api/macro/policies${q}`)
+    ]);
+    if (macroRes.ok) renderMacroDashboard(await macroRes.json());
+    if (policyRes.ok) {
+      cachedPolicyImpactsData = await policyRes.json();
+      renderPolicyImpactMap();
+    }
+  } catch (err) {
+    console.error('Error loading macro/policy hub:', err);
+  }
+}
+
+function renderMacroDashboard(data) {
+  const renderCard = (ind) => {
+    const arrow = ind.trendDirection === 'UP' ? 'fa-arrow-trend-up text-amber-400' : ind.trendDirection === 'DOWN' ? 'fa-arrow-trend-down text-emerald-400' : 'fa-minus text-slate-400';
+    return `
+      <div class="p-3.5 rounded-xl bg-slate-950/60 border border-slate-800/80 space-y-1">
+        <div class="flex items-center justify-between text-[11px] text-slate-400">
+          <span class="font-semibold text-slate-200">${escapeHtml(ind.name)}</span>
+          <i class="fa-solid ${arrow}"></i>
+        </div>
+        <div class="flex items-baseline space-x-2">
+          <span class="text-lg font-bold font-mono text-white">${ind.currentValue} <span class="text-[11px] text-slate-400">${escapeHtml(ind.unit)}</span></span>
+          <span class="text-[10px] font-mono text-slate-400">(${ind.changeDelta >= 0 ? '+' : ''}${ind.changeDelta})</span>
+        </div>
+        <p class="text-[10px] text-slate-400 leading-snug">${escapeHtml(ind.commentary)}</p>
+      </div>`;
+  };
+  const inEl = document.getElementById('macroIndiaGrid');
+  const glEl = document.getElementById('macroGlobalGrid');
+  const impEl = document.getElementById('macroPortfolioImpactsGrid');
+  if (inEl) inEl.innerHTML = (data.indiaIndicators || []).map(renderCard).join('');
+  if (glEl) glEl.innerHTML = (data.globalIndicators || []).map(renderCard).join('');
+  if (impEl) {
+    const imps = data.portfolioImpacts || [];
+    impEl.innerHTML = imps.length === 0
+      ? '<div class="col-span-full text-xs text-slate-400 italic">Select a portfolio with holdings to see stock-by-stock macro sensitivity.</div>'
+      : imps.map(m => {
+          const cls = m.impactDirection === 'TAILWIND' ? 'bg-emerald-500/15 text-emerald-300 border-emerald-500/30' : m.impactDirection === 'HEADWIND' ? 'bg-rose-500/15 text-rose-300 border-rose-500/30' : 'bg-slate-800 text-slate-300 border-slate-700';
+          return `
+            <div class="p-3.5 rounded-xl bg-slate-950/60 border border-slate-800 flex items-start justify-between gap-3">
+              <div class="space-y-1">
+                <div class="flex items-center space-x-2">
+                  <button onclick="inspectFromRow('${escapeHtml(m.ticker)}')" class="text-xs font-bold font-mono text-white hover:text-teal-300">${escapeHtml(m.ticker)}</button>
+                  <span class="text-[10px] text-slate-400">&bull; ${escapeHtml(m.indicatorName)}</span>
+                </div>
+                <p class="text-[11px] text-slate-300">${escapeHtml(m.mechanism)}</p>
+              </div>
+              <span class="px-2 py-0.5 rounded text-[10px] font-mono font-bold border whitespace-nowrap ${cls}">${escapeHtml(m.impactDirection)}</span>
+            </div>`;
+        }).join('');
+  }
+}
+
+function filterPolicyScope(scope) {
+  activePolicyScopeFilter = scope;
+  ['All', 'Domestic', 'International'].forEach(s => {
+    const btn = document.getElementById(`policyFilter${s}`);
+    if (btn) {
+      btn.className = (s.toUpperCase() === scope.toUpperCase())
+        ? 'px-2.5 py-1 rounded text-amber-300 bg-amber-500/20 font-bold transition'
+        : 'px-2.5 py-1 rounded text-slate-400 hover:text-white transition';
+    }
+  });
+  renderPolicyImpactMap();
+}
+
+function renderPolicyImpactMap() {
+  const container = document.getElementById('policyHoldingImpactsGrid');
+  if (!container || !cachedPolicyImpactsData) return;
+  const impacts = (cachedPolicyImpactsData.holdingImpacts || []).filter(i =>
+    activePolicyScopeFilter === 'ALL' || i.scope.toUpperCase() === activePolicyScopeFilter.toUpperCase()
+  );
+  if (impacts.length === 0) {
+    container.innerHTML = '<div class="col-span-full text-xs text-slate-400 italic py-4">No active policy impacts matched for the selected filter/portfolio.</div>';
+    return;
+  }
+  container.innerHTML = impacts.map(p => {
+    const dirCls = p.impactDirection === 'POSITIVE' ? 'bg-emerald-500/15 text-emerald-300 border-emerald-500/30' : p.impactDirection === 'NEGATIVE' ? 'bg-rose-500/15 text-rose-300 border-rose-500/30' : 'bg-amber-500/15 text-amber-300 border-amber-500/30';
+    return `
+      <div class="p-4 rounded-xl bg-slate-950/60 border border-slate-800 space-y-2">
+        <div class="flex items-start justify-between gap-2">
+          <div class="flex items-center flex-wrap gap-1.5">
+            <button onclick="inspectFromRow('${escapeHtml(p.ticker)}')" class="text-xs font-bold font-mono text-white bg-slate-800 px-2 py-0.5 rounded hover:text-teal-300">${escapeHtml(p.ticker)}</button>
+            <span class="text-[10px] px-2 py-0.5 rounded font-mono bg-slate-900 text-slate-300 border border-slate-700">${escapeHtml(p.scope)} &bull; ${escapeHtml(p.impactType)}</span>
+            <span class="text-[10px] px-2 py-0.5 rounded font-mono font-bold border ${dirCls}">${escapeHtml(p.impactDirection)}</span>
+          </div>
+          <span class="text-[10px] text-slate-500 font-mono">${escapeHtml(p.announcedDate)}</span>
+        </div>
+        <div class="text-xs font-bold text-slate-100">${escapeHtml(p.policyTitle)}</div>
+        <p class="text-[11px] text-slate-300 leading-relaxed">${escapeHtml(p.rationale)}</p>
+        <div class="text-[10px] text-slate-500">Source: ${escapeHtml(p.sourceAuthority)}</div>
+      </div>`;
+  }).join('');
+}
+
+async function loadInspectorEarningsAndPolicy(ticker) {
+  const earnEl = document.getElementById('inspectorQuarterlyEarningsSection');
+  const polEl = document.getElementById('inspectorPolicyImpactSection');
+  if (earnEl) earnEl.classList.add('hidden');
+  if (polEl) polEl.classList.add('hidden');
+  try {
+    const [eRes, pRes] = await Promise.all([
+      fetch(`/api/stocks/${encodeURIComponent(ticker)}/earnings`),
+      fetch(`/api/stocks/${encodeURIComponent(ticker)}/policy-impact`)
+    ]);
+    if (eRes.ok && earnEl) {
+      const e = await eRes.json();
+      earnEl.classList.remove('hidden');
+      earnEl.innerHTML = `
+        <div class="flex items-center justify-between border-b border-slate-800 pb-2">
+          <h4 class="text-xs font-bold text-teal-300 uppercase tracking-wider"><i class="fa-solid fa-file-lines mr-1.5"></i>Quarterly Earnings (${escapeHtml(e.latestQuarter)} &bull; ${escapeHtml(e.surpriseVerdict)})</h4>
+          <span class="text-[10px] font-mono text-slate-400">OCF/EBITDA: ${e.cashConversionRatio.toFixed(0)}% &bull; Debt: ${escapeHtml(e.debtTrajectory)}</span>
+        </div>
+        <p class="text-xs text-slate-300">${escapeHtml(e.plainEnglishSummary)}</p>
+        <div class="overflow-x-auto">
+          <table class="w-full text-[11px] font-mono text-left">
+            <thead><tr class="text-slate-400 border-b border-slate-800"><th class="py-1.5">Quarter</th><th class="text-right">Rev (Cr)</th><th class="text-right">Rev YoY</th><th class="text-right">OPM %</th><th class="text-right">PAT (Cr)</th><th class="text-right">PAT YoY</th></tr></thead>
+            <tbody class="divide-y divide-slate-800/60">
+              ${(e.quarters || []).map(q => `<tr><td class="py-1.5 text-white">${escapeHtml(q.quarterLabel)}</td><td class="text-right text-slate-200">${formatINR(q.revenueCrores)}</td><td class="text-right ${q.revenueYoYPercent >= 0 ? 'text-emerald-400' : 'text-rose-400'}">${q.revenueYoYPercent >= 0 ? '+' : ''}${q.revenueYoYPercent.toFixed(1)}%</td><td class="text-right text-cyan-300">${q.operatingMarginPercent.toFixed(1)}%</td><td class="text-right text-slate-200">${formatINR(q.patCrores)}</td><td class="text-right ${q.patYoYPercent >= 0 ? 'text-emerald-400' : 'text-rose-400'}">${q.patYoYPercent >= 0 ? '+' : ''}${q.patYoYPercent.toFixed(1)}%</td></tr>`).join('')}
+            </tbody>
+          </table>
+        </div>`;
+    }
+    if (pRes.ok && polEl) {
+      const policies = await pRes.json();
+      if (policies && policies.length > 0) {
+        polEl.classList.remove('hidden');
+        polEl.innerHTML = `
+          <div class="border-b border-slate-800 pb-2">
+            <h4 class="text-xs font-bold text-amber-300 uppercase tracking-wider"><i class="fa-solid fa-landmark-flag mr-1.5"></i>Policy &amp; Geopolitical Shifts Affecting ${escapeHtml(ticker)}</h4>
+          </div>
+          <div class="space-y-2">
+            ${policies.map(p => `<div class="p-2.5 rounded-lg bg-slate-950/60 border border-slate-800 text-xs"><div class="flex items-center justify-between"><span class="font-bold text-white">${escapeHtml(p.policyTitle)}</span><span class="text-[10px] font-mono px-1.5 py-0.5 rounded bg-amber-500/15 text-amber-300">${escapeHtml(p.scope)} &bull; ${escapeHtml(p.impactType)} &bull; ${escapeHtml(p.impactDirection)}</span></div><p class="text-[11px] text-slate-300 mt-1">${escapeHtml(p.rationale)}</p></div>`).join('')}
+          </div>`;
+      }
+    }
+  } catch (err) {
+    console.error('Error loading inspector earnings/policy:', err);
+  }
+}
+
+window.switchIntelSubTab = switchIntelSubTab;
+window.loadIntelligenceHub = loadIntelligenceHub;
+window.loadMacroPolicyHub = loadMacroPolicyHub;
+window.filterPolicyScope = filterPolicyScope;

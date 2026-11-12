@@ -43,6 +43,13 @@ public class PortfoliosControllerTests : IDisposable
         _advisoryService = new PortfolioAdvisoryService(_repository, _stockProvider);
         _researchService = new MarketTheoryResearchService(_repository, _stockProvider);
         var tradingEngine = new DailyStockTradingEngine(_repository, _scoringService);
+        var earningsProvider = new QuarterlyEarningsProvider(_stockProvider);
+        var quarterlyEarningsService = new QuarterlyEarningsService(earningsProvider, _repository, _stockProvider);
+        var pillarIntelligenceService = new PortfolioPillarIntelligenceService(_repository, _stockProvider, _scoringService);
+        var macroProvider = new MacroDataProvider(new HttpClient(), Microsoft.Extensions.Logging.Abstractions.NullLogger<MacroDataProvider>.Instance);
+        var macroService = new MacroIntelligenceService(macroProvider, _repository, _stockProvider);
+        var policyProvider = new PolicyIntelligenceProvider();
+        var policyService = new PolicyImpactService(policyProvider, _repository, _stockProvider);
 
         _controller = new PortfoliosController(
             _portfolioService,
@@ -51,6 +58,10 @@ public class PortfoliosControllerTests : IDisposable
             _researchService,
             tradingEngine,
             _chartPatternService,
+            quarterlyEarningsService,
+            pillarIntelligenceService,
+            macroService,
+            policyService,
             _cache);
 
         // Seed initial test portfolio so tests have isolated fixture data

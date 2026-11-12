@@ -16,6 +16,10 @@ public class PortfoliosController(
     MarketTheoryResearchService researchService,
     DailyStockTradingEngine tradingEngine,
     IChartPatternRecognitionService chartPatternService,
+    QuarterlyEarningsService quarterlyEarningsService,
+    PortfolioPillarIntelligenceService pillarIntelligenceService,
+    MacroIntelligenceService macroService,
+    PolicyImpactService policyService,
     IMemoryCache cache) : ControllerBase
 {
     private void InvalidatePortfolioCache(Guid id)
@@ -554,5 +558,43 @@ public class PortfoliosController(
 
         cache.Set(cacheKey, ideas, TimeSpan.FromMinutes(2));
         return Ok(ideas);
+    }
+
+    [HttpGet("{id:guid}/earnings-digest")]
+    public async Task<ActionResult<PortfolioEarningsDigestDto>> GetEarningsDigest(Guid id, CancellationToken ct = default)
+    {
+        var result = await quarterlyEarningsService.GetPortfolioEarningsDigestAsync(id, ct);
+        if (result is null) return NotFound(new { error = $"Portfolio with ID '{id}' not found." });
+        return Ok(result);
+    }
+
+    [HttpGet("{id:guid}/institutional-radar")]
+    public async Task<ActionResult<PortfolioInstitutionalRadarDto>> GetInstitutionalRadar(Guid id, CancellationToken ct = default)
+    {
+        var result = await pillarIntelligenceService.GetInstitutionalRadarAsync(id, ct);
+        if (result is null) return NotFound(new { error = $"Portfolio with ID '{id}' not found." });
+        return Ok(result);
+    }
+
+    [HttpGet("{id:guid}/management-pulse")]
+    public async Task<ActionResult<PortfolioManagementPulseDto>> GetManagementPulse(Guid id, CancellationToken ct = default)
+    {
+        var result = await pillarIntelligenceService.GetManagementPulseAsync(id, ct);
+        if (result is null) return NotFound(new { error = $"Portfolio with ID '{id}' not found." });
+        return Ok(result);
+    }
+
+    [HttpGet("{id:guid}/macro-impact")]
+    public async Task<ActionResult<MacroDashboardDto>> GetMacroImpact(Guid id, CancellationToken ct = default)
+    {
+        var result = await macroService.GetMacroDashboardAsync(id, ct);
+        return Ok(result);
+    }
+
+    [HttpGet("{id:guid}/policy-impact")]
+    public async Task<ActionResult<PortfolioPolicyImpactMapDto>> GetPolicyImpact(Guid id, CancellationToken ct = default)
+    {
+        var result = await policyService.GetPolicyImpactMapAsync(id, ct);
+        return Ok(result);
     }
 }

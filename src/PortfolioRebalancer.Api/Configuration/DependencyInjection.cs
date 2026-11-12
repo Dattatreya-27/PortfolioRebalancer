@@ -18,6 +18,9 @@ public static class DependencyInjection
         services.AddSingleton<IStockScoringService, IndianMarketScoringService>();
         services.AddSingleton<ICatalystEventProvider, IndianCatalystEventProvider>();
         services.AddSingleton<IChartPatternRecognitionService, ChartPatternRecognitionService>();
+        services.AddSingleton<IQuarterlyEarningsProvider, QuarterlyEarningsProvider>();
+        services.AddHttpClient<IMacroDataProvider, MacroDataProvider>();
+        services.AddSingleton<IPolicyIntelligenceProvider, PolicyIntelligenceProvider>();
         services.AddSingleton<IEmailNotificationService, PortfolioRebalancer.Infrastructure.Notifications.EmailNotificationService>();
         services.AddSingleton<IPriceAlertService, PortfolioRebalancer.Infrastructure.Notifications.PriceAlertService>();
         services.AddHostedService<PortfolioRebalancer.Api.Workers.MarketHoursPriceAlertWorker>();
@@ -33,6 +36,10 @@ public static class DependencyInjection
         services.AddScoped<ITheoryPortfolioService>(sp => sp.GetRequiredService<TheoryPortfolioService>());
         services.AddScoped<PortfolioTheoryAuditService>();
         services.AddScoped<IPortfolioTheoryAuditService>(sp => sp.GetRequiredService<PortfolioTheoryAuditService>());
+        services.AddScoped<QuarterlyEarningsService>();
+        services.AddScoped<MacroIntelligenceService>();
+        services.AddScoped<PolicyImpactService>();
+        services.AddScoped<PortfolioPillarIntelligenceService>();
 
         return services;
     }
