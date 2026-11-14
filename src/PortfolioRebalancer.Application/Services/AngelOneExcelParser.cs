@@ -122,6 +122,18 @@ public static class AngelOneExcelParser
         ["INE050A01025"] = "BBTC",
         ["INE926X01010"] = "HGINFRA",
         ["INE752P01024"] = "FRETAIL",
+        ["INE351F01018"] = "JPPOWER",
+        ["INE139A01034"] = "NATIONALUM",
+        ["INE242A01010"] = "IOC",
+        ["INE343H01029"] = "SOLARINDS",
+        ["JP POWER VEN."] = "JPPOWER",
+        ["JPPOWER VEN"] = "JPPOWER",
+        ["NATL. ALUMINIUM"] = "NATIONALUM",
+        ["NATL ALUMINIUM"] = "NATIONALUM",
+        ["I O C L"] = "IOC",
+        ["IOCL"] = "IOC",
+        ["SOLAR INDUSTRIES"] = "SOLARINDS",
+        ["SOLAR INDUSTRIES INDIA"] = "SOLARINDS",
     };
 
     public static List<AngelOneHoldingItemRequest> ParseHoldings(Stream excelStream, string? password = null)

@@ -145,7 +145,8 @@ public sealed class JsonFilePortfolioRepository : IPortfolioRepository
                 Money.INR(h.CurrentPrice),
                 h.PERatio,
                 h.DividendYield,
-                h.MarketCap);
+                h.MarketCap,
+                h.PreviousClose.HasValue && h.PreviousClose.Value > 0 ? Money.INR(h.PreviousClose.Value) : null);
 
             var holding = new Holding
             {
@@ -219,7 +220,8 @@ public sealed class JsonFilePortfolioRepository : IPortfolioRepository
                 CurrentPrice = h.Stock.CurrentPrice.Amount,
                 PERatio = h.Stock.PERatio,
                 DividendYield = h.Stock.DividendYield,
-                MarketCap = h.Stock.MarketCap
+                MarketCap = h.Stock.MarketCap,
+                PreviousClose = h.Stock.PreviousClose?.Amount
             }).ToList(),
             TargetAllocations = domain.TargetAllocations.Select(t => new SectorAllocationStorageModel
             {
@@ -288,6 +290,7 @@ public sealed class JsonFilePortfolioRepository : IPortfolioRepository
         public decimal? PERatio { get; set; }
         public decimal? DividendYield { get; set; }
         public decimal? MarketCap { get; set; }
+        public decimal? PreviousClose { get; set; }
     }
 
     private sealed class SectorAllocationStorageModel

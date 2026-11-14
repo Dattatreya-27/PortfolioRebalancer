@@ -36,7 +36,20 @@ public sealed class YahooFinanceLiveStockDataProvider : IStockDataProvider, IDis
         ["ZOMATO"] = "ETERNAL.NS",
         ["PAYTM"] = "PAYTM.NS",
         ["SOLAR INDUSTRIES"] = "SOLARINDS.NS",
-        ["SOLAR INDUSTRIES INDIA"] = "SOLARINDS.NS"
+        ["SOLAR INDUSTRIES INDIA"] = "SOLARINDS.NS",
+        ["SOLARINDS"] = "SOLARINDS.NS",
+        ["JP POWER VEN."] = "JPPOWER.NS",
+        ["JPPOWER VEN"] = "JPPOWER.NS",
+        ["JPPOWER"] = "JPPOWER.NS",
+        ["NATL. ALUMINIUM"] = "NATIONALUM.NS",
+        ["NATL ALUMINIUM"] = "NATIONALUM.NS",
+        ["NATIONALUM"] = "NATIONALUM.NS",
+        ["I O C L"] = "IOC.NS",
+        ["IOCL"] = "IOC.NS",
+        ["IOC"] = "IOC.NS",
+        ["FIRSTCRY"] = "FIRSTCRY.NS",
+        ["TRANSRAILL"] = "TRANSRAILL.NS",
+        ["BHARATCOAL"] = "BHARATCOAL.NS"
     };
 
     private static string NormalizeTicker(string ticker)

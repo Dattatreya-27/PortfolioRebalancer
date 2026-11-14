@@ -149,9 +149,8 @@ public sealed class PortfolioService(
             .Where(i => i.Quantity > 0)
             .Select(i =>
             {
-                var sym = i.TradingSymbol.Trim().ToUpperInvariant();
-                sym = System.Text.RegularExpressions.Regex.Replace(sym, "-(EQ|BE)$", "");
-                return new { Ticker = sym, i.Quantity, i.AveragePrice, i.Ltp };
+                var sym = BrokerHoldingsParser.CleanSymbol(i.TradingSymbol, null);
+                return new { Ticker = sym, i.Quantity, i.AveragePrice, i.Ltp, RawSymbol = i.TradingSymbol };
             })
             .ToList();
 
@@ -162,20 +161,33 @@ public sealed class PortfolioService(
         var newHoldings = new List<Holding>();
         foreach (var item in cleanItems)
         {
-            if (stockLookup.TryGetValue(item.Ticker, out var stock))
+            Stock stock;
+            if (!stockLookup.TryGetValue(item.Ticker, out var foundStock))
             {
+                decimal price = item.Ltp.HasValue && item.Ltp.Value > 0 ? item.Ltp.Value : item.AveragePrice;
+                stock = new Stock
+                {
+                    Ticker = new Ticker(item.Ticker),
+                    Name = item.RawSymbol ?? item.Ticker,
+                    Sector = Sector.Industrials
+                };
+                stock.UpdateMarketData(Money.INR(price), null, null, null, Money.INR(price));
+            }
+            else
+            {
+                stock = foundStock;
                 if (stock.CurrentPrice.Amount <= 0 && item.Ltp.HasValue && item.Ltp.Value > 0)
                 {
                     stock.UpdateMarketData(Money.INR(item.Ltp.Value), stock.PERatio, stock.DividendYield, stock.MarketCap, Money.INR(item.Ltp.Value));
                 }
-
-                newHoldings.Add(new Holding
-                {
-                    Stock = stock,
-                    Quantity = Math.Round(item.Quantity, 0, MidpointRounding.AwayFromZero),
-                    AverageBuyPrice = Money.INR(item.AveragePrice)
-                });
             }
+
+            newHoldings.Add(new Holding
+            {
+                Stock = stock,
+                Quantity = Math.Round(item.Quantity, 0, MidpointRounding.AwayFromZero),
+                AverageBuyPrice = Money.INR(item.AveragePrice)
+            });
         }
 
         if (newHoldings.Count > 0)
@@ -228,34 +240,28 @@ public sealed class PortfolioService(
             var newHoldings = new List<Holding>();
             foreach (var item in parseResult.Holdings)
             {
-                if (stockLookup.TryGetValue(item.Ticker, out var stock))
-                {
-                    if (stock.CurrentPrice.Amount <= 0 && item.Ltp.HasValue && item.Ltp.Value > 0)
-                    {
-                        stock.UpdateMarketData(Money.INR(item.Ltp.Value), stock.PERatio, stock.DividendYield, stock.MarketCap, Money.INR(item.Ltp.Value));
-                    }
+                var stock = ResolveImportStock(item, stockLookup);
 
-                    var h = new Holding
-                    {
-                        Stock = stock,
-                        Quantity = item.Quantity,
-                        AverageBuyPrice = Money.INR(item.AveragePrice)
-                    };
-                    newHoldings.Add(h);
-                    mergeAudit.Add(new HoldingMergeAuditItemDto(
-                        Ticker: stock.Ticker.Value,
-                        Name: stock.Name,
-                        Sector: stock.Sector.ToString(),
-                        PreviousQuantity: 0,
-                        PreviousBuyPrice: 0,
-                        ImportedQuantity: item.Quantity,
-                        ImportedBuyPrice: item.AveragePrice,
-                        NewTotalQuantity: item.Quantity,
-                        NewWeightedBuyPrice: item.AveragePrice,
-                        WasMerged: false
-                    ));
-                    newPositionsCount++;
-                }
+                var h = new Holding
+                {
+                    Stock = stock,
+                    Quantity = item.Quantity,
+                    AverageBuyPrice = Money.INR(item.AveragePrice)
+                };
+                newHoldings.Add(h);
+                mergeAudit.Add(new HoldingMergeAuditItemDto(
+                    Ticker: stock.Ticker.Value,
+                    Name: stock.Name,
+                    Sector: stock.Sector.ToString(),
+                    PreviousQuantity: 0,
+                    PreviousBuyPrice: 0,
+                    ImportedQuantity: item.Quantity,
+                    ImportedBuyPrice: item.AveragePrice,
+                    NewTotalQuantity: item.Quantity,
+                    NewWeightedBuyPrice: item.AveragePrice,
+                    WasMerged: false
+                ));
+                newPositionsCount++;
             }
 
             targetPortfolio.ReplaceHoldings(newHoldings);
@@ -272,19 +278,79 @@ public sealed class PortfolioService(
                 var newHoldings = new List<Holding>();
                 foreach (var item in parseResult.Holdings)
                 {
-                    if (stockLookup.TryGetValue(item.Ticker, out var stock))
-                    {
-                        if (stock.CurrentPrice.Amount <= 0 && item.Ltp.HasValue && item.Ltp.Value > 0)
-                        {
-                            stock.UpdateMarketData(Money.INR(item.Ltp.Value), stock.PERatio, stock.DividendYield, stock.MarketCap, Money.INR(item.Ltp.Value));
-                        }
+                    var stock = ResolveImportStock(item, stockLookup);
 
-                        newHoldings.Add(new Holding
+                    newHoldings.Add(new Holding
+                    {
+                        Stock = stock,
+                        Quantity = item.Quantity,
+                        AverageBuyPrice = Money.INR(item.AveragePrice)
+                    });
+                    mergeAudit.Add(new HoldingMergeAuditItemDto(
+                        Ticker: stock.Ticker.Value,
+                        Name: stock.Name,
+                        Sector: stock.Sector.ToString(),
+                        PreviousQuantity: 0,
+                        PreviousBuyPrice: 0,
+                        ImportedQuantity: item.Quantity,
+                        ImportedBuyPrice: item.AveragePrice,
+                        NewTotalQuantity: item.Quantity,
+                        NewWeightedBuyPrice: item.AveragePrice,
+                        WasMerged: false
+                    ));
+                    newPositionsCount++;
+                }
+                targetPortfolio.ReplaceHoldings(newHoldings);
+                await repository.SaveAsync(targetPortfolio);
+            }
+            else // BrokerImportMode.Merge
+            {
+                foreach (var item in parseResult.Holdings)
+                {
+                    var stock = ResolveImportStock(item, stockLookup);
+
+                    var existing = targetPortfolio.Holdings.FirstOrDefault(h => h.Stock.Ticker.Value.Equals(item.Ticker, StringComparison.OrdinalIgnoreCase));
+                    if (existing != null)
+                    {
+                        decimal oldQty = existing.Quantity;
+                        decimal oldAvg = existing.AverageBuyPrice?.Amount ?? existing.Stock.CurrentPrice.Amount;
+                        decimal addQty = item.Quantity;
+                        decimal addPrice = item.AveragePrice;
+                        decimal newQty = oldQty + addQty;
+                        decimal newWeightedPrice = newQty > 0
+                            ? Math.Round(((oldQty * oldAvg) + (addQty * addPrice)) / newQty, 2)
+                            : addPrice;
+
+                        targetPortfolio.AddHolding(new Holding
+                        {
+                            Stock = stock,
+                            Quantity = newQty,
+                            AverageBuyPrice = Money.INR(newWeightedPrice)
+                        });
+
+                        mergeAudit.Add(new HoldingMergeAuditItemDto(
+                            Ticker: stock.Ticker.Value,
+                            Name: stock.Name,
+                            Sector: stock.Sector.ToString(),
+                            PreviousQuantity: oldQty,
+                            PreviousBuyPrice: oldAvg,
+                            ImportedQuantity: addQty,
+                            ImportedBuyPrice: addPrice,
+                            NewTotalQuantity: newQty,
+                            NewWeightedBuyPrice: newWeightedPrice,
+                            WasMerged: true
+                        ));
+                        mergedCount++;
+                    }
+                    else
+                    {
+                        targetPortfolio.AddHolding(new Holding
                         {
                             Stock = stock,
                             Quantity = item.Quantity,
                             AverageBuyPrice = Money.INR(item.AveragePrice)
                         });
+
                         mergeAudit.Add(new HoldingMergeAuditItemDto(
                             Ticker: stock.Ticker.Value,
                             Name: stock.Name,
@@ -298,78 +364,6 @@ public sealed class PortfolioService(
                             WasMerged: false
                         ));
                         newPositionsCount++;
-                    }
-                }
-                targetPortfolio.ReplaceHoldings(newHoldings);
-                await repository.SaveAsync(targetPortfolio);
-            }
-            else // BrokerImportMode.Merge
-            {
-                foreach (var item in parseResult.Holdings)
-                {
-                    if (stockLookup.TryGetValue(item.Ticker, out var stock))
-                    {
-                        if (stock.CurrentPrice.Amount <= 0 && item.Ltp.HasValue && item.Ltp.Value > 0)
-                        {
-                            stock.UpdateMarketData(Money.INR(item.Ltp.Value), stock.PERatio, stock.DividendYield, stock.MarketCap, Money.INR(item.Ltp.Value));
-                        }
-
-                        var existing = targetPortfolio.Holdings.FirstOrDefault(h => h.Stock.Ticker.Value.Equals(item.Ticker, StringComparison.OrdinalIgnoreCase));
-                        if (existing != null)
-                        {
-                            decimal oldQty = existing.Quantity;
-                            decimal oldAvg = existing.AverageBuyPrice?.Amount ?? existing.Stock.CurrentPrice.Amount;
-                            decimal addQty = item.Quantity;
-                            decimal addPrice = item.AveragePrice;
-                            decimal newQty = oldQty + addQty;
-                            decimal newWeightedPrice = newQty > 0
-                                ? Math.Round(((oldQty * oldAvg) + (addQty * addPrice)) / newQty, 2)
-                                : addPrice;
-
-                            targetPortfolio.AddHolding(new Holding
-                            {
-                                Stock = stock,
-                                Quantity = newQty,
-                                AverageBuyPrice = Money.INR(newWeightedPrice)
-                            });
-
-                            mergeAudit.Add(new HoldingMergeAuditItemDto(
-                                Ticker: stock.Ticker.Value,
-                                Name: stock.Name,
-                                Sector: stock.Sector.ToString(),
-                                PreviousQuantity: oldQty,
-                                PreviousBuyPrice: oldAvg,
-                                ImportedQuantity: addQty,
-                                ImportedBuyPrice: addPrice,
-                                NewTotalQuantity: newQty,
-                                NewWeightedBuyPrice: newWeightedPrice,
-                                WasMerged: true
-                            ));
-                            mergedCount++;
-                        }
-                        else
-                        {
-                            targetPortfolio.AddHolding(new Holding
-                            {
-                                Stock = stock,
-                                Quantity = item.Quantity,
-                                AverageBuyPrice = Money.INR(item.AveragePrice)
-                            });
-
-                            mergeAudit.Add(new HoldingMergeAuditItemDto(
-                                Ticker: stock.Ticker.Value,
-                                Name: stock.Name,
-                                Sector: stock.Sector.ToString(),
-                                PreviousQuantity: 0,
-                                PreviousBuyPrice: 0,
-                                ImportedQuantity: item.Quantity,
-                                ImportedBuyPrice: item.AveragePrice,
-                                NewTotalQuantity: item.Quantity,
-                                NewWeightedBuyPrice: item.AveragePrice,
-                                WasMerged: false
-                            ));
-                            newPositionsCount++;
-                        }
                     }
                 }
                 await repository.SaveAsync(targetPortfolio);
@@ -418,6 +412,30 @@ public sealed class PortfolioService(
 
     // --- Mapping helpers: Domain → DTOs ---
     // These prevent domain model leakage through the API boundary.
+
+    private static Stock ResolveImportStock(
+        BrokerParsedHoldingItem item,
+        IReadOnlyDictionary<string, Stock> stockLookup)
+    {
+        if (stockLookup.TryGetValue(item.Ticker, out var stock))
+        {
+            if (stock.CurrentPrice.Amount <= 0 && item.Ltp.HasValue && item.Ltp.Value > 0)
+            {
+                stock.UpdateMarketData(Money.INR(item.Ltp.Value), stock.PERatio, stock.DividendYield, stock.MarketCap, Money.INR(item.Ltp.Value));
+            }
+            return stock;
+        }
+
+        decimal price = item.Ltp.HasValue && item.Ltp.Value > 0 ? item.Ltp.Value : item.AveragePrice;
+        var newStock = new Stock
+        {
+            Ticker = new Ticker(item.Ticker),
+            Name = !string.IsNullOrWhiteSpace(item.RawSymbol) ? item.RawSymbol : item.Ticker,
+            Sector = Sector.Industrials
+        };
+        newStock.UpdateMarketData(Money.INR(price), null, null, null, Money.INR(price));
+        return newStock;
+    }
 
     private static PortfolioSummaryDto MapToSummary(Portfolio portfolio)
     {
